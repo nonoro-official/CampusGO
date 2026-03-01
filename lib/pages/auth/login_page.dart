@@ -96,7 +96,13 @@ class _LoginPageState extends State<LoginPage> {
                     borderRadius: BorderRadius.circular(15),
                   ),
                 ),
-                child: const Text("Login"),
+                child: const Text("Login",
+                  style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFFFDFDFD),
+                  ),
+                ),
               ),
 
               const SizedBox(height: 10),
