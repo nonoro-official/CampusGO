@@ -20,7 +20,7 @@ class _LoginPageState extends State<LoginPage> {
   bool isLoading = false;
 
   void login() async {
-    if (emailController.text == "admin@foodika.com") {
+    if (emailController.text == "admin@foodika.com" && passwordController.text == "admin") {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const AdminDashboardPage()),
