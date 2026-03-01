@@ -18,7 +18,6 @@ class _RegisterPageState extends State<RegisterPage> {
   bool isLoading = false;
 
   void register() async {
-    // Basic validations
     if (passwordController.text != confirmController.text) {
       setState(() => errorMessage = "Passwords do not match.");
       return;
@@ -27,13 +26,11 @@ class _RegisterPageState extends State<RegisterPage> {
     setState(() => isLoading = true);
 
     try {
-      // Step A: Create the Login in Firebase Auth
       UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
 
-      // Step B: Save User Role to Firestore Database
       await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
         'uid': userCredential.user!.uid,
         'email': emailController.text.trim(),
