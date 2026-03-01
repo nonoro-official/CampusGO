@@ -10,7 +10,6 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
-  // Text Controllers for user input
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmController = TextEditingController();
@@ -18,31 +17,27 @@ class _RegisterPageState extends State<RegisterPage> {
   String? errorMessage;
   bool isLoading = false;
 
-  /// Handles both Firebase Authentication and Firestore Database entry
   void register() async {
-    // 1. Basic Validation
+    // Basic validations
     if (passwordController.text != confirmController.text) {
       setState(() => errorMessage = "Passwords do not match.");
-      return;
-    }
-
-    if (emailController.text.isEmpty || passwordController.text.isEmpty) {
-      setState(() => errorMessage = "Please fill in all fields.");
       return;
     }
 
     setState(() => isLoading = true);
 
     try {
+      // Step A: Create the Login in Firebase Auth
       UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
 
+      // Step B: Save User Role to Firestore Database
       await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
         'uid': userCredential.user!.uid,
         'email': emailController.text.trim(),
-        'role': 'user',
+        'role': 'user', // Default role
         'createdAt': DateTime.now(),
       });
 
@@ -51,82 +46,64 @@ class _RegisterPageState extends State<RegisterPage> {
     } on FirebaseAuthException catch (e) {
       setState(() => errorMessage = e.message ?? "An error occurred.");
     } catch (e) {
-      setState(() => errorMessage = "Database error: Could not save profile.");
+      setState(() => errorMessage = "Database Error: ${e.toString()}");
     }
 
     setState(() => isLoading = false);
   }
 
   @override
-  void dispose() {
-    emailController.dispose();
-    passwordController.dispose();
-    confirmController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Create Foodika Account")),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(25),
-        child: Column(
-          children: [
-            const Icon(Icons.restaurant_menu, size: 80, color: Colors.green),
-            const SizedBox(height: 20),
+      backgroundColor: const Color(0xFFF1F8E9), // Light green background
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(25),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Logo placeholder
+              Image.asset("assets/images/foodika_logo.png", width: 120),
+              const SizedBox(height: 30),
 
-            TextField(
-              controller: emailController,
-              decoration: const InputDecoration(
-                labelText: "Email",
-                border: OutlineInputBorder(),
+              TextField(
+                controller: emailController,
+                decoration: const InputDecoration(labelText: "Email", border: OutlineInputBorder()),
               ),
-              keyboardType: TextInputType.emailAddress,
-            ),
+              const SizedBox(height: 15),
 
-            const SizedBox(height: 15),
-
-            TextField(
-              controller: passwordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: "Password",
-                border: OutlineInputBorder(),
+              TextField(
+                controller: passwordController,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: "Password", border: OutlineInputBorder()),
               ),
-            ),
+              const SizedBox(height: 15),
 
-            const SizedBox(height: 15),
-
-            TextField(
-              controller: confirmController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: "Confirm Password",
-                border: OutlineInputBorder(),
+              TextField(
+                controller: confirmController,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: "Confirm Password", border: OutlineInputBorder()),
               ),
-            ),
+              const SizedBox(height: 20),
 
-            const SizedBox(height: 20),
+              if (errorMessage != null)
+                Text(errorMessage!, style: const TextStyle(color: Colors.red, fontSize: 13)),
 
-            if (errorMessage != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 15),
-                child: Text(errorMessage!, style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 10),
+
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: isLoading ? null : register,
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+                  child: isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text("Sign Up", style: TextStyle(color: Colors.white, fontSize: 18)),
+                ),
               ),
-
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                onPressed: isLoading ? null : register,
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-                child: isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text("Sign Up", style: TextStyle(color: Colors.white, fontSize: 18)),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
