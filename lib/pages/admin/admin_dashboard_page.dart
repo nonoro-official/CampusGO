@@ -3,6 +3,7 @@ import 'admin_map_page.dart';
 import 'restaurant_list_page.dart';
 import '../../services/auth_service.dart';
 import '../auth/login_page.dart';
+import 'add_restaurant_page.dart'; // Add this import
 
 class AdminDashboardPage extends StatefulWidget {
   const AdminDashboardPage({super.key});
@@ -61,11 +62,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         backgroundColor: const Color(0xFFE46A3E),
         foregroundColor: Colors.white,
       ),
-      // Side Navigation Bar
       drawer: Drawer(
         child: Column(
           children: [
-            // Drawer Header
             const UserAccountsDrawerHeader(
               decoration: BoxDecoration(color: Color(0xFFE46A3E)),
               accountName: Text("Admin Panel", style: TextStyle(fontWeight: FontWeight.bold)),
@@ -75,30 +74,25 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 child: Icon(Icons.admin_panel_settings, color: Color(0xFFE46A3E), size: 40),
               ),
             ),
-
-            // Navigation Items
             ListTile(
               leading: const Icon(Icons.map),
               title: const Text("Map View"),
               selected: selectedIndex == 0,
               onTap: () {
                 setState(() => selectedIndex = 0);
-                Navigator.pop(context); // Close drawer
+                Navigator.pop(context);
               },
             ),
             ListTile(
               leading: const Icon(Icons.restaurant),
-              title: const Text("Restaurant List"),
+              title: const Text("Restaurant Management"),
               selected: selectedIndex == 1,
               onTap: () {
                 setState(() => selectedIndex = 1);
-                Navigator.pop(context); // Close drawer
+                Navigator.pop(context);
               },
             ),
-
-            const Spacer(), // Pushes the logout button to the bottom
-
-            // Logout Button inside Side Nav
+            const Spacer(),
             Padding(
               padding: const EdgeInsets.all(20.0),
               child: ElevatedButton.icon(
@@ -118,6 +112,15 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         ),
       ),
       body: pages[selectedIndex],
+      // The button is now controlled by the dashboard
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: const Color(0xFFE46A3E),
+        onPressed: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const AddRestaurantPage())
+        ),
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
     );
   }
 }
