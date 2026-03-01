@@ -5,14 +5,16 @@ class VouchersTab extends StatelessWidget {
   final String restaurantId;
   const VouchersTab({super.key, required this.restaurantId});
 
-  void _showAddVoucherDialog(BuildContext context) {
-    final codeController = TextEditingController();
-    final discountController = TextEditingController();
+  // Now accepts an optional DocumentSnapshot for editing
+  void _showVoucherDialog(BuildContext context, [DocumentSnapshot? voucher]) {
+    final bool isEditing = voucher != null;
+    final codeController = TextEditingController(text: isEditing ? voucher['code'] : '');
+    final discountController = TextEditingController(text: isEditing ? voucher['discount'].toString() : '');
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Create New Voucher"),
+        title: Text(isEditing ? "Edit Voucher" : "Create New Voucher"),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -32,19 +34,28 @@ class VouchersTab extends StatelessWidget {
           ElevatedButton(
             onPressed: () async {
               if (codeController.text.isNotEmpty && discountController.text.isNotEmpty) {
-                await FirebaseFirestore.instance
-                    .collection('restaurants')
-                    .doc(restaurantId)
-                    .collection('vouchers')
-                    .add({
-                  'code': codeController.text.toUpperCase().trim(),
-                  'discount': int.tryParse(discountController.text) ?? 0,
-                  'createdAt': FieldValue.serverTimestamp(),
-                });
+                if (isEditing) {
+                  // UPDATE existing
+                  await voucher.reference.update({
+                    'code': codeController.text.toUpperCase().trim(),
+                    'discount': int.tryParse(discountController.text) ?? 0,
+                  });
+                } else {
+                  // ADD new
+                  await FirebaseFirestore.instance
+                      .collection('restaurants')
+                      .doc(restaurantId)
+                      .collection('vouchers')
+                      .add({
+                    'code': codeController.text.toUpperCase().trim(),
+                    'discount': int.tryParse(discountController.text) ?? 0,
+                    'createdAt': FieldValue.serverTimestamp(),
+                  });
+                }
                 if (context.mounted) Navigator.pop(context);
               }
             },
-            child: const Text("Create"),
+            child: Text(isEditing ? "Save" : "Create"),
           ),
         ],
       ),
@@ -55,9 +66,8 @@ class VouchersTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddVoucherDialog(context),
+        onPressed: () => _showVoucherDialog(context), // Trigger Add Mode
         backgroundColor: const Color(0xFFE46A3E),
-        // FIXED: Changed 'add_ad_units' to 'add_card'
         child: const Icon(Icons.add_card, color: Colors.white),
       ),
       body: StreamBuilder(
@@ -88,25 +98,34 @@ class VouchersTab extends StatelessWidget {
                   leading: const Icon(Icons.confirmation_num, color: Colors.green),
                   title: Text(voucher['code'], style: const TextStyle(fontWeight: FontWeight.bold)),
                   subtitle: Text("${voucher['discount']}% Discount"),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete_outline, color: Colors.red),
-                    // IMPROVED: Added a quick confirmation for deletion
-                    onPressed: () async {
-                      bool? confirm = await showDialog(
-                        context: context,
-                        builder: (ctx) => AlertDialog(
-                          title: const Text("Delete Voucher"),
-                          content: const Text("Are you sure?"),
-                          actions: [
-                            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text("No")),
-                            TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text("Yes")),
-                          ],
-                        ),
-                      );
-                      if (confirm == true) {
-                        voucher.reference.delete();
-                      }
-                    },
+                  // Wrap icons in a Row for Edit and Delete
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.edit, color: Colors.blue),
+                        onPressed: () => _showVoucherDialog(context, voucher), // Trigger Edit Mode
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete_outline, color: Colors.red),
+                        onPressed: () async {
+                          bool? confirm = await showDialog(
+                            context: context,
+                            builder: (ctx) => AlertDialog(
+                              title: const Text("Delete Voucher"),
+                              content: const Text("Are you sure?"),
+                              actions: [
+                                TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text("No")),
+                                TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text("Yes", style: TextStyle(color: Colors.red))),
+                              ],
+                            ),
+                          );
+                          if (confirm == true) {
+                            voucher.reference.delete();
+                          }
+                        },
+                      ),
+                    ],
                   ),
                 ),
               );

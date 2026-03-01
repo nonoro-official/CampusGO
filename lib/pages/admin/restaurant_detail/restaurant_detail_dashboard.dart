@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'edit_restaurant_tab.dart';
 import 'history_tab.dart';
 import 'vouchers_tab.dart';
+import 'menu_tab.dart'; // Import the new tab!
 
 class RestaurantDetailDashboard extends StatefulWidget {
   final String restaurantId;
@@ -20,14 +21,15 @@ class RestaurantDetailDashboard extends StatefulWidget {
 class _RestaurantDetailDashboardState extends State<RestaurantDetailDashboard> {
   int _selectedTabIndex = 0;
 
-  // We pass the ID to each tab so they know which data to pull/save
   late final List<Widget> _tabs;
 
   @override
   void initState() {
     super.initState();
+    // Added MenuTab to the list
     _tabs = [
       EditRestaurantTab(restaurantId: widget.restaurantId, data: widget.restaurantData),
+      MenuTab(restaurantId: widget.restaurantId),
       HistoryTab(restaurantId: widget.restaurantId),
       VouchersTab(restaurantId: widget.restaurantId),
     ];
@@ -39,6 +41,7 @@ class _RestaurantDetailDashboardState extends State<RestaurantDetailDashboard> {
       appBar: AppBar(
         title: Text(widget.restaurantData['name']),
         backgroundColor: const Color(0xFFE46A3E),
+        foregroundColor: Colors.white,
       ),
       drawer: Drawer(
         child: Column(
@@ -56,23 +59,35 @@ class _RestaurantDetailDashboardState extends State<RestaurantDetailDashboard> {
             ListTile(
               leading: const Icon(Icons.edit),
               title: const Text("Edit Details"),
+              selected: _selectedTabIndex == 0,
               onTap: () { setState(() => _selectedTabIndex = 0); Navigator.pop(context); },
+            ),
+            ListTile(
+              leading: const Icon(Icons.restaurant_menu),
+              title: const Text("Edit Menu"),
+              selected: _selectedTabIndex == 1,
+              onTap: () { setState(() => _selectedTabIndex = 1); Navigator.pop(context); },
             ),
             ListTile(
               leading: const Icon(Icons.history),
               title: const Text("History Logs"),
-              onTap: () { setState(() => _selectedTabIndex = 1); Navigator.pop(context); },
+              selected: _selectedTabIndex == 2,
+              onTap: () { setState(() => _selectedTabIndex = 2); Navigator.pop(context); },
             ),
             ListTile(
               leading: const Icon(Icons.confirmation_number),
               title: const Text("Vouchers"),
-              onTap: () { setState(() => _selectedTabIndex = 2); Navigator.pop(context); },
+              selected: _selectedTabIndex == 3,
+              onTap: () { setState(() => _selectedTabIndex = 3); Navigator.pop(context); },
             ),
             const Divider(),
             ListTile(
               leading: const Icon(Icons.arrow_back),
               title: const Text("Back to All Restaurants"),
-              onTap: () => Navigator.pop(context),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pop(context);
+              },
             ),
           ],
         ),
