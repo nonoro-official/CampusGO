@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'user_map_page.dart';
+import '../../services/auth_service.dart';
 import '../auth/login_page.dart';
 
 class UserDashboardPage extends StatelessWidget {
@@ -7,26 +9,36 @@ class UserDashboardPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Foodika - User"),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () {
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (_) => const LoginPage()),
-                    (route) => false,
-              );
-            },
-          ),
-        ],
-      ),
-      body: const Center(
-        child: Text(
-          "User Dashboard",
-          style: TextStyle(fontSize: 22),
-        ),
+      body: const UserMapPage(),
+      floatingActionButton: FloatingActionButton(
+        child: const Icon(Icons.logout),
+        onPressed: () async {
+
+          bool confirm = await showDialog(
+            context: context,
+            builder: (_) => AlertDialog(
+              title: const Text("Logout"),
+              content: const Text("Are you sure?"),
+              actions: [
+                TextButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    child: const Text("Cancel")),
+                TextButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    child: const Text("Logout")),
+              ],
+            ),
+          );
+
+          if (confirm == true) {
+            await AuthService().logout();
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => const LoginPage()),
+                  (route) => false,
+            );
+          }
+        },
       ),
     );
   }

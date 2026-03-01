@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
-import 'pages/splash/splash_screen.dart';
+import 'package:firebase_core/firebase_core.dart';
+import './pages/splash/splash_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   runApp(const FoodikaApp());
 }
 
@@ -12,21 +15,15 @@ class FoodikaApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: "Foodika",
+      title: 'Foodika',
       theme: ThemeData(
-        scaffoldBackgroundColor: const Color(0xFFF5F1EA),
-        primaryColor: const Color(0xFFE46A3E),
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFFE46A3E),
-          primary: const Color(0xFFE46A3E),
-          secondary: const Color(0xFF2E7D32),
+          seedColor: const Color(0xFF2E7D32),
+          secondary: const Color(0xFFFF8C00),
         ),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFFE46A3E),
-          foregroundColor: Colors.white,
-        ),
+        useMaterial3: true,
       ),
-      home: SplashScreen(),
+      home: const SplashScreen(), // unchanged
     );
   }
 }
