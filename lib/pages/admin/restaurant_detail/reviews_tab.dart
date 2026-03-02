@@ -8,62 +8,91 @@ class ReviewsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder(
-      stream: FirebaseFirestore.instance
-          .collection('restaurants')
-          .doc(restaurantId)
-          .collection('reviews')
-          .orderBy('timestamp', descending: true)
-          .snapshots(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-        final reviews = snapshot.data!.docs;
+    return Scaffold(
+      backgroundColor: Colors.grey[100],
+      body: StreamBuilder(
+        stream: FirebaseFirestore.instance
+            .collection('restaurants')
+            .doc(restaurantId)
+            .collection('reviews')
+            .orderBy('timestamp', descending: true)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
 
-        if (reviews.isEmpty) {
-          return const Center(child: Text("No reviews yet. Be the first to rate!"));
-        }
+          final reviews = snapshot.data!.docs;
 
-        return ListView.builder(
-          padding: const EdgeInsets.all(12),
-          itemCount: reviews.length,
-          itemBuilder: (context, index) {
-            var review = reviews[index].data();
-            DateTime date = (review['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now();
-            double rating = (review['rating'] as num).toDouble();
-
-            return Card(
-              margin: const EdgeInsets.only(bottom: 10),
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: List.generate(5, (i) => Icon(
-                            Icons.star,
-                            size: 16,
-                            color: i < rating ? Colors.amber : Colors.grey.shade300,
-                          )),
-                        ),
-                        Text(DateFormat('MMM dd, yyyy').format(date),
-                            style: const TextStyle(color: Colors.grey, fontSize: 12)),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(review['comment'] ?? '', style: const TextStyle(fontSize: 14)),
-                    const SizedBox(height: 5),
-                    Text("— ${review['userName'] ?? 'Anonymous'}",
-                        style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic, color: Colors.grey)),
-                  ],
-                ),
+          if (reviews.isEmpty) {
+            return const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.rate_review_outlined, size: 60, color: Colors.grey),
+                  SizedBox(height: 10),
+                  Text("No reviews yet from customers.", style: TextStyle(color: Colors.grey)),
+                ],
               ),
             );
-          },
-        );
-      },
+          }
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(12),
+            itemCount: reviews.length,
+            itemBuilder: (context, index) {
+              var review = reviews[index].data();
+              double rating = (review['rating'] ?? 0.0).toDouble();
+              DateTime date = (review['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now();
+
+              return Card(
+                elevation: 2,
+                margin: const EdgeInsets.only(bottom: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                child: Padding(
+                  padding: const EdgeInsets.all(15),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: List.generate(5, (starIndex) {
+                              return Icon(
+                                starIndex < rating ? Icons.star : Icons.star_border,
+                                color: Colors.amber,
+                                size: 18,
+                              );
+                            }),
+                          ),
+                          Text(
+                            DateFormat('MMM dd, yyyy').format(date),
+                            style: const TextStyle(color: Colors.grey, fontSize: 12),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        review['comment'] ?? 'No written comment provided.',
+                        style: const TextStyle(fontSize: 15, height: 1.4),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        "— ${review['userName'] ?? 'Anonymous'}",
+                        style: const TextStyle(
+                            fontSize: 13,
+                            fontStyle: FontStyle.italic,
+                            color: Color(0xFFE46A3E),
+                            fontWeight: FontWeight.bold
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      ),
     );
   }
 }
