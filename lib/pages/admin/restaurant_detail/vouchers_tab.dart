@@ -5,28 +5,22 @@ class VouchersTab extends StatelessWidget {
   final String restaurantId;
   const VouchersTab({super.key, required this.restaurantId});
 
-  // Now accepts an optional DocumentSnapshot for editing
   void _showVoucherDialog(BuildContext context, [DocumentSnapshot? voucher]) {
     final bool isEditing = voucher != null;
     final codeController = TextEditingController(text: isEditing ? voucher['code'] : '');
     final discountController = TextEditingController(text: isEditing ? voucher['discount'].toString() : '');
+    final limitController = TextEditingController(text: isEditing ? voucher['maxClaims'].toString() : '10');
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(isEditing ? "Edit Voucher" : "Create New Voucher"),
+        title: Text(isEditing ? "Edit Voucher" : "Create Limited Voucher"),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(
-              controller: codeController,
-              decoration: const InputDecoration(labelText: "Promo Code (e.g. SAVE20)"),
-            ),
-            TextField(
-              controller: discountController,
-              decoration: const InputDecoration(labelText: "Discount Amount (%)"),
-              keyboardType: TextInputType.number,
-            ),
+            TextField(controller: codeController, decoration: const InputDecoration(labelText: "Promo Code (e.g. PROMO20)")),
+            TextField(controller: discountController, decoration: const InputDecoration(labelText: "Discount Amount (%)"), keyboardType: TextInputType.number),
+            TextField(controller: limitController, decoration: const InputDecoration(labelText: "Claim Limit (Number of Users)"), keyboardType: TextInputType.number),
           ],
         ),
         actions: [
@@ -34,23 +28,22 @@ class VouchersTab extends StatelessWidget {
           ElevatedButton(
             onPressed: () async {
               if (codeController.text.isNotEmpty && discountController.text.isNotEmpty) {
+                final data = {
+                  'code': codeController.text.toUpperCase().trim(),
+                  'discount': int.tryParse(discountController.text) ?? 0,
+                  'maxClaims': int.tryParse(limitController.text) ?? 10,
+                  'currentClaims': isEditing ? voucher['currentClaims'] : 0,
+                  'expiryDate': DateTime.now().add(const Duration(days: 7)),
+                };
+
                 if (isEditing) {
-                  // UPDATE existing
-                  await voucher.reference.update({
-                    'code': codeController.text.toUpperCase().trim(),
-                    'discount': int.tryParse(discountController.text) ?? 0,
-                  });
+                  await voucher.reference.update(data);
                 } else {
-                  // ADD new
                   await FirebaseFirestore.instance
                       .collection('restaurants')
                       .doc(restaurantId)
                       .collection('vouchers')
-                      .add({
-                    'code': codeController.text.toUpperCase().trim(),
-                    'discount': int.tryParse(discountController.text) ?? 0,
-                    'createdAt': FieldValue.serverTimestamp(),
-                  });
+                      .add(data);
                 }
                 if (context.mounted) Navigator.pop(context);
               }
@@ -66,7 +59,7 @@ class VouchersTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showVoucherDialog(context), // Trigger Add Mode
+        onPressed: () => _showVoucherDialog(context),
         backgroundColor: const Color(0xFFE46A3E),
         child: const Icon(Icons.add_card, color: Colors.white),
       ),
@@ -75,58 +68,27 @@ class VouchersTab extends StatelessWidget {
             .collection('restaurants')
             .doc(restaurantId)
             .collection('vouchers')
-            .orderBy('createdAt', descending: true)
             .snapshots(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-
           final vouchers = snapshot.data!.docs;
-
-          if (vouchers.isEmpty) {
-            return const Center(child: Text("No vouchers available for this place."));
-          }
 
           return ListView.builder(
             padding: const EdgeInsets.all(10),
             itemCount: vouchers.length,
             itemBuilder: (context, index) {
-              var voucher = vouchers[index];
+              var v = vouchers[index];
+              int remaining = (v['maxClaims'] ?? 0) - (v['currentClaims'] ?? 0);
               return Card(
-                elevation: 3,
-                margin: const EdgeInsets.symmetric(vertical: 8),
                 child: ListTile(
                   leading: const Icon(Icons.confirmation_num, color: Colors.green),
-                  title: Text(voucher['code'], style: const TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: Text("${voucher['discount']}% Discount"),
-                  // Wrap icons in a Row for Edit and Delete
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.edit, color: Colors.blue),
-                        onPressed: () => _showVoucherDialog(context, voucher), // Trigger Edit Mode
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.delete_outline, color: Colors.red),
-                        onPressed: () async {
-                          bool? confirm = await showDialog(
-                            context: context,
-                            builder: (ctx) => AlertDialog(
-                              title: const Text("Delete Voucher"),
-                              content: const Text("Are you sure?"),
-                              actions: [
-                                TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text("No")),
-                                TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text("Yes", style: TextStyle(color: Colors.red))),
-                              ],
-                            ),
-                          );
-                          if (confirm == true) {
-                            voucher.reference.delete();
-                          }
-                        },
-                      ),
-                    ],
+                  title: Text("${v['code']} (${v['discount']}%)"),
+                  subtitle: Text("Remaining: $remaining / ${v['maxClaims']}"),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.red),
+                    onPressed: () => v.reference.delete(),
                   ),
+                  onLongPress: () => _showVoucherDialog(context, v),
                 ),
               );
             },
