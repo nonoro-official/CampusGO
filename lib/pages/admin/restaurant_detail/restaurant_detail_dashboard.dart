@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'edit_restaurant_tab.dart';
 import 'history_tab.dart';
 import 'vouchers_tab.dart';
-import 'menu_tab.dart'; // Import the new tab!
+import 'menu_tab.dart';
+import 'orders_tab.dart';
+import 'reviews_tab.dart'; // Import the new ReviewsTab
 
 class RestaurantDetailDashboard extends StatefulWidget {
   final String restaurantId;
@@ -26,12 +28,14 @@ class _RestaurantDetailDashboardState extends State<RestaurantDetailDashboard> {
   @override
   void initState() {
     super.initState();
-    // Added MenuTab to the list
+    // Logic: Every tab must have a unique index (0 to 5)
     _tabs = [
-      EditRestaurantTab(restaurantId: widget.restaurantId, data: widget.restaurantData),
-      MenuTab(restaurantId: widget.restaurantId),
-      HistoryTab(restaurantId: widget.restaurantId),
-      VouchersTab(restaurantId: widget.restaurantId),
+      EditRestaurantTab(restaurantId: widget.restaurantId, data: widget.restaurantData), // 0
+      MenuTab(restaurantId: widget.restaurantId),                                      // 1
+      HistoryTab(restaurantId: widget.restaurantId),                                   // 2
+      VouchersTab(restaurantId: widget.restaurantId),                                  // 3
+      OrdersTab(restaurantId: widget.restaurantId),                                    // 4
+      ReviewsTab(restaurantId: widget.restaurantId),                                   // 5
     ];
   }
 
@@ -79,6 +83,18 @@ class _RestaurantDetailDashboardState extends State<RestaurantDetailDashboard> {
               title: const Text("Vouchers"),
               selected: _selectedTabIndex == 3,
               onTap: () { setState(() => _selectedTabIndex = 3); Navigator.pop(context); },
+            ),
+            ListTile(
+              leading: const Icon(Icons.receipt_long), // Using receipt icon for Orders
+              title: const Text("Live Orders"),
+              selected: _selectedTabIndex == 4,
+              onTap: () { setState(() => _selectedTabIndex = 4); Navigator.pop(context); },
+            ),
+            ListTile(
+              leading: const Icon(Icons.star_rate),
+              title: const Text("Customer Reviews"),
+              selected: _selectedTabIndex == 5,
+              onTap: () { setState(() => _selectedTabIndex = 5); Navigator.pop(context); },
             ),
             const Divider(),
             ListTile(
