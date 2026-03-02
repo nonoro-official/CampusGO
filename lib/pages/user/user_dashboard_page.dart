@@ -4,7 +4,6 @@ import 'user_map_page.dart';
 import '../../services/auth_service.dart';
 import '../auth/login_page.dart';
 
-// NEW: Import the pages for the sidebar navigation
 import 'personal_details_page.dart';
 import 'order_history_page.dart';
 import 'saved_places_page.dart';
@@ -20,22 +19,23 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
   final AuthService _authService = AuthService();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  // State variables for our search and filters
   String searchQuery = "";
   String activeFilter = "All";
 
-  // The quick filters we want to show as pill buttons
-  final List<String> quickFilters = ["All", "Filipino", "Fast Food", "Cafe", "₱ (Budget)", "Free WiFi"];
+  final List<String> quickFilters = ["All", "Filipino", "Fast Food", "Cafe", "Budget", "Free WiFi"];
 
   void logout() async {
     bool? confirm = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (context) => AlertDialog(
         title: const Text("Logout"),
-        content: const Text("Are you sure?"),
+        content: const Text("Are you sure you want to sign out?"),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Cancel")),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text("Logout", style: TextStyle(color: Colors.red))),
+          TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text("Logout", style: TextStyle(color: Colors.red))
+          ),
         ],
       ),
     );
@@ -43,86 +43,87 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
     if (confirm == true) {
       await _authService.logout();
       if (!mounted) return;
-      Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const LoginPage()), (route) => false);
+      Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginPage()),
+              (route) => false
+      );
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
-    final String uidSnippet = user?.uid.substring(0, 8).toUpperCase() ?? "00000000";
-    final String userEmail = user?.email ?? "User";
+  Widget _drawerTile(IconData icon, String title, VoidCallback? onTap) {
+    return ListTile(
+      leading: Icon(icon, color: Colors.black87),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
+      onTap: onTap ?? () {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("$title coming soon!")));
+      },
+    );
+  }
 
-    return Scaffold(
-      key: _scaffoldKey,
-      drawer: _buildDrawer(userEmail, uidSnippet),
-      body: Stack(
+  Widget _buildDrawer(String email, String name) {
+    return Drawer(
+      child: Column(
         children: [
-          // 1. The Map (Now receives the search and filter data!)
-          UserMapPage(searchQuery: searchQuery, activeFilter: activeFilter),
-
-          // 2. The Floating Search & Filter Bar
-          Positioned(
-            top: 50,
-            left: 15,
-            right: 15,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          UserAccountsDrawerHeader(
+            decoration: const BoxDecoration(color: Color(0xFFE46A3E)),
+            accountName: Text(name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            accountEmail: Text(email, style: const TextStyle(color: Colors.white70)),
+            currentAccountPicture: const CircleAvatar(
+              backgroundColor: Colors.white,
+              child: Icon(Icons.person, color: Color(0xFFE46A3E), size: 40),
+            ),
+          ),
+          Container(
+            margin: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(colors: [Color(0xFFFFD700), Color(0xFFFFA500)]),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: ListTile(
+              leading: const Icon(Icons.workspace_premium, color: Colors.white),
+              title: const Text("Foodika PRO", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              onTap: () {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Premium coming soon!")));
+              },
+            ),
+          ),
+          Expanded(
+            child: ListView(
+              padding: EdgeInsets.zero,
               children: [
-                // Search Text Field
-                Container(
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(25),
-                    boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 8, offset: Offset(0, 3))],
-                  ),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.menu, color: Colors.black87),
-                        onPressed: () => _scaffoldKey.currentState?.openDrawer(),
-                      ),
-                      Expanded(
-                        child: TextField(
-                          onChanged: (val) => setState(() => searchQuery = val), // Updates map as you type
-                          decoration: const InputDecoration(hintText: "Search for restaurants...", border: InputBorder.none),
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.tune, color: Color(0xFFE46A3E)),
-                        onPressed: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Advanced filters coming soon!"))),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 10),
-
-                // Horizontal Filter Chips
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  // Hides the scrollbar for a cleaner look
-                  physics: const BouncingScrollPhysics(),
-                  child: Row(
-                    children: quickFilters.map((filter) {
-                      bool isSelected = activeFilter == filter;
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 8.0),
-                        child: ChoiceChip(
-                          label: Text(filter, style: TextStyle(color: isSelected ? Colors.white : Colors.black87, fontWeight: FontWeight.bold)),
-                          selected: isSelected,
-                          selectedColor: const Color(0xFFE46A3E),
-                          backgroundColor: Colors.white,
-                          showCheckmark: false,
-                          onSelected: (selected) {
-                            if (selected) setState(() => activeFilter = filter);
-                          },
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ),
+                _drawerTile(Icons.person_outline, "Personal Details", () {
+                  Navigator.pop(context);
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const PersonalDetailsPage()));
+                }),
+                _drawerTile(Icons.history, "Order History", () {
+                  Navigator.pop(context);
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const OrderHistoryPage()));
+                }),
+                _drawerTile(Icons.favorite_border, "Saved Places", () {
+                  Navigator.pop(context);
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const SavedPlacesPage()));
+                }),
+                const Divider(),
+                _drawerTile(Icons.settings_outlined, "Settings", null),
+                _drawerTile(Icons.help_outline, "Help & Support", null),
               ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: ElevatedButton.icon(
+              onPressed: logout,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red.shade700,
+                foregroundColor: Colors.white,
+                minimumSize: const Size(double.infinity, 50),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              icon: const Icon(Icons.logout),
+              label: const Text("Log Out"),
             ),
           ),
         ],
@@ -130,81 +131,73 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
     );
   }
 
-  Widget _buildDrawer(String email, String uidSnippet) {
-    return Drawer(
-      child: Column(
+  @override
+  Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+    final String displayName = user?.email?.split('@')[0].toUpperCase() ?? "GUEST";
+    final String userEmail = user?.email ?? "User";
+
+    return Scaffold(
+      key: _scaffoldKey,
+      drawer: _buildDrawer(userEmail, displayName),
+      // Fix: Combined 'extendBody' logic correctly within the Scaffold parameters
+      extendBodyBehindAppBar: true,
+      body: Stack(
         children: [
-          UserAccountsDrawerHeader(
-            decoration: const BoxDecoration(color: Color(0xFFE46A3E)),
-            accountName: Text(email.split('@')[0], style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            accountEmail: Text("UID: $uidSnippet", style: const TextStyle(color: Colors.white70, fontSize: 12)),
-            currentAccountPicture: const CircleAvatar(backgroundColor: Colors.white, child: Icon(Icons.person, color: Color(0xFFE46A3E), size: 40)),
-          ),
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFFFFD700), Color(0xFFFFA500)]), borderRadius: BorderRadius.circular(10)),
-            child: ListTile(
-              leading: const Icon(Icons.workspace_premium, color: Colors.white),
-              title: const Text("Upgrade to PRO", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-              subtitle: const Text("₱89/mo for exclusive perks", style: TextStyle(color: Colors.white70, fontSize: 12)),
-              onTap: () {
-                Navigator.pop(context); // Close the drawer first
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Premium Checkout UI coming soon!")));
-              },
+          UserMapPage(searchQuery: searchQuery, activeFilter: activeFilter),
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 10,
+            left: 15,
+            right: 15,
+            child: Column(
+              children: [
+                Container(
+                  height: 55,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(30),
+                    boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 5))],
+                  ),
+                  child: TextField(
+                    onChanged: (val) => setState(() => searchQuery = val),
+                    decoration: InputDecoration(
+                      hintText: "Search for food...",
+                      prefixIcon: IconButton(
+                        icon: const Icon(Icons.menu),
+                        onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+                      ),
+                      suffixIcon: const Icon(Icons.search, color: Color(0xFFE46A3E)),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: 40,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: quickFilters.length,
+                    itemBuilder: (context, index) {
+                      String filter = quickFilters[index];
+                      bool isSelected = activeFilter == filter;
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8.0),
+                        child: ChoiceChip(
+                          label: Text(filter),
+                          selected: isSelected,
+                          onSelected: (selected) => setState(() => activeFilter = filter),
+                          selectedColor: const Color(0xFFE46A3E),
+                          labelStyle: TextStyle(color: isSelected ? Colors.white : Colors.black),
+                          showCheckmark: false,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
-          const Divider(),
-          ListTile(
-              leading: const Icon(Icons.person_outline),
-              title: const Text("Personal Details"),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const PersonalDetailsPage()));
-              }
-          ),
-          ListTile(
-              leading: const Icon(Icons.history),
-              title: const Text("Order History"),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const OrderHistoryPage()));
-              }
-          ),
-          ListTile(
-              leading: const Icon(Icons.favorite_border),
-              title: const Text("Saved Places"),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const SavedPlacesPage()));
-              }
-          ),
-          ListTile(
-              leading: const Icon(Icons.settings),
-              title: const Text("Settings"),
-              onTap: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Settings coming soon!")));
-              }
-          ),
-          ListTile(
-              leading: const Icon(Icons.help_outline),
-              title: const Text("Help & Support"),
-              onTap: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Help & Support coming soon!")));
-              }
-          ),
-          const Spacer(),
-          Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: ElevatedButton.icon(
-              onPressed: logout,
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade700, foregroundColor: Colors.white, minimumSize: const Size(double.infinity, 50), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-              icon: const Icon(Icons.logout),
-              label: const Text("Log Out", style: TextStyle(fontSize: 16)),
-            ),
-          ),
-          const SizedBox(height: 10),
         ],
       ),
     );

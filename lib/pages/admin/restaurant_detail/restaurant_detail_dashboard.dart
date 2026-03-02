@@ -4,7 +4,7 @@ import 'history_tab.dart';
 import 'vouchers_tab.dart';
 import 'menu_tab.dart';
 import 'orders_tab.dart';
-import 'reviews_tab.dart'; // Import the new ReviewsTab
+import 'reviews_tab.dart';
 
 class RestaurantDetailDashboard extends StatefulWidget {
   final String restaurantId;
@@ -28,7 +28,6 @@ class _RestaurantDetailDashboardState extends State<RestaurantDetailDashboard> {
   @override
   void initState() {
     super.initState();
-    // Logic: Every tab must have a unique index (0 to 5)
     _tabs = [
       EditRestaurantTab(restaurantId: widget.restaurantId, data: widget.restaurantData), // 0
       MenuTab(restaurantId: widget.restaurantId),                                      // 1
@@ -85,7 +84,7 @@ class _RestaurantDetailDashboardState extends State<RestaurantDetailDashboard> {
               onTap: () { setState(() => _selectedTabIndex = 3); Navigator.pop(context); },
             ),
             ListTile(
-              leading: const Icon(Icons.receipt_long), // Using receipt icon for Orders
+              leading: const Icon(Icons.receipt_long),
               title: const Text("Live Orders"),
               selected: _selectedTabIndex == 4,
               onTap: () { setState(() => _selectedTabIndex = 4); Navigator.pop(context); },

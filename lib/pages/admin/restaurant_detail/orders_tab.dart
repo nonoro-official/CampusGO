@@ -19,9 +19,7 @@ class OrdersTab extends StatelessWidget {
         if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
         final orders = snapshot.data!.docs;
 
-        if (orders.isEmpty) {
-          return const Center(child: Text("No orders received yet."));
-        }
+        if (orders.isEmpty) return const Center(child: Text("No current orders."));
 
         return ListView.builder(
           padding: const EdgeInsets.all(10),
@@ -34,41 +32,40 @@ class OrdersTab extends StatelessWidget {
             bool isPaid = order['isPaid'] ?? false;
 
             return Card(
-              elevation: 3,
+              elevation: 4,
               margin: const EdgeInsets.only(bottom: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
               child: Padding(
-                padding: const EdgeInsets.all(12.0),
+                padding: const EdgeInsets.all(15.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text("Type: ${order['orderType'] ?? 'Dine-in'}",
-                            style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFE46A3E))),
+                        Text("${order['orderType']} ORDER",
+                            style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFE46A3E), fontSize: 16)),
                         Text(DateFormat('hh:mm a').format(date), style: const TextStyle(color: Colors.grey)),
                       ],
                     ),
-                    const Divider(),
-                    Text("Items: ${order['items']}", style: const TextStyle(fontSize: 16)),
-                    const SizedBox(height: 5),
-                    Text("Total: ₱${order['total']}", style: const TextStyle(fontWeight: FontWeight.bold)),
+                    const Divider(height: 20),
+                    Text("Items: ${order['items']}", style: const TextStyle(fontSize: 15)),
                     const SizedBox(height: 10),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: isPaid ? Colors.green.shade100 : Colors.red.shade100,
-                            borderRadius: BorderRadius.circular(5),
-                          ),
-                          child: Text(isPaid ? "PAID" : "UNPAID",
-                              style: TextStyle(color: isPaid ? Colors.green.shade800 : Colors.red.shade800, fontWeight: FontWeight.bold)),
-                        ),
+                        Text("Total: ₱${order['total']}", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                        Text(isPaid ? "PAID ✅" : "UNPAID ❌",
+                            style: TextStyle(color: isPaid ? Colors.green : Colors.red, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                    const SizedBox(height: 15),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text("Update Status:", style: TextStyle(fontWeight: FontWeight.w500)),
                         DropdownButton<String>(
                           value: status,
-                          underline: Container(),
                           onChanged: (String? newValue) {
                             FirebaseFirestore.instance
                                 .collection('restaurants')

@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'user_restaurant_detail_page.dart'; // Make sure this is imported!
+import 'user_restaurant_detail_page.dart';
 
-class UserMapPage extends StatelessWidget {
+class UserMapPage extends StatefulWidget {
+  // FIXED: Added these two named parameters to the constructor
   final String searchQuery;
   final String activeFilter;
 
@@ -14,147 +15,161 @@ class UserMapPage extends StatelessWidget {
     required this.activeFilter,
   });
 
-  void _showRestaurantPreview(BuildContext context, String id, Map<String, dynamic> data) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        String imageUrl = data['imageUrl'] ?? '';
-        String name = data['name'] ?? 'Unknown Restaurant';
-        String cuisine = data['cuisine'] ?? 'Various';
-        String price = data['priceRange'] ?? '₱';
-        String hours = data['operatingHours'] ?? 'Hours unlisted';
+  @override
+  State<UserMapPage> createState() => _UserMapPageState();
+}
 
-        return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-                child: imageUrl.isNotEmpty
-                    ? Image.network(imageUrl, height: 150, fit: BoxFit.cover)
-                    : Container(height: 120, color: Colors.grey.shade200, child: const Icon(Icons.restaurant, size: 50, color: Colors.grey)),
+class _UserMapPageState extends State<UserMapPage> {
+  List<Marker> markers = [];
+  final MapController _mapController = MapController();
+
+  @override
+  void initState() {
+    super.initState();
+    // We listen to the stream, but we will filter the results in the build logic
+    _listenToRestaurants();
+  }
+
+  void _listenToRestaurants() {
+    FirebaseFirestore.instance.collection('restaurants').snapshots().listen((snapshot) {
+      _updateMarkers(snapshot.docs);
+    });
+  }
+
+  void _updateMarkers(List<QueryDocumentSnapshot<Map<String, dynamic>>> docs) {
+    final newMarkers = docs.where((doc) {
+      final data = doc.data();
+      final String name = (data['name'] ?? '').toString().toLowerCase();
+      final String cuisine = (data['cuisine'] ?? '').toString();
+      final String priceRange = (data['priceRange'] ?? '').toString();
+
+      // 1. Search Filter Logic
+      bool matchesSearch = name.contains(widget.searchQuery.toLowerCase());
+
+      // 2. Category/Pill Filter Logic
+      bool matchesFilter = true;
+      if (widget.activeFilter != "All") {
+        if (widget.activeFilter == "Budget") {
+          matchesFilter = priceRange == "₱" || priceRange == "₱₱";
+        } else {
+          matchesFilter = cuisine == widget.activeFilter;
+        }
+      }
+
+      return matchesSearch && matchesFilter;
+    }).map((doc) {
+      final data = doc.data();
+      double lat = (data['latitude'] ?? 0.0).toDouble();
+      double lng = (data['longitude'] ?? 0.0).toDouble();
+      String name = data['name'] ?? 'Restaurant';
+      String imageUrl = data['imageUrl'] ?? '';
+      double avgRating = (data['avgRating'] ?? 0.0).toDouble();
+      int reviewCount = (data['reviewCount'] ?? 0).toInt();
+
+      return Marker(
+        point: LatLng(lat, lng),
+        width: 160,
+        height: 90,
+        child: GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => UserRestaurantDetailPage(
+                  restaurantId: doc.id,
+                  data: data,
+                ),
               ),
-              Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            );
+          },
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4)],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(name, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 5),
-                    Text("$cuisine • $price", style: TextStyle(fontSize: 14, color: Colors.grey.shade700, fontWeight: FontWeight.w500)),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        const Icon(Icons.access_time, size: 16, color: Color(0xFFE46A3E)),
-                        const SizedBox(width: 5),
-                        Text(hours, style: const TextStyle(fontSize: 14)),
-                      ],
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(5),
+                      child: (imageUrl.isNotEmpty)
+                          ? Image.network(imageUrl, width: 35, height: 35, fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => const Icon(Icons.restaurant, size: 25))
+                          : const Icon(Icons.restaurant, size: 25, color: Colors.grey),
                     ),
-                    const SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => UserRestaurantDetailPage(
-                              restaurantId: id,
-                              data: data,
-                            ),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            name,
+                            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFE46A3E),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 15),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          Row(
+                            children: [
+                              const Icon(Icons.star, color: Colors.amber, size: 12),
+                              Text(
+                                " $avgRating",
+                                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                              ),
+                              Text(
+                                " ($reviewCount)",
+                                style: const TextStyle(fontSize: 10, color: Colors.grey),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-                      child: const Center(child: Text("View Menu & Order", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold))),
                     ),
                   ],
                 ),
-              )
+              ),
+              const Icon(Icons.location_on, color: Color(0xFFE46A3E), size: 30),
             ],
           ),
-        );
-      },
-    );
+        ),
+      );
+    }).toList();
+
+    setState(() {
+      markers = newMarkers;
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant UserMapPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // This triggers when the user types in the search bar or changes a filter
+    if (oldWidget.searchQuery != widget.searchQuery || oldWidget.activeFilter != widget.activeFilter) {
+      FirebaseFirestore.instance.collection('restaurants').get().then((snapshot) {
+        _updateMarkers(snapshot.docs);
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance.collection("restaurants").snapshots(),
-      builder: (context, snapshot) {
-        // If loading, just show an empty map skeleton
-        if (!snapshot.hasData) {
-          return FlutterMap(
-            options: MapOptions(initialCenter: const LatLng(14.6291, 121.0419), initialZoom: 16.0),
-            children: [TileLayer(urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png')],
-          );
-        }
-
-        // 1. Filter the restaurants based on Search and Chips!
-        var filteredDocs = snapshot.data!.docs.where((doc) {
-          final data = doc.data() as Map<String, dynamic>;
-
-          if (!data.containsKey("latitude") || !data.containsKey("longitude")) return false;
-
-          // Search Bar Check
-          if (searchQuery.isNotEmpty) {
-            String name = (data['name'] ?? '').toString().toLowerCase();
-            if (!name.contains(searchQuery.toLowerCase())) return false;
-          }
-
-          // Filter Chip Check
-          if (activeFilter != "All") {
-            if (activeFilter == "Free WiFi") {
-              if (data['hasWiFi'] != true) return false;
-            } else if (activeFilter.startsWith("₱")) {
-              if (data['priceRange'] != activeFilter) return false;
-            } else {
-              if (data['cuisine'] != activeFilter) return false;
-            }
-          }
-
-          return true;
-        }).toList();
-
-        // 2. Generate the blue map pins from the filtered list
-        List<Marker> markers = filteredDocs.map((doc) {
-          final data = doc.data() as Map<String, dynamic>;
-          return Marker(
-            point: LatLng(data["latitude"], data["longitude"]),
-            width: 50,
-            height: 50,
-            child: GestureDetector(
-              onTap: () => _showRestaurantPreview(context, doc.id, data),
-              child: const Icon(Icons.location_on, color: Colors.blue, size: 40),
-            ),
-          );
-        }).toList();
-
-        // 3. Draw the map with only the matching pins
-        return FlutterMap(
-          options: MapOptions(
-            initialCenter: const LatLng(14.6291, 121.0419),
-            initialZoom: 16.0,
-            interactionOptions: const InteractionOptions(flags: InteractiveFlag.all & ~InteractiveFlag.rotate),
+    return Scaffold(
+      body: FlutterMap(
+        mapController: _mapController,
+        options: const MapOptions(
+          initialCenter: LatLng(14.6291, 121.0419),
+          initialZoom: 15.0,
+        ),
+        children: [
+          TileLayer(
+            urlTemplate: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
           ),
-          children: [
-            TileLayer(urlTemplate: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', userAgentPackageName: 'com.foodika.app'),
-            MarkerLayer(markers: markers),
-          ],
-        );
-      },
+          MarkerLayer(markers: markers),
+        ],
+      ),
     );
   }
 }
