@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../user/user_dashboard_page.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -38,7 +39,12 @@ class _RegisterPageState extends State<RegisterPage> {
         'createdAt': DateTime.now(),
       });
 
-      if (mounted) Navigator.pop(context);
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const UserDashboardPage()),
+        );
+      }
 
     } on FirebaseAuthException catch (e) {
       setState(() => errorMessage = e.message ?? "An error occurred.");

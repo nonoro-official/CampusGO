@@ -13,16 +13,23 @@ class CartProvider extends ChangeNotifier {
   final Map<String, CartItem> _items = {};
   double discountPercentage = 0.0;
   String? appliedVoucherCode;
+  String? currentRestaurantId; // NEW: Tracks where the cart belongs
 
   Map<String, CartItem> get items => _items;
-
   int get totalItems => _items.values.fold(0, (sum, item) => sum + item.quantity);
-
   double get subtotal => _items.values.fold(0, (sum, item) => sum + (item.price * item.quantity));
-
   double get total => subtotal * (1 - (discountPercentage / 100));
 
-  void addItem(String id, String name, double price) {
+  // NEW: Requires the restaurantId when adding an item
+  void addItem(String restaurantId, String id, String name, double price) {
+    // If they switched restaurants, empty the old cart automatically!
+    if (currentRestaurantId != null && currentRestaurantId != restaurantId) {
+      _items.clear();
+      discountPercentage = 0.0;
+      appliedVoucherCode = null;
+    }
+    currentRestaurantId = restaurantId;
+
     if (_items.containsKey(id)) {
       _items[id]!.quantity++;
     } else {
@@ -33,6 +40,7 @@ class CartProvider extends ChangeNotifier {
 
   void removeItem(String id) {
     _items.remove(id);
+    if (_items.isEmpty) currentRestaurantId = null; // Reset if empty
     notifyListeners();
   }
 
@@ -46,6 +54,7 @@ class CartProvider extends ChangeNotifier {
     _items.clear();
     discountPercentage = 0.0;
     appliedVoucherCode = null;
+    currentRestaurantId = null; // Reset tracking
     notifyListeners();
   }
 }

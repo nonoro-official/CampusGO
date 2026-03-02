@@ -51,6 +51,9 @@ class _UserMapPageState extends State<UserMapPage> {
       if (widget.activeFilter != "All") {
         if (widget.activeFilter == "Budget") {
           matchesFilter = priceRange == "₱" || priceRange == "₱₱";
+        } else if (widget.activeFilter == "Free WiFi") {
+          // ADDED THE WIFI CHECK!
+          matchesFilter = data['hasWiFi'] == true;
         } else {
           matchesFilter = cuisine == widget.activeFilter;
         }

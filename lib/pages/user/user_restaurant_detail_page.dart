@@ -20,7 +20,7 @@ class UserRestaurantDetailPage extends StatefulWidget {
 
 class _UserRestaurantDetailPageState extends State<UserRestaurantDetailPage> {
   bool isFavorite = false;
-  String selectedOrderType = "Dine-in"; // Added for Dine-in/Take-out
+  String selectedOrderType = "Dine-in"; // From the functional version
   final user = FirebaseAuth.instance.currentUser;
 
   @override
@@ -56,12 +56,13 @@ class _UserRestaurantDetailPageState extends State<UserRestaurantDetailPage> {
     }
   }
 
+  // FUNCTIONAL CHECKOUT: Includes the ToggleButtons and dual-database saving
   void _showRealCheckout(CartProvider cart) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (context) => StatefulBuilder( // Added to handle toggle state inside bottom sheet
+      builder: (context) => StatefulBuilder(
         builder: (context, setModalState) => Padding(
           padding: const EdgeInsets.all(20.0),
           child: Column(
@@ -106,17 +107,36 @@ class _UserRestaurantDetailPageState extends State<UserRestaurantDetailPage> {
                     'items': itemSummary,
                     'status': 'Pending',
                     'orderType': selectedOrderType,
-                    'isPaid': true, // Mock payment verification
+                    'isPaid': true,
                     'timestamp': FieldValue.serverTimestamp(),
                   };
 
-                  // 1. Add to User's History
-                  await FirebaseFirestore.instance.collection('users').doc(user?.uid).collection('orders').add(orderData);
+                  if (user != null) {
+                    // 1. Add to User's History
+                    await FirebaseFirestore.instance.collection('users').doc(user!.uid).collection('orders').add(orderData);
+                  }
 
-                  // 2. Add to Restaurant's Kitchen Queue
+                  // 2. Add to Restaurant's Kitchen Queue (For Admin Dashboard)
                   await FirebaseFirestore.instance.collection('restaurants').doc(widget.restaurantId).collection('orders').add(orderData);
 
-                  cart.clear();
+                  // 3. NEW: If they used a voucher, increment the claim count!
+                  if (cart.appliedVoucherCode != null) {
+                    var voucherQuery = await FirebaseFirestore.instance
+                        .collection('restaurants')
+                        .doc(widget.restaurantId)
+                        .collection('vouchers')
+                        .where('code', isEqualTo: cart.appliedVoucherCode)
+                        .limit(1)
+                        .get();
+
+                    if (voucherQuery.docs.isNotEmpty) {
+                      voucherQuery.docs.first.reference.update({
+                        'currentClaims': FieldValue.increment(1)
+                      });
+                    }
+                  }
+
+                  cart.clear(); // Clears cart after everything is saved
                   if (mounted) {
                     Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("🎉 Payment Verified! Order sent to Kitchen."), backgroundColor: Colors.green));
@@ -134,6 +154,16 @@ class _UserRestaurantDetailPageState extends State<UserRestaurantDetailPage> {
           ),
         ),
       ),
+    );
+  }
+
+  // HELPER FOR THE TAGS (Premium UI)
+  Widget _buildTag(String label) {
+    return Container(
+      margin: const EdgeInsets.only(right: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(color: Colors.grey.shade200, borderRadius: BorderRadius.circular(20)),
+      child: Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
     );
   }
 
@@ -187,14 +217,24 @@ class _UserRestaurantDetailPageState extends State<UserRestaurantDetailPage> {
                       if (widget.data['contactNumber'] != null) Text("📞 ${widget.data['contactNumber']}"),
                       const SizedBox(height: 10),
                       Text(widget.data['description'] ?? '', style: TextStyle(color: Colors.grey.shade700)),
+                      const SizedBox(height: 15),
+
+                      // THE RESTORED TAGS ROW
+                      Row(
+                        children: [
+                          if (widget.data['acceptsGCash'] == true) _buildTag("GCash"),
+                          if (widget.data['acceptsCards'] == true) _buildTag("Cards"),
+                          if (widget.data['hasWiFi'] == true) _buildTag("Free WiFi"),
+                        ],
+                      )
                     ],
                   ),
                 ),
               ),
-              const SliverPersistentHeader(
+              SliverPersistentHeader(
                 pinned: true,
                 delegate: _SliverAppBarDelegate(
-                  TabBar(
+                  const TabBar(
                     labelColor: Color(0xFFE46A3E),
                     indicatorColor: Color(0xFFE46A3E),
                     tabs: [Tab(icon: Icon(Icons.restaurant_menu), text: "Menu"), Tab(icon: Icon(Icons.local_offer), text: "Vouchers")],
@@ -214,24 +254,47 @@ class _UserRestaurantDetailPageState extends State<UserRestaurantDetailPage> {
     );
   }
 
+  // PREMIUM MENU TAB: Off-white cards + Functional Add to Cart
   Widget _buildMenuTab(CartProvider cart) {
     return StreamBuilder(
       stream: FirebaseFirestore.instance.collection('restaurants').doc(widget.restaurantId).collection('menu').orderBy('category').snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
         final items = snapshot.data!.docs;
+
+        if (items.isEmpty) return const Center(child: Text("No menu available."));
+
         return ListView.builder(
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.all(12),
           itemCount: items.length,
           itemBuilder: (context, index) {
-            var item = items[index].data();
+            var item = items[index].data() as Map<String, dynamic>;
+            String? img = item['imageUrl'];
+
             return Card(
+              margin: const EdgeInsets.only(bottom: 12),
+              color: const Color(0xFFF5F5F0),
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
               child: ListTile(
-                title: Text(item['name'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: Text("${item['category']} • ₱${item['price']}"),
+                contentPadding: const EdgeInsets.all(10),
+                leading: Container(
+                  width: 60, height: 60,
+                  decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(10)),
+                  child: img != null && img.isNotEmpty
+                      ? ClipRRect(borderRadius: BorderRadius.circular(10), child: Image.network(img, fit: BoxFit.cover))
+                      : const Icon(Icons.fastfood, size: 30, color: Colors.grey),
+                ),
+                title: Text(item['name'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                subtitle: Text("${item['category']} • ₱${item['price']}\n${item['description'] ?? ''}"),
+                isThreeLine: true,
                 trailing: IconButton(
-                  icon: const Icon(Icons.add_circle, color: Color(0xFFE46A3E), size: 30),
-                  onPressed: () => cart.addItem(items[index].id, item['name'], (item['price'] as num).toDouble()),
+                  icon: const Icon(Icons.add_circle, color: Color(0xFFE46A3E), size: 35),
+                  onPressed: () {
+                    // FIXED: Now passes the restaurantId so the cart knows where this food is from!
+                    cart.addItem(widget.restaurantId, items[index].id, item['name'], (item['price'] as num).toDouble());
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Added to order!"), duration: Duration(seconds: 1)));
+                  },
                 ),
               ),
             );
@@ -241,6 +304,7 @@ class _UserRestaurantDetailPageState extends State<UserRestaurantDetailPage> {
     );
   }
 
+  // HYBRID VOUCHERS TAB: Premium PRO Voucher + Real Math/Limits for regular vouchers
   Widget _buildVouchersTab(CartProvider cart) {
     return StreamBuilder(
       stream: FirebaseFirestore.instance.collection('restaurants').doc(widget.restaurantId).collection('vouchers').snapshots(),
@@ -250,19 +314,47 @@ class _UserRestaurantDetailPageState extends State<UserRestaurantDetailPage> {
         return ListView(
           padding: const EdgeInsets.all(12),
           children: [
+            // THE FAKE VIP UPSELL VOUCHER
+            Card(
+              elevation: 4,
+              color: const Color(0xFFFFF8E1),
+              shape: RoundedRectangleBorder(side: const BorderSide(color: Color(0xFFFFD700), width: 2), borderRadius: BorderRadius.circular(10)),
+              child: ListTile(
+                leading: const Icon(Icons.workspace_premium, color: Color(0xFFFFD700), size: 40),
+                title: const Text("Foodika PRO Exclusive", style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFB8860B))),
+                subtitle: const Text("Get 20% off your entire pre-order!"),
+                trailing: const Icon(Icons.lock, color: Colors.grey),
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Upgrade to Foodika PRO to unlock this voucher!")));
+                },
+              ),
+            ),
+            const SizedBox(height: 10),
+            const Divider(),
+            const SizedBox(height: 10),
+
+            // THE REAL VOUCHERS (With Premium Styling & Functional Limits)
+            if (vouchers.isEmpty) const Center(child: Text("No regular vouchers available.")),
             ...vouchers.map((v) {
-              int remaining = (v['maxClaims'] ?? 0) - (v['currentClaims'] ?? 0);
+              var data = v.data();
+              int remaining = (data['maxClaims'] ?? 0) - (data['currentClaims'] ?? 0);
               bool isAvailable = remaining > 0;
+
               return Card(
+                elevation: 0,
+                color: const Color(0xFFF5F5F0),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 child: ListTile(
-                  title: Text("${v['discount']}% OFF", style: TextStyle(fontWeight: FontWeight.bold, color: isAvailable ? Colors.black : Colors.grey)),
-                  subtitle: Text("Code: ${v['code']} • $remaining left"),
-                  trailing: ElevatedButton(
-                    onPressed: isAvailable ? () async {
-                      cart.applyVoucher(v['code'], (v['discount'] as num).toDouble());
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Voucher ${v['code']} applied!")));
+                  leading: const Icon(Icons.local_offer, color: Colors.green, size: 35),
+                  title: Text("${data['discount']}% OFF", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: isAvailable ? Colors.black : Colors.grey)),
+                  subtitle: Text("Code: ${data['code']} • $remaining left"),
+                  trailing: OutlinedButton(
+                    style: OutlinedButton.styleFrom(backgroundColor: Colors.white, foregroundColor: isAvailable ? Colors.black87 : Colors.grey),
+                    onPressed: isAvailable ? () {
+                      cart.applyVoucher(data['code'], (data['discount'] as num).toDouble());
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Voucher ${data['code']} applied to cart!")));
                     } : null,
-                    child: Text(isAvailable ? "Apply" : "Fully Claimed"),
+                    child: Text(isAvailable ? "Claim" : "Fully Claimed"),
                   ),
                 ),
               );
@@ -275,7 +367,7 @@ class _UserRestaurantDetailPageState extends State<UserRestaurantDetailPage> {
 }
 
 class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
-  const _SliverAppBarDelegate(this._tabBar);
+  _SliverAppBarDelegate(this._tabBar);
   final TabBar _tabBar;
   @override double get minExtent => _tabBar.preferredSize.height;
   @override double get maxExtent => _tabBar.preferredSize.height;

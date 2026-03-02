@@ -40,6 +40,14 @@ class RestaurantListPage extends StatelessWidget {
       final historySnapshot = await docRef.collection('history').get();
       for (var h in historySnapshot.docs) await h.reference.delete();
 
+      // NEW: Delete Live Orders
+      final orderSnapshot = await docRef.collection('orders').get();
+      for (var o in orderSnapshot.docs) await o.reference.delete();
+
+      // NEW: Delete Reviews
+      final reviewSnapshot = await docRef.collection('reviews').get();
+      for (var r in reviewSnapshot.docs) await r.reference.delete();
+
       // 4. Delete the Main Restaurant Image
       if (data.containsKey('imageUrl') && data['imageUrl'].toString().isNotEmpty) {
         try {
