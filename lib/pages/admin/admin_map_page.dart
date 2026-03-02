@@ -98,7 +98,8 @@ class _AdminMapPageState extends State<AdminMapPage> {
       ),
       children: [
         TileLayer(
-          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+          // Change from openstreetmap.org to CartoDB (highly recommended for developers)
+          urlTemplate: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
           userAgentPackageName: 'com.foodika.app',
         ),
         MarkerLayer(markers: markers),
