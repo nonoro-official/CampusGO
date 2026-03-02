@@ -6,8 +6,7 @@ import 'package:intl/intl.dart';
 class OrderHistoryPage extends StatelessWidget {
   const OrderHistoryPage({super.key});
 
-  // --- THE REVIEW DIALOG LOGIC WITH TRANSACTION ---
-  void _showReviewDialog(BuildContext context, String restaurantId, String restaurantName) {
+  void _showReviewDialog(BuildContext context, String restaurantId, String restaurantName, String orderId) {
     double selectedRating = 5;
     final commentController = TextEditingController();
     final user = FirebaseAuth.instance.currentUser;
@@ -82,10 +81,14 @@ class OrderHistoryPage extends StatelessWidget {
 
                     // 2. Update the main Restaurant document
                     transaction.update(restaurantRef, {
-                      'avgRating': double.parse(newAverage.toStringAsFixed(1)), // Format to 1 decimal, e.g., 4.8
+                      'avgRating': double.parse(newAverage.toStringAsFixed(1)),
                       'reviewCount': newReviewCount,
                       'totalRatingSum': newTotalRatingSum,
                     });
+
+                    // 3. NEW: Mark this specific order as rated so they can't spam!
+                    final userOrderRef = FirebaseFirestore.instance.collection('users').doc(user.uid).collection('orders').doc(orderId);
+                    transaction.update(userOrderRef, {'isRated': true});
                   });
 
                   if (context.mounted) {
@@ -138,8 +141,10 @@ class OrderHistoryPage extends StatelessWidget {
             itemCount: docs.length,
             itemBuilder: (context, index) {
               final order = docs[index].data();
+              final String orderId = docs[index].id;
               String status = order["status"] ?? 'Pending';
               bool isDone = status == "Done";
+              bool isRated = order['isRated'] ?? false;
               DateTime date = (order['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now();
 
               return Card(
@@ -186,13 +191,14 @@ class OrderHistoryPage extends StatelessWidget {
                               ),
                             ),
                           ),
-                          // ONLY SHOW REVIEW BUTTON IF ORDER IS DONE
-                          if (isDone)
+                          // ONLY SHOW REVIEW BUTTON IF ORDER IS DONE AND NOT RATED
+                          if (isDone && !isRated)
                             ElevatedButton.icon(
                               onPressed: () => _showReviewDialog(
                                   context,
                                   order['restaurantId'],
-                                  order['restaurantName']
+                                  order['restaurantName'],
+                                  orderId // Pass the ID here!
                               ),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.amber.shade700,
@@ -201,7 +207,9 @@ class OrderHistoryPage extends StatelessWidget {
                               ),
                               icon: const Icon(Icons.star, size: 16),
                               label: const Text("Rate Meal"),
-                            ),
+                            )
+                          else if (isDone && isRated)
+                            const Text("⭐ Rated", style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold, fontSize: 14)),
                         ],
                       )
                     ],

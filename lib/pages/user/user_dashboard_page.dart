@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'user_map_page.dart';
 import '../../services/auth_service.dart';
 import '../auth/login_page.dart';
@@ -62,18 +63,37 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
     );
   }
 
-  Widget _buildDrawer(String email, String name) {
+  Widget _buildDrawer(String email) {
+    final user = FirebaseAuth.instance.currentUser;
+
     return Drawer(
       child: Column(
         children: [
-          UserAccountsDrawerHeader(
-            decoration: const BoxDecoration(color: Color(0xFFE46A3E)),
-            accountName: Text(name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            accountEmail: Text(email, style: const TextStyle(color: Colors.white70)),
-            currentAccountPicture: const CircleAvatar(
-              backgroundColor: Colors.white,
-              child: Icon(Icons.person, color: Color(0xFFE46A3E), size: 40),
-            ),
+          // NEW: StreamBuilder listens to the database live!
+          StreamBuilder<DocumentSnapshot>(
+              stream: FirebaseFirestore.instance.collection('users').doc(user?.uid).snapshots(),
+              builder: (context, snapshot) {
+                // Default fallback is still the first half of the email
+                String displayName = email.split('@')[0].toUpperCase();
+
+                // If they saved a real name in the database, use that instead!
+                if (snapshot.hasData && snapshot.data!.exists) {
+                  var data = snapshot.data!.data() as Map<String, dynamic>?;
+                  if (data != null && data.containsKey('name') && data['name'].toString().trim().isNotEmpty) {
+                    displayName = data['name'].toString().toUpperCase();
+                  }
+                }
+
+                return UserAccountsDrawerHeader(
+                  decoration: const BoxDecoration(color: Color(0xFFE46A3E)),
+                  accountName: Text(displayName, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  accountEmail: Text(email, style: const TextStyle(color: Colors.white70)),
+                  currentAccountPicture: const CircleAvatar(
+                    backgroundColor: Colors.white,
+                    child: Icon(Icons.person, color: Color(0xFFE46A3E), size: 40),
+                  ),
+                );
+              }
           ),
           Container(
             margin: const EdgeInsets.all(12),
@@ -134,13 +154,11 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
-    final String displayName = user?.email?.split('@')[0].toUpperCase() ?? "GUEST";
-    final String userEmail = user?.email ?? "User";
+    final String userEmail = user?.email ?? "User"; // We only need the email now
 
     return Scaffold(
       key: _scaffoldKey,
-      drawer: _buildDrawer(userEmail, displayName),
-      // Fix: Combined 'extendBody' logic correctly within the Scaffold parameters
+      drawer: _buildDrawer(userEmail), // Only pass the email here
       extendBodyBehindAppBar: true,
       body: Stack(
         children: [
