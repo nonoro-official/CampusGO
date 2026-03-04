@@ -20,7 +20,7 @@ class UserRestaurantDetailPage extends StatefulWidget {
 
 class _UserRestaurantDetailPageState extends State<UserRestaurantDetailPage> {
   bool isFavorite = false;
-  String selectedOrderType = "Dine-in"; // From the functional version
+  String selectedOrderType = "Dine-in";
   final user = FirebaseAuth.instance.currentUser;
 
   @override
@@ -49,14 +49,16 @@ class _UserRestaurantDetailPageState extends State<UserRestaurantDetailPage> {
         'cuisine': widget.data['cuisine'],
         'priceRange': widget.data['priceRange'],
       });
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Added to Saved Places!")));
+      if(mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Added to Saved Places!")));
     } else {
       await favRef.delete();
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Removed from Saved Places.")));
+      if(mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Removed from Saved Places.")));
     }
   }
 
-  // FUNCTIONAL CHECKOUT: Includes the ToggleButtons and dual-database saving
+  // =========================================================================
+  // FIXED CHECKOUT FUNCTION
+  // =========================================================================
   void _showRealCheckout(CartProvider cart) {
     showModalBottomSheet(
       context: context,
@@ -78,16 +80,16 @@ class _UserRestaurantDetailPageState extends State<UserRestaurantDetailPage> {
               const Text("Select Service Type:", style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 10),
               ToggleButtons(
-                isSelected: [selectedOrderType == "Dine-in", selectedOrderType == "Take-out"],
+                isSelected: [selectedOrderType == "Dine-in", selectedOrderType == "Takeout"],
                 onPressed: (index) {
-                  setModalState(() => selectedOrderType = index == 0 ? "Dine-in" : "Take-out");
+                  setModalState(() => selectedOrderType = index == 0 ? "Dine-in" : "Takeout");
                 },
                 borderRadius: BorderRadius.circular(10),
                 selectedColor: Colors.white,
                 fillColor: const Color(0xFFE46A3E),
                 children: const [
                   Padding(padding: EdgeInsets.symmetric(horizontal: 20), child: Text("Dine-in")),
-                  Padding(padding: EdgeInsets.symmetric(horizontal: 20), child: Text("Take-out")),
+                  Padding(padding: EdgeInsets.symmetric(horizontal: 20), child: Text("Takeout")),
                 ],
               ),
               const SizedBox(height: 20),
@@ -99,27 +101,51 @@ class _UserRestaurantDetailPageState extends State<UserRestaurantDetailPage> {
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () async {
+                  if (user == null) return;
+
                   String itemSummary = cart.items.values.map((i) => "${i.quantity}x ${i.name}").join(", ");
+
+                  // 1. Generate ONE single Document ID to use for both databases
+                  String syncDocId = FirebaseFirestore.instance.collection('restaurants').doc().id;
+
+                  // 2. Fetch User's Display Name
+                  String userName = user!.email?.split('@')[0].toUpperCase() ?? "GUEST";
+                  var userDoc = await FirebaseFirestore.instance.collection('users').doc(user!.uid).get();
+                  if (userDoc.exists && userDoc.data()!.containsKey('name') && userDoc.data()!['name'].toString().trim().isNotEmpty) {
+                    userName = userDoc.data()!['name'];
+                  }
+
+                  // 3. Create the Complete Order Payload
                   var orderData = {
+                    'userId': user!.uid,
+                    'userName': userName,
                     'restaurantId': widget.restaurantId,
                     'restaurantName': widget.data['name'],
-                    'total': double.parse(cart.total.toStringAsFixed(2)),
+                    'totalAmount': double.parse(cart.total.toStringAsFixed(2)),
                     'items': itemSummary,
                     'status': 'Pending',
                     'orderType': selectedOrderType,
                     'isPaid': true,
+                    'isRated': false,
                     'timestamp': FieldValue.serverTimestamp(),
                   };
 
-                  if (user != null) {
-                    // 1. Add to User's History
-                    await FirebaseFirestore.instance.collection('users').doc(user!.uid).collection('orders').add(orderData);
-                  }
+                  // 4. Save to BOTH collections
+                  await FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(user!.uid)
+                      .collection('orders')
+                      .doc(syncDocId)
+                      .set(orderData);
 
-                  // 2. Add to Restaurant's Kitchen Queue (For Admin Dashboard)
-                  await FirebaseFirestore.instance.collection('restaurants').doc(widget.restaurantId).collection('orders').add(orderData);
+                  await FirebaseFirestore.instance
+                      .collection('restaurants')
+                      .doc(widget.restaurantId)
+                      .collection('orders')
+                      .doc(syncDocId)
+                      .set(orderData);
 
-                  // 3. NEW: If they used a voucher, increment the claim count!
+                  // 5. Increment Voucher Claims
                   if (cart.appliedVoucherCode != null) {
                     var voucherQuery = await FirebaseFirestore.instance
                         .collection('restaurants')
@@ -136,10 +162,12 @@ class _UserRestaurantDetailPageState extends State<UserRestaurantDetailPage> {
                     }
                   }
 
-                  cart.clear(); // Clears cart after everything is saved
+                  cart.clear();
+
                   if (mounted) {
                     Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("🎉 Payment Verified! Order sent to Kitchen."), backgroundColor: Colors.green));
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("🎉 Order Placed successfully!"), backgroundColor: Colors.green));
                   }
                 },
                 style: ElevatedButton.styleFrom(
@@ -157,7 +185,6 @@ class _UserRestaurantDetailPageState extends State<UserRestaurantDetailPage> {
     );
   }
 
-  // HELPER FOR THE TAGS (Premium UI)
   Widget _buildTag(String label) {
     return Container(
       margin: const EdgeInsets.only(right: 8),
@@ -173,10 +200,15 @@ class _UserRestaurantDetailPageState extends State<UserRestaurantDetailPage> {
     String imageUrl = widget.data['imageUrl'] ?? '';
     String name = widget.data['name'] ?? 'Unknown Restaurant';
 
+    // =========================================================================
+    // CART BUG FIX: Only show the cart button if it matches the current restaurant
+    // =========================================================================
+    bool showCartButton = cart.totalItems > 0 && cart.currentRestaurantId == widget.restaurantId;
+
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        floatingActionButton: cart.totalItems > 0
+        floatingActionButton: showCartButton
             ? FloatingActionButton.extended(
           onPressed: () => _showRealCheckout(cart),
           backgroundColor: const Color(0xFFE46A3E),
@@ -211,6 +243,29 @@ class _UserRestaurantDetailPageState extends State<UserRestaurantDetailPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // =========================================================================
+                      // NEW: Star Ratings display
+                      // =========================================================================
+                      if (widget.data['reviewCount'] != null && widget.data['reviewCount'] > 0)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 10.0),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.star, color: Colors.amber, size: 20),
+                              const SizedBox(width: 6),
+                              Text(
+                                "${(widget.data['avgRating'] ?? 0.0).toDouble().toStringAsFixed(1)}",
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                "(${widget.data['reviewCount']} reviews)",
+                                style: const TextStyle(color: Colors.grey, fontSize: 14),
+                              ),
+                            ],
+                          ),
+                        ),
+
                       Row(children: [const Icon(Icons.access_time, size: 16, color: Color(0xFFE46A3E)), const SizedBox(width: 5), Text(widget.data['operatingHours'] ?? 'Hours unlisted', style: const TextStyle(fontWeight: FontWeight.bold))]),
                       const SizedBox(height: 5),
                       Text("📍 ${widget.data['address'] ?? 'No address'}"),
@@ -219,7 +274,6 @@ class _UserRestaurantDetailPageState extends State<UserRestaurantDetailPage> {
                       Text(widget.data['description'] ?? '', style: TextStyle(color: Colors.grey.shade700)),
                       const SizedBox(height: 15),
 
-                      // THE RESTORED TAGS ROW
                       Row(
                         children: [
                           if (widget.data['acceptsGCash'] == true) _buildTag("GCash"),
@@ -254,7 +308,6 @@ class _UserRestaurantDetailPageState extends State<UserRestaurantDetailPage> {
     );
   }
 
-  // PREMIUM MENU TAB: Off-white cards + Functional Add to Cart
   Widget _buildMenuTab(CartProvider cart) {
     return StreamBuilder(
       stream: FirebaseFirestore.instance.collection('restaurants').doc(widget.restaurantId).collection('menu').orderBy('category').snapshots(),
@@ -291,7 +344,6 @@ class _UserRestaurantDetailPageState extends State<UserRestaurantDetailPage> {
                 trailing: IconButton(
                   icon: const Icon(Icons.add_circle, color: Color(0xFFE46A3E), size: 35),
                   onPressed: () {
-                    // FIXED: Now passes the restaurantId so the cart knows where this food is from!
                     cart.addItem(widget.restaurantId, items[index].id, item['name'], (item['price'] as num).toDouble());
                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Added to order!"), duration: Duration(seconds: 1)));
                   },
@@ -304,7 +356,6 @@ class _UserRestaurantDetailPageState extends State<UserRestaurantDetailPage> {
     );
   }
 
-  // HYBRID VOUCHERS TAB: Premium PRO Voucher + Real Math/Limits for regular vouchers
   Widget _buildVouchersTab(CartProvider cart) {
     return StreamBuilder(
       stream: FirebaseFirestore.instance.collection('restaurants').doc(widget.restaurantId).collection('vouchers').snapshots(),
@@ -314,7 +365,6 @@ class _UserRestaurantDetailPageState extends State<UserRestaurantDetailPage> {
         return ListView(
           padding: const EdgeInsets.all(12),
           children: [
-            // THE FAKE VIP UPSELL VOUCHER
             Card(
               elevation: 4,
               color: const Color(0xFFFFF8E1),
@@ -333,10 +383,9 @@ class _UserRestaurantDetailPageState extends State<UserRestaurantDetailPage> {
             const Divider(),
             const SizedBox(height: 10),
 
-            // THE REAL VOUCHERS (With Premium Styling & Functional Limits)
             if (vouchers.isEmpty) const Center(child: Text("No regular vouchers available.")),
             ...vouchers.map((v) {
-              var data = v.data();
+              var data = v.data() as Map<String, dynamic>;
               int remaining = (data['maxClaims'] ?? 0) - (data['currentClaims'] ?? 0);
               bool isAvailable = remaining > 0;
 

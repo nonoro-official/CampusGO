@@ -69,14 +69,11 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
     return Drawer(
       child: Column(
         children: [
-          // NEW: StreamBuilder listens to the database live!
           StreamBuilder<DocumentSnapshot>(
               stream: FirebaseFirestore.instance.collection('users').doc(user?.uid).snapshots(),
               builder: (context, snapshot) {
-                // Default fallback is still the first half of the email
                 String displayName = email.split('@')[0].toUpperCase();
 
-                // If they saved a real name in the database, use that instead!
                 if (snapshot.hasData && snapshot.data!.exists) {
                   var data = snapshot.data!.data() as Map<String, dynamic>?;
                   if (data != null && data.containsKey('name') && data['name'].toString().trim().isNotEmpty) {
@@ -154,11 +151,11 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
-    final String userEmail = user?.email ?? "User"; // We only need the email now
+    final String userEmail = user?.email ?? "User";
 
     return Scaffold(
       key: _scaffoldKey,
-      drawer: _buildDrawer(userEmail), // Only pass the email here
+      drawer: _buildDrawer(userEmail),
       extendBodyBehindAppBar: true,
       body: Stack(
         children: [
@@ -216,7 +213,281 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
               ],
             ),
           ),
+          const Positioned(
+            bottom: 30,
+            left: 15,
+            right: 15,
+            child: ActiveOrderTracker(),
+          ),
         ],
+      ),
+    );
+  }
+}
+
+// ============================================================================
+// WIDGET: Floating Active Order Tracker
+// ============================================================================
+class ActiveOrderTracker extends StatelessWidget {
+  const ActiveOrderTracker({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return const SizedBox.shrink();
+
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('orders')
+          .where('status', whereIn: ['Pending', 'Preparing'])
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        var activeOrderDoc = snapshot.data!.docs.first;
+        var activeOrder = activeOrderDoc.data() as Map<String, dynamic>;
+        String status = activeOrder['status'] ?? 'Pending';
+        String restaurantName = activeOrder['restaurantName'] ?? 'Restaurant';
+
+        double progress = status == 'Preparing' ? 0.7 : 0.3;
+        Color statusColor = status == 'Preparing' ? Colors.orange : Colors.blue;
+
+        return GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ActiveOrderDetailScreen(
+                  orderData: activeOrder,
+                  orderId: activeOrderDoc.id,
+                ),
+              ),
+            );
+          },
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(15),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.15),
+                  blurRadius: 15,
+                  spreadRadius: 2,
+                  offset: const Offset(0, 5),
+                )
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Order from $restaurantName",
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                              "Status: $status (Tap for details)",
+                              style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 13)
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE46A3E).withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.delivery_dining, color: Color(0xFFE46A3E), size: 30),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 15),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    backgroundColor: Colors.grey.shade200,
+                    color: statusColor,
+                    minHeight: 8,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ============================================================================
+// SCREEN: Active Order Details (With Cancel Functionality)
+// ============================================================================
+class ActiveOrderDetailScreen extends StatelessWidget {
+  final Map<String, dynamic> orderData;
+  final String orderId;
+
+  const ActiveOrderDetailScreen({super.key, required this.orderData, required this.orderId});
+
+  Future<void> _cancelOrder(BuildContext context) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Cancel Order", style: TextStyle(color: Colors.red)),
+        content: const Text("Are you sure you want to cancel this order? This cannot be undone."),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Keep Order", style: TextStyle(color: Colors.grey))),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            child: const Text("Yes, Cancel"),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      try {
+        String restaurantId = orderData['restaurantId'];
+
+        // 1. Update User's Database
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .collection('orders')
+            .doc(orderId)
+            .update({'status': 'Cancelled'});
+
+        // 2. Update Restaurant's Database
+        await FirebaseFirestore.instance
+            .collection('restaurants')
+            .doc(restaurantId)
+            .collection('orders')
+            .doc(orderId)
+            .update({'status': 'Cancelled'});
+
+        if (context.mounted) {
+          Navigator.pop(context); // Close the detail screen
+          ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Order cancelled successfully."), backgroundColor: Colors.red)
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error cancelling order: $e")));
+        }
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    String status = orderData['status'] ?? 'Pending';
+    Color statusColor = status == 'Preparing' ? Colors.orange : Colors.blue;
+    double progress = status == 'Preparing' ? 0.7 : 0.3;
+
+    // Check if the order can still be cancelled
+    bool canCancel = status == 'Pending';
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Order Details"),
+        backgroundColor: const Color(0xFFE46A3E),
+        foregroundColor: Colors.white,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Column(
+                children: [
+                  Icon(Icons.fastfood, size: 80, color: statusColor),
+                  const SizedBox(height: 10),
+                  Text(status.toUpperCase(), style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: statusColor)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            LinearProgressIndicator(value: progress, color: statusColor, minHeight: 10, backgroundColor: Colors.grey.shade300),
+            const SizedBox(height: 30),
+            const Text("Order Information", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.store),
+              title: const Text("Restaurant"),
+              subtitle: Text(orderData['restaurantName'] ?? 'Unknown'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.receipt),
+              title: const Text("Order ID"),
+              subtitle: Text(orderId),
+            ),
+            ListTile(
+              leading: const Icon(Icons.shopping_bag),
+              title: const Text("Order Type"),
+              subtitle: Text(orderData['orderType'] ?? 'Dine-in'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.payments),
+              title: const Text("Total Amount"),
+              subtitle: Text("₱${(orderData['totalAmount'] ?? 0.0).toStringAsFixed(2)}", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
+            ),
+            const Spacer(),
+
+            // Cancel Button (Only visible if Pending)
+            if (canCancel)
+              Container(
+                width: double.infinity,
+                margin: const EdgeInsets.only(bottom: 12),
+                height: 50,
+                child: OutlinedButton.icon(
+                  onPressed: () => _cancelOrder(context),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.red,
+                    side: const BorderSide(color: Colors.red, width: 2),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  icon: const Icon(Icons.cancel),
+                  label: const Text("Cancel Order", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                ),
+              ),
+
+            // Back Button
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.grey.shade200,
+                    foregroundColor: Colors.black,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))
+                ),
+                child: const Text("Back to Map", style: TextStyle(fontSize: 16)),
+              ),
+            )
+          ],
+        ),
       ),
     );
   }
