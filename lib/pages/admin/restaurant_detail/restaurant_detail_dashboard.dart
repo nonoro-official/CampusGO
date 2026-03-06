@@ -5,6 +5,7 @@ import 'vouchers_tab.dart';
 import 'menu_tab.dart';
 import 'orders_tab.dart';
 import 'reviews_tab.dart';
+import 'insights_tab.dart';
 
 class RestaurantDetailDashboard extends StatefulWidget {
   final String restaurantId;
@@ -35,6 +36,7 @@ class _RestaurantDetailDashboardState extends State<RestaurantDetailDashboard> {
       VouchersTab(restaurantId: widget.restaurantId),                                  // 3
       OrdersTab(restaurantId: widget.restaurantId),                                    // 4
       ReviewsTab(restaurantId: widget.restaurantId),                                   // 5
+      InsightsTab(restaurantId: widget.restaurantId),                                  // 6
     ];
   }
 
@@ -94,6 +96,12 @@ class _RestaurantDetailDashboardState extends State<RestaurantDetailDashboard> {
               title: const Text("Customer Reviews"),
               selected: _selectedTabIndex == 5,
               onTap: () { setState(() => _selectedTabIndex = 5); Navigator.pop(context); },
+            ),
+            ListTile(
+              leading: const Icon(Icons.insert_chart_outlined_outlined),
+              title: const Text("Insights"),
+              selected: _selectedTabIndex == 6,
+              onTap: () { setState(() => _selectedTabIndex = 6); Navigator.pop(context); },
             ),
             const Divider(),
             ListTile(

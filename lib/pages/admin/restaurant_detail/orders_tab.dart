@@ -6,6 +6,7 @@ class OrdersTab extends StatelessWidget {
   final String restaurantId;
   const OrdersTab({super.key, required this.restaurantId});
 
+  // Sticks to your original naming and refund logic
   Future<void> _updateOrderStatus(BuildContext context, String docId, Map<String, dynamic> order, String newStatus) async {
     bool? confirm = await showDialog<bool>(
       context: context,
@@ -13,10 +14,7 @@ class OrdersTab extends StatelessWidget {
         title: const Text("Update Order Status"),
         content: Text("Are you sure you want to change the status to '$newStatus'?"),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Cancel", style: TextStyle(color: Colors.grey))),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFE46A3E), foregroundColor: Colors.white),
@@ -31,33 +29,31 @@ class OrdersTab extends StatelessWidget {
     try {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Updating status..."), duration: Duration(seconds: 1)));
 
-      await FirebaseFirestore.instance
-          .collection('restaurants')
-          .doc(restaurantId)
-          .collection('orders')
-          .doc(docId)
-          .update({'status': newStatus});
+      // 1. Update Admin Side
+      await FirebaseFirestore.instance.collection('restaurants').doc(restaurantId).collection('orders').doc(docId).update({'status': newStatus});
 
       String? userId = order['userId'];
       if (userId != null && userId.isNotEmpty) {
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(userId)
-            .collection('orders')
-            .doc(docId)
-            .update({'status': newStatus});
+        // 2. Update User Side (Synced)
+        await FirebaseFirestore.instance.collection('users').doc(userId).collection('orders').doc(docId).update({'status': newStatus});
 
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Status updated for both Admin and User!"), backgroundColor: Colors.green)
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("Warning: 'userId' is missing in this order. The user's app will NOT be updated!"),
-              backgroundColor: Colors.red,
-              duration: Duration(seconds: 5),
-            )
-        );
+        // ECONOMY REFUND LOGIC
+        if (newStatus == 'Cancelled') {
+          int pointCost = order['appliedVoucherCost'] ?? 0;
+          String? voucherCode = order['appliedVoucherCode'];
+
+          if (pointCost > 0) {
+            await FirebaseFirestore.instance.collection('users').doc(userId).update({'points': FieldValue.increment(pointCost)});
+          }
+          if (voucherCode != null) {
+            var voucherQuery = await FirebaseFirestore.instance.collection('restaurants').doc(restaurantId).collection('vouchers').where('code', isEqualTo: voucherCode).limit(1).get();
+            if (voucherQuery.docs.isNotEmpty) {
+              voucherQuery.docs.first.reference.update({'currentClaims': FieldValue.increment(-1)});
+            }
+          }
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Status updated for both Admin and User!"), backgroundColor: Colors.green));
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red));
@@ -87,9 +83,6 @@ class OrdersTab extends StatelessWidget {
             var docId = orders[index].id;
             DateTime date = (order['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now();
             String status = order['status'] ?? 'Pending';
-            bool isPaid = order['isPaid'] ?? false;
-
-            // NEW: Fetch the orderType (Fallback to 'Dine-in' if missing)
             String orderType = order['orderType'] ?? 'Dine-in';
 
             return Card(
@@ -104,92 +97,44 @@ class OrdersTab extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text("Order ID: ${docId.substring(0, 8)}", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                        Text(DateFormat('MMM dd, yyyy - hh:mm a').format(date), style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                        Text("ORDER #${docId.substring(0, 5).toUpperCase()}", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                        Text(DateFormat('MMM dd, hh:mm a').format(date), style: const TextStyle(color: Colors.grey, fontSize: 12)),
                       ],
                     ),
                     const Divider(height: 20),
-
-                    // NEW: Display Customer Name alongside the Order Type Badge
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text("Customer: ${order['userName'] ?? 'Guest'}", style: const TextStyle(fontSize: 15)),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                          decoration: BoxDecoration(
-                            // Purple for Takeout, Blue for Dine-in
-                              color: orderType == 'Takeout' ? Colors.purple.shade50 : Colors.blue.shade50,
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color: orderType == 'Takeout' ? Colors.purple.shade200 : Colors.blue.shade200,
-                              )
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                  orderType == 'Takeout' ? Icons.shopping_bag_outlined : Icons.restaurant,
-                                  size: 16,
-                                  color: orderType == 'Takeout' ? Colors.purple.shade700 : Colors.blue.shade700
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                  orderType,
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: orderType == 'Takeout' ? Colors.purple.shade700 : Colors.blue.shade700
-                                  )
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-
-                    Text("Total: ₱${order['totalAmount']?.toStringAsFixed(2) ?? '0.00'}", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.green)),
+                    Text("Customer: ${order['userName'] ?? 'Guest'}", style: const TextStyle(fontSize: 15)),
                     const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        const Text("Payment: "),
-                        Text(isPaid ? "Paid" : "Pending", style: TextStyle(color: isPaid ? Colors.green : Colors.red, fontWeight: FontWeight.bold)),
-                      ],
-                    ),
+                    Text("Total: ₱${(order['totalAmount'] ?? 0.0).toStringAsFixed(2)}", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
                     const SizedBox(height: 15),
+
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text("Update Status:", style: TextStyle(fontWeight: FontWeight.w500)),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey.shade300),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<String>(
-                              value: status,
-                              icon: const Icon(Icons.arrow_drop_down, color: Color(0xFFE46A3E)),
-                              onChanged: (String? newValue) {
-                                if (newValue != null && newValue != status) {
-                                  _updateOrderStatus(context, docId, order, newValue);
-                                }
-                              },
-                              items: <String>['Pending', 'Preparing', 'Done', 'Cancelled']
-                                  .map<DropdownMenuItem<String>>((String value) {
-                                return DropdownMenuItem<String>(
-                                  value: value,
-                                  child: Text(value, style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: value == 'Done' ? Colors.green : (value == 'Cancelled' ? Colors.red : Colors.orange)
-                                  )),
-                                );
-                              }).toList(),
+                        if (status == 'Pending')
+                          Expanded(
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                              onPressed: () => _updateOrderStatus(context, docId, order, 'Preparing'),
+                              child: const Text("Accept Order", style: TextStyle(color: Colors.white)),
                             ),
                           ),
-                        ),
+                        if (status == 'Preparing')
+                          Expanded(
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                              onPressed: () => _updateOrderStatus(context, docId, order, 'Done'),
+                              child: const Text("Mark as Ready", style: TextStyle(color: Colors.white)),
+                            ),
+                          ),
+                        if (status != 'Done' && status != 'Cancelled') ...[
+                          const SizedBox(width: 10),
+                          OutlinedButton(
+                            style: OutlinedButton.styleFrom(foregroundColor: Colors.red, side: const BorderSide(color: Colors.red)),
+                            onPressed: () => _updateOrderStatus(context, docId, order, 'Cancelled'),
+                            child: const Icon(Icons.close, size: 20),
+                          ),
+                        ],
+                        if (status == 'Done') const Expanded(child: Center(child: Text("✅ Order Completed", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)))),
+                        if (status == 'Cancelled') const Expanded(child: Center(child: Text("❌ Order Cancelled", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)))),
                       ],
                     ),
                   ],

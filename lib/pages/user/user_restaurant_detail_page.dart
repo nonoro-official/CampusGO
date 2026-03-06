@@ -20,6 +20,7 @@ class UserRestaurantDetailPage extends StatefulWidget {
 
 class _UserRestaurantDetailPageState extends State<UserRestaurantDetailPage> {
   bool isFavorite = false;
+  bool hasShared = false;
   String selectedOrderType = "Dine-in";
   final user = FirebaseAuth.instance.currentUser;
 
@@ -27,12 +28,20 @@ class _UserRestaurantDetailPageState extends State<UserRestaurantDetailPage> {
   void initState() {
     super.initState();
     _checkIfFavorite();
+    _checkIfShared();
   }
 
   void _checkIfFavorite() async {
     if (user != null) {
       var doc = await FirebaseFirestore.instance.collection('users').doc(user!.uid).collection('favorites').doc(widget.restaurantId).get();
-      setState(() => isFavorite = doc.exists);
+      if (mounted) setState(() => isFavorite = doc.exists);
+    }
+  }
+
+  void _checkIfShared() async {
+    if (user != null) {
+      var doc = await FirebaseFirestore.instance.collection('users').doc(user!.uid).collection('shared_logs').doc(widget.restaurantId).get();
+      if (mounted) setState(() => hasShared = doc.exists);
     }
   }
 
@@ -40,147 +49,286 @@ class _UserRestaurantDetailPageState extends State<UserRestaurantDetailPage> {
     if (user == null) return;
     final favRef = FirebaseFirestore.instance.collection('users').doc(user!.uid).collection('favorites').doc(widget.restaurantId);
 
-    setState(() => isFavorite = !isFavorite);
-
     if (isFavorite) {
-      await favRef.set({
-        'name': widget.data['name'],
-        'imageUrl': widget.data['imageUrl'],
-        'cuisine': widget.data['cuisine'],
-        'priceRange': widget.data['priceRange'],
-      });
-      if(mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Added to Saved Places!")));
-    } else {
       await favRef.delete();
-      if(mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Removed from Saved Places.")));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Removed from saved places.")));
+    } else {
+      await favRef.set(widget.data);
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Added to saved places!"), backgroundColor: Colors.green));
     }
+    setState(() => isFavorite = !isFavorite);
   }
 
-  // =========================================================================
-  // FIXED CHECKOUT FUNCTION
-  // =========================================================================
+  void _showShareDialog() {
+    showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+            title: Text(hasShared ? "Share with Friends!" : "Earn Points!", style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFE46A3E))),
+            content: Text(hasShared
+                ? "Share this hidden gem to TikTok or Instagram!\n\n(You've already claimed your +10 points for this restaurant.)"
+                : "Share this hidden gem to TikTok or Instagram to earn +10 Foodika Points!"),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel", style: TextStyle(color: Colors.grey))),
+              ElevatedButton.icon(
+                onPressed: () async {
+                  bool pointsAwarded = false;
+
+                  if (!hasShared && user != null) {
+                    await FirebaseFirestore.instance.collection('users').doc(user!.uid).set({
+                      'points': FieldValue.increment(10)
+                    }, SetOptions(merge: true));
+
+                    await FirebaseFirestore.instance.collection('users').doc(user!.uid).collection('shared_logs').doc(widget.restaurantId).set({
+                      'sharedAt': FieldValue.serverTimestamp()
+                    });
+
+                    pointsAwarded = true;
+                    if (mounted) setState(() => hasShared = true);
+                  }
+
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                            content: Text(pointsAwarded ? "🎉 +10 Points added for sharing!" : "🎉 Shared successfully!"),
+                            backgroundColor: Colors.green
+                        )
+                    );
+                  }
+                },
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent, foregroundColor: Colors.white),
+                icon: const Icon(Icons.ios_share, size: 18),
+                label: const Text("Share Now"),
+              )
+            ]
+        )
+    );
+  }
+
   void _showRealCheckout(CartProvider cart) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (context) => StatefulBuilder(
-        builder: (context, setModalState) => Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text("Your Pre-Order", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-              const Divider(),
-              ...cart.items.values.map((item) => ListTile(
-                title: Text(item.name),
-                trailing: Text("${item.quantity}x ₱${item.price}"),
-              )),
-              const Divider(),
-              const Text("Select Service Type:", style: TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 10),
-              ToggleButtons(
-                isSelected: [selectedOrderType == "Dine-in", selectedOrderType == "Takeout"],
-                onPressed: (index) {
-                  setModalState(() => selectedOrderType = index == 0 ? "Dine-in" : "Takeout");
-                },
-                borderRadius: BorderRadius.circular(10),
-                selectedColor: Colors.white,
-                fillColor: const Color(0xFFE46A3E),
-                children: const [
-                  Padding(padding: EdgeInsets.symmetric(horizontal: 20), child: Text("Dine-in")),
-                  Padding(padding: EdgeInsets.symmetric(horizontal: 20), child: Text("Takeout")),
-                ],
-              ),
-              const SizedBox(height: 20),
-              if (cart.discountPercentage > 0)
-                Text("Discount: -${cart.discountPercentage.toInt()}% (${cart.appliedVoucherCode})",
-                    style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
-              Text("Total: ₱${cart.total.toStringAsFixed(2)}",
-                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFFE46A3E))),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () async {
-                  if (user == null) return;
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return StatefulBuilder(builder: (context, setModalState) {
+          return Container(
+            height: MediaQuery.of(context).size.height * 0.85,
+            padding: const EdgeInsets.all(20),
+            decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text("Order Summary", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                const Divider(),
 
-                  String itemSummary = cart.items.values.map((i) => "${i.quantity}x ${i.name}").join(", ");
-
-                  // 1. Generate ONE single Document ID to use for both databases
-                  String syncDocId = FirebaseFirestore.instance.collection('restaurants').doc().id;
-
-                  // 2. Fetch User's Display Name
-                  String userName = user!.email?.split('@')[0].toUpperCase() ?? "GUEST";
-                  var userDoc = await FirebaseFirestore.instance.collection('users').doc(user!.uid).get();
-                  if (userDoc.exists && userDoc.data()!.containsKey('name') && userDoc.data()!['name'].toString().trim().isNotEmpty) {
-                    userName = userDoc.data()!['name'];
-                  }
-
-                  // 3. Create the Complete Order Payload
-                  var orderData = {
-                    'userId': user!.uid,
-                    'userName': userName,
-                    'restaurantId': widget.restaurantId,
-                    'restaurantName': widget.data['name'],
-                    'totalAmount': double.parse(cart.total.toStringAsFixed(2)),
-                    'items': itemSummary,
-                    'status': 'Pending',
-                    'orderType': selectedOrderType,
-                    'isPaid': true,
-                    'isRated': false,
-                    'timestamp': FieldValue.serverTimestamp(),
-                  };
-
-                  // 4. Save to BOTH collections
-                  await FirebaseFirestore.instance
-                      .collection('users')
-                      .doc(user!.uid)
-                      .collection('orders')
-                      .doc(syncDocId)
-                      .set(orderData);
-
-                  await FirebaseFirestore.instance
-                      .collection('restaurants')
-                      .doc(widget.restaurantId)
-                      .collection('orders')
-                      .doc(syncDocId)
-                      .set(orderData);
-
-                  // 5. Increment Voucher Claims
-                  if (cart.appliedVoucherCode != null) {
-                    var voucherQuery = await FirebaseFirestore.instance
-                        .collection('restaurants')
-                        .doc(widget.restaurantId)
-                        .collection('vouchers')
-                        .where('code', isEqualTo: cart.appliedVoucherCode)
-                        .limit(1)
-                        .get();
-
-                    if (voucherQuery.docs.isNotEmpty) {
-                      voucherQuery.docs.first.reference.update({
-                        'currentClaims': FieldValue.increment(1)
-                      });
-                    }
-                  }
-
-                  cart.clear();
-
-                  if (mounted) {
-                    Navigator.pop(context);
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("🎉 Order Placed successfully!"), backgroundColor: Colors.green));
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  minimumSize: const Size(double.infinity, 50),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    ChoiceChip(
+                      label: const Text("Dine-in"),
+                      selected: selectedOrderType == "Dine-in",
+                      onSelected: (val) { if (val) setModalState(() => selectedOrderType = "Dine-in"); },
+                      selectedColor: const Color(0xFFE46A3E),
+                      labelStyle: TextStyle(color: selectedOrderType == "Dine-in" ? Colors.white : Colors.black),
+                    ),
+                    ChoiceChip(
+                      label: const Text("Take-out"),
+                      selected: selectedOrderType == "Take-out",
+                      onSelected: (val) { if (val) setModalState(() => selectedOrderType = "Take-out"); },
+                      selectedColor: const Color(0xFFE46A3E),
+                      labelStyle: TextStyle(color: selectedOrderType == "Take-out" ? Colors.white : Colors.black),
+                    ),
+                  ],
                 ),
-                child: const Text("PAY NOW & PLACE ORDER", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 10),
+
+                Expanded(
+                  child: ListView(
+                    children: cart.items.values.map((item) => ListTile(
+                      title: Text(item.name),
+                      trailing: Text("₱${(item.price * item.quantity).toStringAsFixed(2)}"),
+                      leading: CircleAvatar(backgroundColor: Colors.orange.shade100, child: Text("${item.quantity}x", style: const TextStyle(color: Colors.orange))),
+                    )).toList(),
+                  ),
+                ),
+                const Divider(),
+                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text("Subtotal"), Text("₱${cart.subtotal.toStringAsFixed(2)}")]),
+                if (cart.discountPercentage > 0)
+                  Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text("Discount", style: TextStyle(color: Colors.green)), Text("- ₱${(cart.subtotal - cart.total).toStringAsFixed(2)}", style: const TextStyle(color: Colors.green))]),
+                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text("Total", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)), Text("₱${cart.total.toStringAsFixed(2)}", style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFFE46A3E)))]),
+                const SizedBox(height: 20),
+
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      if (user == null) return;
+
+                      // ========================================================
+                      // THE MASTER ORDER ID FIX
+                      // ========================================================
+                      // Generate ONE single ID so the databases are perfectly synced
+                      final String masterOrderId = FirebaseFirestore.instance.collection('users').doc(user!.uid).collection('orders').doc().id;
+
+                      final orderData = {
+                        'orderId': masterOrderId,
+                        'userId': user!.uid,
+                        'userName': user!.email?.split('@')[0] ?? 'Guest',
+                        'restaurantId': widget.restaurantId,
+                        'restaurantName': widget.data['name'],
+                        'orderType': selectedOrderType, // Explicitly save Order Type!
+                        'items': cart.items.values.map((i) => {'name': i.name, 'quantity': i.quantity, 'price': i.price}).toList(),
+                        'totalAmount': cart.total, // Corrected key to match Admin panel
+                        'status': 'Pending',
+                        'timestamp': FieldValue.serverTimestamp(),
+                        'isPaid': false,
+                        'appliedVoucherCode': cart.appliedVoucherCode,
+                        'appliedVoucherCost': cart.appliedVoucherCost,
+                      };
+
+                      // Use .set() with the Master ID instead of .add()
+                      await FirebaseFirestore.instance.collection('users').doc(user!.uid).collection('orders').doc(masterOrderId).set(orderData);
+                      await FirebaseFirestore.instance.collection('restaurants').doc(widget.restaurantId).collection('orders').doc(masterOrderId).set(orderData);
+
+                      // ========================================================
+                      // VOUCHER & POINTS ECONOMY LOGIC
+                      // ========================================================
+                      if (cart.appliedVoucherCode != null) {
+                        // 1. Deduct the points from the user
+                        if (cart.appliedVoucherCost > 0) {
+                          await FirebaseFirestore.instance.collection('users').doc(user!.uid).update({
+                            'points': FieldValue.increment(-cart.appliedVoucherCost)
+                          });
+                        }
+
+                        // 2. Increase the claim count on the voucher (FOMO reduction)
+                        var voucherQuery = await FirebaseFirestore.instance.collection('restaurants').doc(widget.restaurantId).collection('vouchers').where('code', isEqualTo: cart.appliedVoucherCode).limit(1).get();
+                        if (voucherQuery.docs.isNotEmpty) {
+                          voucherQuery.docs.first.reference.update({'currentClaims': FieldValue.increment(1)});
+                        }
+                      }
+
+                      cart.clear();
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Order Placed Successfully!"), backgroundColor: Colors.green));
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                    child: const Text("Confirm & Place Order", style: TextStyle(color: Colors.white, fontSize: 18)),
+                  ),
+                )
+              ],
+            ),
+          );
+        });
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    String imageUrl = widget.data['imageUrl'] ?? '';
+    final cart = Provider.of<CartProvider>(context);
+    bool hasItemsInCart = cart.totalItems > 0 && cart.currentRestaurantId == widget.restaurantId;
+
+    return DefaultTabController(
+      length: 3,
+      child: Scaffold(
+        body: NestedScrollView(
+          headerSliverBuilder: (context, innerBoxIsScrolled) => [
+            SliverAppBar(
+              expandedHeight: 250,
+              pinned: true,
+              backgroundColor: const Color(0xFFE46A3E),
+              iconTheme: const IconThemeData(color: Colors.white),
+              actions: [
+                IconButton(
+                  onPressed: _showShareDialog,
+                  icon: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      const Icon(Icons.ios_share, color: Colors.white),
+                      if (hasShared)
+                        Positioned(
+                          right: -2,
+                          bottom: -2,
+                          child: Container(
+                            decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                            child: const Icon(Icons.check_circle, color: Colors.green, size: 12),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(isFavorite ? Icons.favorite : Icons.favorite_border, color: isFavorite ? Colors.red : Colors.white),
+                  onPressed: _toggleFavorite,
+                ),
+              ],
+              flexibleSpace: FlexibleSpaceBar(
+                title: Text(widget.data['name'] ?? 'Restaurant', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, shadows: [Shadow(color: Colors.black, blurRadius: 10)])),
+                background: imageUrl.isNotEmpty
+                    ? Image.network(imageUrl, fit: BoxFit.cover, color: Colors.black45, colorBlendMode: BlendMode.darken)
+                    : Container(color: Colors.grey.shade400, child: const Icon(Icons.restaurant, size: 80, color: Colors.white)),
               ),
-              const SizedBox(height: 10),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(widget.data['description'] ?? "No description available.", style: const TextStyle(fontSize: 16, color: Colors.grey)),
+                    const SizedBox(height: 15),
+
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          if (widget.data['isSponsored'] == true)
+                            Container(
+                              margin: const EdgeInsets.only(right: 8),
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(color: Colors.amber.shade100, borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.amber)),
+                              child: const Row(children: [Icon(Icons.star, size: 14, color: Colors.orange), SizedBox(width: 4), Text("Sponsored", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.orange))]),
+                            ),
+                          if (widget.data['acceptsGCash'] == true) _buildTag("GCash"),
+                          if (widget.data['acceptsCards'] == true) _buildTag("Cards"),
+                          if (widget.data['hasParking'] == true) _buildTag("Parking"),
+                          if (widget.data['hasWiFi'] == true) _buildTag("Free WiFi"),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _SliverAppBarDelegate(
+                const TabBar(
+                  labelColor: Color(0xFFE46A3E),
+                  unselectedLabelColor: Colors.grey,
+                  indicatorColor: Color(0xFFE46A3E),
+                  tabs: [Tab(text: "Menu"), Tab(text: "Vouchers"), Tab(text: "Info")],
+                ),
+              ),
+            ),
+          ],
+          body: TabBarView(
+            children: [
+              _buildMenuTab(cart),
+              _buildVouchersTab(cart),
+              _buildInfoTab(),
             ],
           ),
         ),
+        bottomNavigationBar: hasItemsInCart ? _buildCheckoutBar(cart) : null,
       ),
     );
   }
@@ -194,115 +342,31 @@ class _UserRestaurantDetailPageState extends State<UserRestaurantDetailPage> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final cart = Provider.of<CartProvider>(context);
-    String imageUrl = widget.data['imageUrl'] ?? '';
-    String name = widget.data['name'] ?? 'Unknown Restaurant';
-
-    // =========================================================================
-    // CART BUG FIX: Only show the cart button if it matches the current restaurant
-    // =========================================================================
-    bool showCartButton = cart.totalItems > 0 && cart.currentRestaurantId == widget.restaurantId;
-
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        floatingActionButton: showCartButton
-            ? FloatingActionButton.extended(
-          onPressed: () => _showRealCheckout(cart),
-          backgroundColor: const Color(0xFFE46A3E),
-          icon: const Icon(Icons.shopping_bag, color: Colors.white),
-          label: Text("Review Order (₱${cart.total.toStringAsFixed(2)})", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        )
-            : null,
-        body: NestedScrollView(
-          headerSliverBuilder: (context, innerBoxIsScrolled) {
-            return [
-              SliverAppBar(
-                expandedHeight: 250.0,
-                pinned: true,
-                backgroundColor: const Color(0xFFE46A3E),
-                foregroundColor: Colors.white,
-                actions: [
-                  IconButton(
-                    icon: Icon(isFavorite ? Icons.favorite : Icons.favorite_border, color: isFavorite ? Colors.red : Colors.white),
-                    onPressed: _toggleFavorite,
-                  ),
-                ],
-                flexibleSpace: FlexibleSpaceBar(
-                  title: Text(name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, shadows: [Shadow(color: Colors.black54, blurRadius: 4)])),
-                  background: imageUrl.isNotEmpty
-                      ? Image.network(imageUrl, fit: BoxFit.cover)
-                      : Container(color: Colors.grey.shade300, child: const Icon(Icons.restaurant, size: 80, color: Colors.grey)),
-                ),
-              ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // =========================================================================
-                      // NEW: Star Ratings display
-                      // =========================================================================
-                      if (widget.data['reviewCount'] != null && widget.data['reviewCount'] > 0)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 10.0),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.star, color: Colors.amber, size: 20),
-                              const SizedBox(width: 6),
-                              Text(
-                                "${(widget.data['avgRating'] ?? 0.0).toDouble().toStringAsFixed(1)}",
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                "(${widget.data['reviewCount']} reviews)",
-                                style: const TextStyle(color: Colors.grey, fontSize: 14),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                      Row(children: [const Icon(Icons.access_time, size: 16, color: Color(0xFFE46A3E)), const SizedBox(width: 5), Text(widget.data['operatingHours'] ?? 'Hours unlisted', style: const TextStyle(fontWeight: FontWeight.bold))]),
-                      const SizedBox(height: 5),
-                      Text("📍 ${widget.data['address'] ?? 'No address'}"),
-                      if (widget.data['contactNumber'] != null) Text("📞 ${widget.data['contactNumber']}"),
-                      const SizedBox(height: 10),
-                      Text(widget.data['description'] ?? '', style: TextStyle(color: Colors.grey.shade700)),
-                      const SizedBox(height: 15),
-
-                      Row(
-                        children: [
-                          if (widget.data['acceptsGCash'] == true) _buildTag("GCash"),
-                          if (widget.data['acceptsCards'] == true) _buildTag("Cards"),
-                          if (widget.data['hasWiFi'] == true) _buildTag("Free WiFi"),
-                        ],
-                      )
-                    ],
-                  ),
-                ),
-              ),
-              SliverPersistentHeader(
-                pinned: true,
-                delegate: _SliverAppBarDelegate(
-                  const TabBar(
-                    labelColor: Color(0xFFE46A3E),
-                    indicatorColor: Color(0xFFE46A3E),
-                    tabs: [Tab(icon: Icon(Icons.restaurant_menu), text: "Menu"), Tab(icon: Icon(Icons.local_offer), text: "Vouchers")],
-                  ),
-                ),
-              ),
-            ];
-          },
-          body: TabBarView(
-            children: [
-              _buildMenuTab(cart),
-              _buildVouchersTab(cart),
-            ],
-          ),
+  Widget _buildCheckoutBar(CartProvider cart) {
+    return Container(
+      padding: const EdgeInsets.all(15),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, -5))],
+      ),
+      child: SafeArea(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("${cart.totalItems} Items", style: const TextStyle(color: Colors.grey)),
+                Text("Total: ₱${cart.total.toStringAsFixed(2)}", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFFE46A3E))),
+              ],
+            ),
+            ElevatedButton(
+              onPressed: () => _showRealCheckout(cart),
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFE46A3E), padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12)),
+              child: const Text("View Cart", style: TextStyle(color: Colors.white, fontSize: 16)),
+            )
+          ],
         ),
       ),
     );
@@ -310,37 +374,29 @@ class _UserRestaurantDetailPageState extends State<UserRestaurantDetailPage> {
 
   Widget _buildMenuTab(CartProvider cart) {
     return StreamBuilder(
-      stream: FirebaseFirestore.instance.collection('restaurants').doc(widget.restaurantId).collection('menu').orderBy('category').snapshots(),
+      stream: FirebaseFirestore.instance.collection('restaurants').doc(widget.restaurantId).collection('menu').snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-        final items = snapshot.data!.docs;
-
-        if (items.isEmpty) return const Center(child: Text("No menu available."));
+        var items = snapshot.data!.docs;
+        if (items.isEmpty) return const Center(child: Text("Menu is currently empty."));
 
         return ListView.builder(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(10),
           itemCount: items.length,
           itemBuilder: (context, index) {
-            var item = items[index].data() as Map<String, dynamic>;
-            String? img = item['imageUrl'];
-
+            var item = items[index].data();
             return Card(
-              margin: const EdgeInsets.only(bottom: 12),
-              color: const Color(0xFFF5F5F0),
-              elevation: 0,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+              elevation: 2,
+              margin: const EdgeInsets.only(bottom: 10),
               child: ListTile(
-                contentPadding: const EdgeInsets.all(10),
-                leading: Container(
-                  width: 60, height: 60,
-                  decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(10)),
-                  child: img != null && img.isNotEmpty
-                      ? ClipRRect(borderRadius: BorderRadius.circular(10), child: Image.network(img, fit: BoxFit.cover))
-                      : const Icon(Icons.fastfood, size: 30, color: Colors.grey),
+                leading: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: item['imageUrl'] != null && item['imageUrl'].toString().isNotEmpty
+                      ? Image.network(item['imageUrl'], width: 60, height: 60, fit: BoxFit.cover)
+                      : Container(width: 60, height: 60, color: Colors.grey.shade300, child: const Icon(Icons.fastfood, color: Colors.grey)),
                 ),
-                title: Text(item['name'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                subtitle: Text("${item['category']} • ₱${item['price']}\n${item['description'] ?? ''}"),
-                isThreeLine: true,
+                title: Text(item['name'], style: const TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: Text("₱${item['price']}"),
                 trailing: IconButton(
                   icon: const Icon(Icons.add_circle, color: Color(0xFFE46A3E), size: 35),
                   onPressed: () {
@@ -357,60 +413,69 @@ class _UserRestaurantDetailPageState extends State<UserRestaurantDetailPage> {
   }
 
   Widget _buildVouchersTab(CartProvider cart) {
-    return StreamBuilder(
-      stream: FirebaseFirestore.instance.collection('restaurants').doc(widget.restaurantId).collection('vouchers').snapshots(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-        final vouchers = snapshot.data!.docs;
-        return ListView(
-          padding: const EdgeInsets.all(12),
-          children: [
-            Card(
-              elevation: 4,
-              color: const Color(0xFFFFF8E1),
-              shape: RoundedRectangleBorder(side: const BorderSide(color: Color(0xFFFFD700), width: 2), borderRadius: BorderRadius.circular(10)),
-              child: ListTile(
-                leading: const Icon(Icons.workspace_premium, color: Color(0xFFFFD700), size: 40),
-                title: const Text("Foodika PRO Exclusive", style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFB8860B))),
-                subtitle: const Text("Get 20% off your entire pre-order!"),
-                trailing: const Icon(Icons.lock, color: Colors.grey),
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Upgrade to Foodika PRO to unlock this voucher!")));
+    // NEW: Wrap in a StreamBuilder to check the user's live points balance!
+    return StreamBuilder<DocumentSnapshot>(
+        stream: FirebaseFirestore.instance.collection('users').doc(user?.uid).snapshots(),
+        builder: (context, userSnapshot) {
+          int userPoints = 0;
+          if (userSnapshot.hasData && userSnapshot.data!.exists) {
+            userPoints = (userSnapshot.data!.data() as Map<String, dynamic>)['points'] ?? 0;
+          }
+
+          return StreamBuilder(
+            stream: FirebaseFirestore.instance.collection('restaurants').doc(widget.restaurantId).collection('vouchers').snapshots(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+              var vouchers = snapshot.data!.docs;
+              if (vouchers.isEmpty) return const Center(child: Text("No active vouchers right now."));
+
+              return ListView.builder(
+                padding: const EdgeInsets.all(10),
+                itemCount: vouchers.length,
+                itemBuilder: (context, index) {
+                  var data = vouchers[index].data();
+                  int maxClaims = data['maxClaims'] ?? 10;
+                  int currentClaims = data['currentClaims'] ?? 0;
+                  int pointCost = data['pointCost'] ?? 300;
+                  int remaining = maxClaims - currentClaims;
+
+                  bool isAvailable = remaining > 0;
+                  bool canAfford = userPoints >= pointCost;
+
+                  return Card(
+                    elevation: 2,
+                    margin: const EdgeInsets.only(bottom: 10),
+                    child: ListTile(
+                      leading: const Icon(Icons.stars, color: Colors.orange, size: 35),
+                      title: Text("${data['discount']}% OFF", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: isAvailable ? Colors.black : Colors.grey)),
+                      subtitle: Text("Code: ${data['code']} • $remaining left\nCost: $pointCost Points", style: TextStyle(color: canAfford ? Colors.black87 : Colors.red)),
+                      trailing: OutlinedButton(
+                        style: OutlinedButton.styleFrom(backgroundColor: Colors.white, foregroundColor: (isAvailable && canAfford) ? Colors.black87 : Colors.grey),
+                        onPressed: (isAvailable && canAfford) ? () {
+                          // Pass the point cost to the cart!
+                          cart.applyVoucher(data['code'], (data['discount'] as num).toDouble(), pointCost);
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Voucher ${data['code']} applied! $pointCost points will be deducted at checkout."), backgroundColor: Colors.green));
+                        } : null,
+                        child: Text(!isAvailable ? "Fully Claimed" : (!canAfford ? "Need Points" : "Apply")),
+                      ),
+                    ),
+                  );
                 },
-              ),
-            ),
-            const SizedBox(height: 10),
-            const Divider(),
-            const SizedBox(height: 10),
-
-            if (vouchers.isEmpty) const Center(child: Text("No regular vouchers available.")),
-            ...vouchers.map((v) {
-              var data = v.data() as Map<String, dynamic>;
-              int remaining = (data['maxClaims'] ?? 0) - (data['currentClaims'] ?? 0);
-              bool isAvailable = remaining > 0;
-
-              return Card(
-                elevation: 0,
-                color: const Color(0xFFF5F5F0),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                child: ListTile(
-                  leading: const Icon(Icons.local_offer, color: Colors.green, size: 35),
-                  title: Text("${data['discount']}% OFF", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: isAvailable ? Colors.black : Colors.grey)),
-                  subtitle: Text("Code: ${data['code']} • $remaining left"),
-                  trailing: OutlinedButton(
-                    style: OutlinedButton.styleFrom(backgroundColor: Colors.white, foregroundColor: isAvailable ? Colors.black87 : Colors.grey),
-                    onPressed: isAvailable ? () {
-                      cart.applyVoucher(data['code'], (data['discount'] as num).toDouble());
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Voucher ${data['code']} applied to cart!")));
-                    } : null,
-                    child: Text(isAvailable ? "Claim" : "Fully Claimed"),
-                  ),
-                ),
               );
-            }),
-          ],
-        );
-      },
+            },
+          );
+        }
+    );
+  }
+
+  Widget _buildInfoTab() {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        ListTile(leading: const Icon(Icons.location_on, color: Color(0xFFE46A3E)), title: Text(widget.data['address'] ?? "Address not provided")),
+        ListTile(leading: const Icon(Icons.access_time, color: Color(0xFFE46A3E)), title: Text(widget.data['operatingHours'] ?? "Hours not provided")),
+        ListTile(leading: const Icon(Icons.phone, color: Color(0xFFE46A3E)), title: Text(widget.data['contactNumber'] ?? "Contact not provided")),
+      ],
     );
   }
 }

@@ -13,20 +13,20 @@ class CartProvider extends ChangeNotifier {
   final Map<String, CartItem> _items = {};
   double discountPercentage = 0.0;
   String? appliedVoucherCode;
-  String? currentRestaurantId; // NEW: Tracks where the cart belongs
+  int appliedVoucherCost = 0; // NEW: Tracks the point cost of the voucher
+  String? currentRestaurantId;
 
   Map<String, CartItem> get items => _items;
   int get totalItems => _items.values.fold(0, (sum, item) => sum + item.quantity);
   double get subtotal => _items.values.fold(0, (sum, item) => sum + (item.price * item.quantity));
   double get total => subtotal * (1 - (discountPercentage / 100));
 
-  // NEW: Requires the restaurantId when adding an item
   void addItem(String restaurantId, String id, String name, double price) {
-    // If they switched restaurants, empty the old cart automatically!
     if (currentRestaurantId != null && currentRestaurantId != restaurantId) {
       _items.clear();
       discountPercentage = 0.0;
       appliedVoucherCode = null;
+      appliedVoucherCost = 0;
     }
     currentRestaurantId = restaurantId;
 
@@ -40,13 +40,15 @@ class CartProvider extends ChangeNotifier {
 
   void removeItem(String id) {
     _items.remove(id);
-    if (_items.isEmpty) currentRestaurantId = null; // Reset if empty
+    if (_items.isEmpty) currentRestaurantId = null;
     notifyListeners();
   }
 
-  void applyVoucher(String code, double percentage) {
+  // NEW: Now requires the point cost when applying
+  void applyVoucher(String code, double percentage, int pointCost) {
     appliedVoucherCode = code;
     discountPercentage = percentage;
+    appliedVoucherCost = pointCost;
     notifyListeners();
   }
 
@@ -54,7 +56,8 @@ class CartProvider extends ChangeNotifier {
     _items.clear();
     discountPercentage = 0.0;
     appliedVoucherCode = null;
-    currentRestaurantId = null; // Reset tracking
+    appliedVoucherCost = 0;
+    currentRestaurantId = null;
     notifyListeners();
   }
 }

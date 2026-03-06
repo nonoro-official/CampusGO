@@ -24,77 +24,97 @@ class _AdminMapPageState extends State<AdminMapPage> {
       final newMarkers = snapshot.docs.map((doc) {
         final data = doc.data();
 
-        // Safely extract coordinates
         double lat = data["latitude"] ?? 0.0;
         double lng = data["longitude"] ?? 0.0;
+        bool isSponsored = data['isSponsored'] == true;
+        String imageUrl = data['imageUrl'] ?? '';
 
         return Marker(
           point: LatLng(lat, lng),
-          width: 160,
-          height: 90,
+          width: 160, // Widened to safely fit the new card layout
+          height: 85,
+          alignment: Alignment.topCenter,
           child: GestureDetector(
             onTap: () => Navigator.push(context, MaterialPageRoute(
               builder: (_) => RestaurantDetailDashboard(restaurantId: doc.id, restaurantData: data),
             )),
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
+                // THE NEW CLEAN CARD UI
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: isSponsored ? Colors.amber.shade50 : Colors.white,
                     borderRadius: BorderRadius.circular(10),
+                    border: isSponsored ? Border.all(color: Colors.amber, width: 1.5) : null,
                     boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4)],
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      // Left Side: The Restaurant Image
                       ClipRRect(
                         borderRadius: BorderRadius.circular(5),
-                        child: (data['imageUrl'] != null && data['imageUrl'] != "")
-                            ? Image.network(data['imageUrl'], width: 35, height: 35, fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => const Icon(Icons.restaurant, size: 30))
-                            : const Icon(Icons.restaurant, size: 30),
+                        child: Container(
+                          width: 24,
+                          height: 24,
+                          color: Colors.grey.shade200,
+                          child: imageUrl.isNotEmpty
+                              ? Image.network(
+                            imageUrl,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => Image.asset('assets/images/foodika_logo.png', fit: BoxFit.cover),
+                          )
+                              : Image.asset('assets/images/foodika_logo.png', fit: BoxFit.cover),
+                        ),
                       ),
-                      const SizedBox(width: 8),
-                      Flexible(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                                data['name'] ?? 'Place',
-                                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-                                overflow: TextOverflow.ellipsis
+                      const SizedBox(width: 6),
+                      // Right Side: The Text and Rating
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            data["name"] ?? "Unknown",
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10,
+                                color: isSponsored ? Colors.orange.shade900 : Colors.black
                             ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (data['avgRating'] != null && data['avgRating'] > 0)
                             Row(
+                              mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.star, color: Colors.amber, size: 12),
+                                const Icon(Icons.star, color: Colors.amber, size: 10),
                                 const SizedBox(width: 2),
-                                Text(
-                                    "${data['avgRating'] ?? '0.0'}",
-                                    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)
-                                ),
+                                Text("${data['avgRating']}", style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
                                 const SizedBox(width: 2),
-                                Text(
-                                    "(${data['reviewCount'] ?? '0'})",
-                                    style: const TextStyle(fontSize: 10, color: Colors.grey)
-                                ),
+                                Text("(${data['reviewCount'] ?? '0'})", style: const TextStyle(fontSize: 9, color: Colors.grey)),
                               ],
                             ),
-                          ],
-                        ),
+                        ],
                       ),
                     ],
                   ),
                 ),
-                const Icon(Icons.location_on, color: Color(0xFFE46A3E), size: 30),
+                const SizedBox(height: 2),
+                // CLEAN TEARDROP PIN
+                Icon(
+                  Icons.location_on,
+                  color: isSponsored ? Colors.amber : const Color(0xFFE46A3E),
+                  size: isSponsored ? 45 : 35,
+                  shadows: const [Shadow(color: Colors.black45, blurRadius: 5, offset: Offset(0, 2))],
+                ),
               ],
             ),
           ),
         );
       }).toList();
 
-      setState(() => markers = newMarkers);
+      if (mounted) setState(() => markers = newMarkers);
     });
   }
 
@@ -102,11 +122,12 @@ class _AdminMapPageState extends State<AdminMapPage> {
   Widget build(BuildContext context) {
     return FlutterMap(
       options: const MapOptions(
-          initialCenter: LatLng(14.6291, 121.0419), // Quezon City Default
-          initialZoom: 16.0
+        initialCenter: LatLng(14.6291, 121.0419),
+        initialZoom: 16.0,
+        interactionOptions: InteractionOptions(flags: InteractiveFlag.all & ~InteractiveFlag.rotate),
       ),
       children: [
-        TileLayer(urlTemplate: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'),
+        TileLayer(urlTemplate: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', userAgentPackageName: 'com.foodika.app'),
         MarkerLayer(markers: markers),
       ],
     );

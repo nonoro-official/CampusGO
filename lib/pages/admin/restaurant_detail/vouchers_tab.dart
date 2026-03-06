@@ -7,13 +7,12 @@ class VouchersTab extends StatelessWidget {
 
   void _showVoucherDialog(BuildContext context, [DocumentSnapshot? voucher]) {
     final bool isEditing = voucher != null;
-
-    // SAFE CASTING: Safely pull data from old vouchers so the app never crashes
     final data = isEditing ? voucher.data() as Map<String, dynamic> : <String, dynamic>{};
 
     final codeController = TextEditingController(text: isEditing ? (data['code'] ?? '') : '');
     final discountController = TextEditingController(text: isEditing ? (data['discount']?.toString() ?? '') : '');
     final limitController = TextEditingController(text: isEditing ? (data['maxClaims']?.toString() ?? '10') : '10');
+    final pointsController = TextEditingController(text: isEditing ? (data['pointCost']?.toString() ?? '300') : '300'); // NEW: Point Cost
 
     showDialog(
       context: context,
@@ -26,7 +25,9 @@ class VouchersTab extends StatelessWidget {
             const SizedBox(height: 10),
             TextField(controller: discountController, decoration: const InputDecoration(labelText: "Discount Amount (%)"), keyboardType: TextInputType.number),
             const SizedBox(height: 10),
-            TextField(controller: limitController, decoration: const InputDecoration(labelText: "Claim Limit (Number of Users)"), keyboardType: TextInputType.number),
+            TextField(controller: pointsController, decoration: const InputDecoration(labelText: "Cost in Points (e.g. 300)"), keyboardType: TextInputType.number),
+            const SizedBox(height: 10),
+            TextField(controller: limitController, decoration: const InputDecoration(labelText: "Claim Limit"), keyboardType: TextInputType.number),
           ],
         ),
         actions: [
@@ -37,6 +38,7 @@ class VouchersTab extends StatelessWidget {
                 final updateData = {
                   'code': codeController.text.toUpperCase().trim(),
                   'discount': int.tryParse(discountController.text) ?? 0,
+                  'pointCost': int.tryParse(pointsController.text) ?? 300,
                   'maxClaims': int.tryParse(limitController.text) ?? 10,
                   'currentClaims': isEditing ? (data['currentClaims'] ?? 0) : 0,
                   'expiryDate': DateTime.now().add(const Duration(days: 7)),
@@ -45,11 +47,7 @@ class VouchersTab extends StatelessWidget {
                 if (isEditing) {
                   await voucher.reference.update(updateData);
                 } else {
-                  await FirebaseFirestore.instance
-                      .collection('restaurants')
-                      .doc(restaurantId)
-                      .collection('vouchers')
-                      .add(updateData);
+                  await FirebaseFirestore.instance.collection('restaurants').doc(restaurantId).collection('vouchers').add(updateData);
                 }
                 if (context.mounted) Navigator.pop(context);
               }
@@ -72,18 +70,12 @@ class VouchersTab extends StatelessWidget {
         label: const Text("New Voucher", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
       body: StreamBuilder(
-        stream: FirebaseFirestore.instance
-            .collection('restaurants')
-            .doc(restaurantId)
-            .collection('vouchers')
-            .snapshots(),
+        stream: FirebaseFirestore.instance.collection('restaurants').doc(restaurantId).collection('vouchers').snapshots(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
           final vouchers = snapshot.data!.docs;
 
-          if (vouchers.isEmpty) {
-            return const Center(child: Text("No vouchers created yet.\nTap 'New Voucher' to add one!", textAlign: TextAlign.center, style: TextStyle(color: Colors.grey)));
-          }
+          if (vouchers.isEmpty) return const Center(child: Text("No vouchers created yet.", style: TextStyle(color: Colors.grey)));
 
           return ListView.builder(
             padding: const EdgeInsets.all(12),
@@ -92,10 +84,10 @@ class VouchersTab extends StatelessWidget {
               var v = vouchers[index];
               var data = v.data() as Map<String, dynamic>;
 
-              // Safe fallbacks for the math
-              int maxClaims = data.containsKey('maxClaims') ? data['maxClaims'] : 10;
-              int currentClaims = data.containsKey('currentClaims') ? data['currentClaims'] : 0;
+              int maxClaims = data['maxClaims'] ?? 10;
+              int currentClaims = data['currentClaims'] ?? 0;
               int remaining = maxClaims - currentClaims;
+              int pointCost = data['pointCost'] ?? 0;
 
               return Card(
                 elevation: 2,
@@ -103,17 +95,13 @@ class VouchersTab extends StatelessWidget {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 child: ListTile(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  leading: CircleAvatar(
-                    backgroundColor: Colors.green.shade100,
-                    child: const Icon(Icons.local_offer, color: Colors.green),
-                  ),
+                  leading: CircleAvatar(backgroundColor: Colors.amber.shade100, child: const Icon(Icons.stars, color: Colors.orange)),
                   title: Text("${data['code']} (${data['discount']}%)", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                  subtitle: Text("Remaining: $remaining / $maxClaims\nLong-press to edit"),
+                  subtitle: Text("Cost: $pointCost Points\nRemaining: $remaining / $maxClaims", style: const TextStyle(color: Colors.black87)),
                   isThreeLine: true,
                   trailing: IconButton(
                     icon: const Icon(Icons.delete, color: Colors.red),
                     onPressed: () async {
-                      // Added a confirmation dialog so you don't accidentally delete vouchers!
                       bool? confirm = await showDialog(
                           context: context,
                           builder: (_) => AlertDialog(
@@ -125,9 +113,7 @@ class VouchersTab extends StatelessWidget {
                               ]
                           )
                       );
-                      if (confirm == true) {
-                        v.reference.delete();
-                      }
+                      if (confirm == true) v.reference.delete();
                     },
                   ),
                   onLongPress: () => _showVoucherDialog(context, v),

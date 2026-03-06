@@ -11,6 +11,7 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
+  final nameController = TextEditingController(); // NEW: Capture name early
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmController = TextEditingController();
@@ -19,6 +20,10 @@ class _RegisterPageState extends State<RegisterPage> {
   bool isLoading = false;
 
   void register() async {
+    if (nameController.text.trim().isEmpty) {
+      setState(() => errorMessage = "Please enter your name.");
+      return;
+    }
     if (passwordController.text != confirmController.text) {
       setState(() => errorMessage = "Passwords do not match.");
       return;
@@ -32,10 +37,14 @@ class _RegisterPageState extends State<RegisterPage> {
         password: passwordController.text.trim(),
       );
 
+      // Initialize the user document with loyalty and tracking fields
       await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
         'uid': userCredential.user!.uid,
+        'name': nameController.text.trim(),
         'email': emailController.text.trim(),
-        'role': 'user', // Default role
+        'role': 'user',
+        'points': 0, // NEW: Initial points
+        'hasCompletedProfile': false, // NEW: Tracks if they earned the bonus
         'createdAt': DateTime.now(),
       });
 
@@ -58,16 +67,21 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F8E9), // Light green background
+      backgroundColor: const Color(0xFFF1F8E9),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(25),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Logo placeholder
               Image.asset("assets/images/foodika_logo.png", width: 120),
               const SizedBox(height: 30),
+
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(labelText: "Full Name", border: OutlineInputBorder()),
+              ),
+              const SizedBox(height: 15),
 
               TextField(
                 controller: emailController,
