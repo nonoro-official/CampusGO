@@ -69,7 +69,6 @@ class MenuTab extends StatelessWidget {
                   title: Text(data['name'] ?? 'Unnamed Item', style: const TextStyle(fontWeight: FontWeight.bold)),
                   subtitle: Text("${data['category']} • ₱${data['price']}\n${data['description'] ?? ''}"),
                   isThreeLine: true,
-                  // Added Row for Edit and Delete buttons
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -95,8 +94,8 @@ class MenuTab extends StatelessWidget {
                             ),
                           );
                           if (confirm == true) {
-                            // Also delete image from storage if it exists
-                            if (imageUrl != null && imageUrl.isNotEmpty) {
+                            // Safely try to delete from storage if it's a firebase file
+                            if (imageUrl != null && imageUrl.isNotEmpty && imageUrl.contains('firebase')) {
                               try {
                                 await FirebaseStorage.instance.refFromURL(imageUrl).delete();
                               } catch (_) {}
@@ -119,7 +118,7 @@ class MenuTab extends StatelessWidget {
 
 class _MenuItemForm extends StatefulWidget {
   final String restaurantId;
-  final DocumentSnapshot? item; // Nullable item for determining Add vs Edit
+  final DocumentSnapshot? item;
 
   const _MenuItemForm({required this.restaurantId, this.item});
 
@@ -136,13 +135,13 @@ class _MenuItemFormState extends State<_MenuItemForm> {
   final List<String> categories = ['Appetizers', 'Mains', 'Desserts', 'Drinks', 'Sides'];
 
   File? selectedImage;
+  String? imageUrlInput; // NEW: Holds the pasted URL
   String? existingImageUrl;
   bool isSaving = false;
 
   @override
   void initState() {
     super.initState();
-    // Pre-fill controllers if editing
     final data = widget.item?.data() as Map<String, dynamic>?;
 
     nameController = TextEditingController(text: data?['name'] ?? '');
@@ -155,11 +154,58 @@ class _MenuItemFormState extends State<_MenuItemForm> {
     }
   }
 
-  void pickImage() async {
-    final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (picked != null) {
-      setState(() => selectedImage = File(picked.path));
-    }
+  // ========================================================
+  // NEW: FILE OR URL SELECTOR DIALOG
+  // ========================================================
+  void _showImageSourceDialog() {
+    TextEditingController urlController = TextEditingController(text: imageUrlInput ?? '');
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Select Image Source"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_library, color: Color(0xFFE46A3E)),
+              title: const Text("Upload from Device"),
+              onTap: () async {
+                Navigator.pop(context);
+                final picker = ImagePicker();
+                final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+                if (pickedFile != null) {
+                  setState(() {
+                    selectedImage = File(pickedFile.path);
+                    imageUrlInput = null; // Clear URL if file is selected
+                  });
+                }
+              },
+            ),
+            const Divider(),
+            const Text("OR", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+            const SizedBox(height: 10),
+            TextField(
+              controller: urlController,
+              decoration: const InputDecoration(labelText: "Paste Image URL", border: OutlineInputBorder()),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
+          ElevatedButton(
+            onPressed: () {
+              setState(() {
+                imageUrlInput = urlController.text.trim();
+                selectedImage = null; // Clear file if URL is pasted
+              });
+              Navigator.pop(context);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFE46A3E), foregroundColor: Colors.white),
+            child: const Text("Use URL"),
+          ),
+        ],
+      ),
+    );
   }
 
   void saveItem() async {
@@ -169,15 +215,17 @@ class _MenuItemFormState extends State<_MenuItemForm> {
     }
 
     setState(() => isSaving = true);
-    String finalImageUrl = existingImageUrl ?? ""; // Keep old image by default
+    String finalImageUrl = existingImageUrl ?? "";
 
     try {
-      // If they picked a NEW image, upload it and overwrite the URL
+      // Prioritize the File upload, fallback to the URL paste, keep existing if neither changed
       if (selectedImage != null) {
         final ref = FirebaseStorage.instance
             .ref("restaurants/${widget.restaurantId}/menu/${DateTime.now().millisecondsSinceEpoch}.jpg");
         await ref.putFile(selectedImage!);
         finalImageUrl = await ref.getDownloadURL();
+      } else if (imageUrlInput != null && imageUrlInput!.isNotEmpty) {
+        finalImageUrl = imageUrlInput!;
       }
 
       final itemData = {
@@ -190,21 +238,18 @@ class _MenuItemFormState extends State<_MenuItemForm> {
       };
 
       if (widget.item == null) {
-        // ADD NEW
         await FirebaseFirestore.instance
             .collection('restaurants')
             .doc(widget.restaurantId)
             .collection('menu')
             .add(itemData);
 
-        // History log
         await FirebaseFirestore.instance.collection('restaurants').doc(widget.restaurantId).collection('history').add({
           'action': 'Menu Item Added',
           'details': 'Added ${itemData['name']} to $selectedCategory',
           'timestamp': FieldValue.serverTimestamp(),
         });
       } else {
-        // UPDATE EXISTING
         await widget.item!.reference.update(itemData);
       }
 
@@ -218,6 +263,8 @@ class _MenuItemFormState extends State<_MenuItemForm> {
 
   @override
   Widget build(BuildContext context) {
+    bool hasImageReady = selectedImage != null || (imageUrlInput != null && imageUrlInput!.isNotEmpty);
+
     return Padding(
       padding: const EdgeInsets.all(20.0),
       child: Column(
@@ -248,10 +295,10 @@ class _MenuItemFormState extends State<_MenuItemForm> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               ElevatedButton.icon(
-                onPressed: pickImage,
+                onPressed: _showImageSourceDialog,
                 icon: const Icon(Icons.image),
-                label: Text(selectedImage != null
-                    ? "New Image Selected"
+                label: Text(hasImageReady
+                    ? "New Image Ready"
                     : (existingImageUrl != null && existingImageUrl!.isNotEmpty)
                     ? "Change Image"
                     : "Add Image (Opt.)"

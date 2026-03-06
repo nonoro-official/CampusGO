@@ -73,21 +73,57 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
               stream: FirebaseFirestore.instance.collection('users').doc(user?.uid).snapshots(),
               builder: (context, snapshot) {
                 String displayName = email.split('@')[0].toUpperCase();
+                int points = 0;
 
                 if (snapshot.hasData && snapshot.data!.exists) {
                   var data = snapshot.data!.data() as Map<String, dynamic>?;
-                  if (data != null && data.containsKey('name') && data['name'].toString().trim().isNotEmpty) {
-                    displayName = data['name'].toString().toUpperCase();
+                  if (data != null) {
+                    if (data.containsKey('name') && data['name'].toString().trim().isNotEmpty) {
+                      displayName = data['name'].toString().toUpperCase();
+                    }
+                    if (data.containsKey('points')) {
+                      points = data['points'];
+                    }
                   }
                 }
 
                 return UserAccountsDrawerHeader(
                   decoration: const BoxDecoration(color: Color(0xFFE46A3E)),
-                  accountName: Text(displayName, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  accountName: Row(
+                    children: [
+                      Text(displayName, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      const SizedBox(width: 10),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: Colors.amber,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2))],
+                        ),
+                        child: Text("⭐ $points Pts", style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 12)),
+                      )
+                    ],
+                  ),
                   accountEmail: Text(email, style: const TextStyle(color: Colors.white70)),
-                  currentAccountPicture: const CircleAvatar(
-                    backgroundColor: Colors.white,
-                    child: Icon(Icons.person, color: Color(0xFFE46A3E), size: 40),
+                  // Inside _buildDrawer in user_dashboard_page.dart
+                  currentAccountPicture: StreamBuilder<DocumentSnapshot>(
+                    stream: FirebaseFirestore.instance.collection('users').doc(user?.uid).snapshots(),
+                    builder: (context, snapshot) {
+                      String? profileUrl;
+                      if (snapshot.hasData && snapshot.data!.exists) {
+                        profileUrl = (snapshot.data!.data() as Map<String, dynamic>?)?['profileImageUrl'];
+                      }
+
+                      return CircleAvatar(
+                        backgroundColor: Colors.white,
+                        backgroundImage: (profileUrl != null && profileUrl.isNotEmpty)
+                            ? NetworkImage(profileUrl)
+                            : null,
+                        child: (profileUrl == null || profileUrl.isEmpty)
+                            ? const Icon(Icons.person, color: Color(0xFFE46A3E), size: 40)
+                            : null,
+                      );
+                    },
                   ),
                 );
               }
@@ -97,13 +133,15 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
             decoration: BoxDecoration(
               gradient: const LinearGradient(colors: [Color(0xFFFFD700), Color(0xFFFFA500)]),
               borderRadius: BorderRadius.circular(12),
+              boxShadow: [BoxShadow(color: Colors.orange.withOpacity(0.4), blurRadius: 8, offset: const Offset(0, 3))],
             ),
             child: ListTile(
-              leading: const Icon(Icons.workspace_premium, color: Colors.white),
-              title: const Text("Foodika PRO", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              leading: const Icon(Icons.workspace_premium, color: Colors.white, size: 30),
+              title: const Text("Foodika PRO", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+              subtitle: const Text("Unlock exclusive perks", style: TextStyle(color: Colors.white70, fontSize: 12)),
               onTap: () {
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Premium coming soon!")));
+                _showProModal(context);
               },
             ),
           ),
@@ -143,6 +181,74 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
               label: const Text("Log Out"),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  void _showProModal(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(color: Colors.orange.shade50, shape: BoxShape.circle),
+              child: const Icon(Icons.workspace_premium, color: Colors.orange, size: 40),
+            ),
+            const SizedBox(height: 15),
+            const Text("Upgrade to Foodika PRO", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            const Text("Just ₱89/month for the ultimate foodie experience.", textAlign: TextAlign.center, style: TextStyle(color: Colors.grey, fontSize: 14)),
+            const SizedBox(height: 25),
+
+            _buildProPerk(Icons.block, "Zero Advertisements"),
+            _buildProPerk(Icons.confirmation_num, "Access to Exclusive Gold Vouchers"),
+            _buildProPerk(Icons.stars, "Earn Double Loyalty Points"),
+            const SizedBox(height: 30),
+
+            SizedBox(
+              width: double.infinity,
+              height: 55,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("🎉 Welcome to Foodika PRO! Payment successful."), backgroundColor: Colors.green)
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFE46A3E),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                ),
+                child: const Text("Subscribe Now - ₱89/mo", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+              ),
+            ),
+            const SizedBox(height: 10),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProPerk(IconData icon, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.amber, size: 24),
+          const SizedBox(width: 15),
+          Text(text, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
         ],
       ),
     );
@@ -263,7 +369,7 @@ class ActiveOrderTracker extends StatelessWidget {
               MaterialPageRoute(
                 builder: (context) => ActiveOrderDetailScreen(
                   orderData: activeOrder,
-                  orderId: activeOrderDoc.id,
+                  orderId: activeOrderDoc.id, // This is now identical to the Admin's ID!
                 ),
               ),
             );
@@ -336,7 +442,7 @@ class ActiveOrderTracker extends StatelessWidget {
 }
 
 // ============================================================================
-// SCREEN: Active Order Details (With Cancel Functionality)
+// SCREEN: Active Order Details (UPGRADED CANCEL & REFUND LOGIC)
 // ============================================================================
 class ActiveOrderDetailScreen extends StatelessWidget {
   final Map<String, dynamic> orderData;
@@ -352,7 +458,7 @@ class ActiveOrderDetailScreen extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text("Cancel Order", style: TextStyle(color: Colors.red)),
-        content: const Text("Are you sure you want to cancel this order? This cannot be undone."),
+        content: const Text("Are you sure you want to cancel this order? Your points will be refunded."),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Keep Order", style: TextStyle(color: Colors.grey))),
           ElevatedButton(
@@ -367,27 +473,32 @@ class ActiveOrderDetailScreen extends StatelessWidget {
     if (confirm == true) {
       try {
         String restaurantId = orderData['restaurantId'];
+        int pointCost = orderData['appliedVoucherCost'] ?? 0;
+        String? voucherCode = orderData['appliedVoucherCode'];
 
-        // 1. Update User's Database
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(user.uid)
-            .collection('orders')
-            .doc(orderId)
-            .update({'status': 'Cancelled'});
+        // 1. Update Both Databases (Perfectly Synced)
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).collection('orders').doc(orderId).update({'status': 'Cancelled'});
+        await FirebaseFirestore.instance.collection('restaurants').doc(restaurantId).collection('orders').doc(orderId).update({'status': 'Cancelled'});
 
-        // 2. Update Restaurant's Database
-        await FirebaseFirestore.instance
-            .collection('restaurants')
-            .doc(restaurantId)
-            .collection('orders')
-            .doc(orderId)
-            .update({'status': 'Cancelled'});
+        // 2. ECONOMY FIX: Refund the points if they used a voucher
+        if (pointCost > 0) {
+          await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+            'points': FieldValue.increment(pointCost)
+          });
+        }
+
+        // 3. ECONOMY FIX: Return the voucher quantity to the public pool
+        if (voucherCode != null) {
+          var voucherQuery = await FirebaseFirestore.instance.collection('restaurants').doc(restaurantId).collection('vouchers').where('code', isEqualTo: voucherCode).limit(1).get();
+          if (voucherQuery.docs.isNotEmpty) {
+            voucherQuery.docs.first.reference.update({'currentClaims': FieldValue.increment(-1)});
+          }
+        }
 
         if (context.mounted) {
           Navigator.pop(context); // Close the detail screen
           ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Order cancelled successfully."), backgroundColor: Colors.red)
+              SnackBar(content: Text(pointCost > 0 ? "Order cancelled. $pointCost points refunded!" : "Order cancelled successfully."), backgroundColor: Colors.red)
           );
         }
       } catch (e) {
@@ -404,7 +515,6 @@ class ActiveOrderDetailScreen extends StatelessWidget {
     Color statusColor = status == 'Preparing' ? Colors.orange : Colors.blue;
     double progress = status == 'Preparing' ? 0.7 : 0.3;
 
-    // Check if the order can still be cancelled
     bool canCancel = status == 'Pending';
 
     return Scaffold(
@@ -440,7 +550,7 @@ class ActiveOrderDetailScreen extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.receipt),
               title: const Text("Order ID"),
-              subtitle: Text(orderId),
+              subtitle: Text(orderId.substring(0, 8).toUpperCase()),
             ),
             ListTile(
               leading: const Icon(Icons.shopping_bag),
@@ -454,7 +564,6 @@ class ActiveOrderDetailScreen extends StatelessWidget {
             ),
             const Spacer(),
 
-            // Cancel Button (Only visible if Pending)
             if (canCancel)
               Container(
                 width: double.infinity,
@@ -472,7 +581,6 @@ class ActiveOrderDetailScreen extends StatelessWidget {
                 ),
               ),
 
-            // Back Button
             SizedBox(
               width: double.infinity,
               height: 50,
