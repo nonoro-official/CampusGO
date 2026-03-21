@@ -15,7 +15,6 @@ It moves beyond standard delivery apps by eliminating heavy merchant commissions
 <p align="center">
   <img src="assets/screenshots/map_discovery_image.png" width="200" alt="Map Discovery"/>
   <img src="assets/screenshots/restaurant_detail_image.png" width="200" alt="Restaurant Profile"/>
-  <img src="assets/screenshots/live_order_image.png" width="200" alt="Live Order Tracker"/>
   <img src="assets/screenshots/admin_insights_image.png" width="200" alt="Admin Insights Dashboard"/>
 </p>
 
