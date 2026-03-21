@@ -12,13 +12,11 @@ It moves beyond standard delivery apps by eliminating heavy merchant commissions
 
 ## 📸 Screen Previews
 
-> **Note:** Replace these placeholder links with actual images of your app. Create a `/assets/screenshots/` folder in your repo.
-
 <p align="center">
-  <img src="link_to_map_discovery_image.png" width="200" alt="Map Discovery"/>
-  <img src="link_to_restaurant_detail_image.png" width="200" alt="Restaurant Profile"/>
-  <img src="link_to_live_order_image.png" width="200" alt="Live Order Tracker"/>
-  <img src="link_to_admin_insights_image.png" width="200" alt="Admin Insights Dashboard"/>
+  <img src="map_discovery_image.png" width="200" alt="Map Discovery"/>
+  <img src="restaurant_detail_image.png" width="200" alt="Restaurant Profile"/>
+  <img src="live_order_image.png" width="200" alt="Live Order Tracker"/>
+  <img src="admin_insights_image.png" width="200" alt="Admin Insights Dashboard"/>
 </p>
 
 ---
@@ -56,8 +54,8 @@ To run this project locally, you will need to have [Flutter](https://flutter.dev
 
 ### 1. Clone the repository
 ```bash
-git clone [https://github.com/yourusername/foodika.git](https://github.com/yourusername/foodika.git)
-cd foodika
+git clone https://github.com/whyburrito/Technopreneurship-Foodika.git
+cd Technopreneurship-Foodika
 ```
 
 ### 2. Install Dependencies
