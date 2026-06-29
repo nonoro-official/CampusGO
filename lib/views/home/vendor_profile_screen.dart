@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:unimart/views/home/widgets/top_bar.dart';
+import 'package:campusgo/widgets/top_bar.dart';
 
 import '../../models/business_hours.dart';
 import '../../models/business_model.dart';
@@ -14,7 +14,7 @@ import '../../utils/business_utils.dart';
 import 'leave_review_sheet.dart';
 import 'settings/business_edit.dart';
 import 'product_detail_screen.dart';
-import 'widgets/product_image.dart';
+import '../../widgets/product_image.dart';
 import 'report_business_sheet.dart';
 import '../../models/enums.dart';
 import 'chat_page.dart';

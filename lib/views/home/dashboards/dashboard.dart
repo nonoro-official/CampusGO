@@ -3,12 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 // import 'package:cloud_firestore/cloud_firestore.dart';
 // import 'package:geolocator/geolocator.dart';
 import 'dart:async';
-import 'package:unimart/views/home/dashboards/history.dart';
-// import 'package:unimart/providers/auth_provider.dart';
-// import 'package:unimart/models/enums.dart';
+import 'package:campusgo/views/home/dashboards/history.dart';
+// import 'package:campusgo/providers/auth_provider.dart';
+// import 'package:campusgo/models/enums.dart';
 import 'home.dart';
-import '../widgets/top_bar.dart';
-import '../widgets/navbar.dart';
+import '../../../widgets/top_bar.dart';
+import '../../../widgets/navbar.dart';
 import 'shops_dashboard.dart';
 import '../../../services/auth_service.dart';
 
@@ -92,7 +92,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
 
     return Scaffold(
       extendBody: true,
-      appBar: const TopBar(title: "UniMart", dashboard: true),
+      appBar: const TopBar(title: "campusgo", dashboard: true),
       body: SafeArea(
         bottom: false,
         child: Stack(

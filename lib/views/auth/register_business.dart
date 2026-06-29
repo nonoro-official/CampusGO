@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:unimart/models/enums.dart';
-import 'package:unimart/services/auth_service.dart';
-import 'package:unimart/services/business_service.dart';
-import 'package:unimart/views/home/widgets/top_bar.dart';
+import 'package:campusgo/models/enums.dart';
+import 'package:campusgo/services/auth_service.dart';
+import 'package:campusgo/services/business_service.dart';
+import 'package:campusgo/widgets/top_bar.dart';
 
 class RegisterBusinessScreen extends StatefulWidget {
   const RegisterBusinessScreen({

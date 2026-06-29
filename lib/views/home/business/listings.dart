@@ -1,9 +1,9 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../widgets/search.dart';
-import '../widgets/filter.dart';
-import '../widgets/top_bar.dart';
+import '../../../widgets/search.dart';
+import '../../../widgets/filter.dart';
+import '../../../widgets/top_bar.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/product_provider.dart';
 import '../../../models/product_model.dart';
@@ -160,7 +160,7 @@ class _CategoryFilter extends ConsumerWidget {
         );
       },
       loading: () => const SizedBox(height: 45),
-      error: (_, _) => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
     );
   }
 }

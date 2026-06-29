@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../providers/auth_provider.dart';
-import '../widgets/modal.dart';
+import '../../../widgets/modal.dart';
 
 void editPassword(BuildContext context, WidgetRef ref) {
   final currentController = TextEditingController();

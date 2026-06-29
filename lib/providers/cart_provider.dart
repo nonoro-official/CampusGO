@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../lib/models/cart_item_model.dart';
-import '../lib/models/product_model.dart';
-import '../lib/services/cart_service.dart';
-import '../lib/services/order_service.dart';
+import '../models/cart_item_model.dart';
+import '../models/product_model.dart';
+import '../services/cart_service.dart';
+import '../services/order_service.dart';
 import 'auth_provider.dart';
 
 //Service

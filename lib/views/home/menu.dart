@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:unimart/views/home/settings/close_business.dart';
-import 'package:unimart/views/home/settings/privacy_policy.dart';
-import 'package:unimart/views/home/settings/terms_and_conditions.dart';
-import 'package:unimart/views/home/widgets/top_bar.dart';
+import 'package:campusgo/views/home/settings/close_business.dart';
+import 'package:campusgo/views/home/settings/privacy_policy.dart';
+import 'package:campusgo/views/home/settings/terms_and_conditions.dart';
+import 'package:campusgo/widgets/top_bar.dart';
 import 'settings/profile_edit.dart';
 import 'settings/help_center.dart';
 import 'settings/business_edit.dart';
 import 'settings/password_edit.dart';
 import 'settings/delete_account.dart';
-import 'widgets/pfp_edit.dart';
+import '../../widgets/pfp_edit.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../models/enums.dart';
 import '../../providers/auth_provider.dart';
@@ -80,7 +80,7 @@ class MenuScreen extends ConsumerWidget {
                         },
                       ]),
                       loading: () => const LinearProgressIndicator(),
-                      error: (_, _) => const Text("Error loading business"),
+                      error: (_, __) => const Text("Error loading business"),
                     ),
                   ] else ...[
                     _buildList(context, [

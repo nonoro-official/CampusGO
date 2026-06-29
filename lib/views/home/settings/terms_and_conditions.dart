@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../widgets/modal.dart';
+import '../../../widgets/modal.dart';
 
 void termsAndConditions(BuildContext context, WidgetRef ref) {
   ModalContainer.show(
@@ -26,7 +26,7 @@ void termsAndConditions(BuildContext context, WidgetRef ref) {
             _buildSection(
               context,
               "Welcome",
-              "Welcome to UniMart! By using our service, you agree to the following terms:",
+              "Welcome to campusgo! By using our service, you agree to the following terms:",
             ),
             _buildSection(
               context,

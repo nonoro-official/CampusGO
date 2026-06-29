@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:unimart/models/order_model.dart';
-import 'package:unimart/providers/order_provider.dart';
-import 'package:unimart/services/business_service.dart';
-import 'package:unimart/services/message_service.dart';
-import '../widgets/top_bar.dart';
-import '../widgets/modal.dart';
+import 'package:campusgo/models/order_model.dart';
+import 'package:campusgo/providers/order_provider.dart';
+import 'package:campusgo/services/business_service.dart';
+import 'package:campusgo/services/message_service.dart';
+import '../../../widgets/top_bar.dart';
+import '../../../widgets/modal.dart';
 import '../chat_page.dart';
 
 class OrderSummary extends ConsumerWidget {

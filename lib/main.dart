@@ -2,8 +2,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:unimart/views/auth/register_business.dart';
-import 'package:unimart/services/fcm_service.dart';
+import 'package:campusgo/views/auth/register_business.dart';
+import 'package:campusgo/services/fcm_service.dart';
 import 'themes/theme.dart';
 import 'firebase_options.dart';
 import 'views/wrapper.dart';
@@ -21,7 +21,7 @@ import 'views/home/business/listings.dart';
 import 'views/home/vendor_profile_screen.dart';
 import 'views/home/dashboards/history.dart';
 import 'models/business_model.dart';
-import 'views/home/widgets/message_notification_listener.dart';
+import 'widgets/message_notification_listener.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 final ValueNotifier<String?> currentRouteNotifier = ValueNotifier<String?>(
@@ -76,7 +76,7 @@ class MyApp extends StatelessWidget {
       navigatorKey: navigatorKey,
       navigatorObservers: [RouteNameObserver(currentRouteNotifier)],
       debugShowCheckedModeBanner: false,
-      title: 'UniMart',
+      title: 'campusgo',
       theme: AppTheme.lightTheme,
 
       builder: (context, child) {

@@ -6,8 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../models/product_model.dart';
 import '../../../models/enums.dart';
 import '../../../providers/product_provider.dart';
-import '../widgets/modal.dart';
-import '../widgets/product_image_picker.dart';
+import '../../../widgets/modal.dart';
+import '../../../widgets/product_image_picker.dart';
 
 String _generateAutoSku() {
   final random = Random();

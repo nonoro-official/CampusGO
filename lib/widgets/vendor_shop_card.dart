@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../providers/business_provider.dart';
 import '../../../providers/review_provider.dart';
-import '../vendor_profile_screen.dart';
+import '../views/home/vendor_profile_screen.dart';
 import '../../../utils/business_utils.dart';
 import '../../../models/enums.dart';
 

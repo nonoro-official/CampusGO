@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../widgets/search.dart';
-import '../widgets/top_bar.dart';
-import '../widgets/product_image.dart';
-import '../widgets/filter.dart';
+import '../../../widgets/search.dart';
+import '../../../widgets/top_bar.dart';
+import '../../../widgets/product_image.dart';
+import '../../../widgets/filter.dart';
 import '../../../providers/business_provider.dart';
 import '../../../providers/product_provider.dart';
 import '../../../models/business_model.dart';
@@ -32,7 +32,7 @@ class _ShopsScreenState extends ConsumerState<ShopsScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: TopBar(
-        title: 'UniMart',
+        title: 'campusgo',
         showBack: true,
         rightIcon: Icons.chat_bubble_outline,
         onRightPressed: () => Navigator.pushNamed(context, "/messages"),
@@ -263,7 +263,7 @@ class VendorCard extends ConsumerWidget {
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     itemCount: products.length,
-                    separatorBuilder: (_, _) =>
+                    separatorBuilder: (_, __) =>
                         const SizedBox(width: 10),
                     itemBuilder: (context, index) {
                       final product = products[index];
@@ -318,7 +318,7 @@ class VendorCard extends ConsumerWidget {
                 child: Center(
                     child: CircularProgressIndicator()),
               ),
-              error: (_, _) => const SizedBox.shrink(),
+              error: (_, __) => const SizedBox.shrink(),
             ),
           ],
         ),

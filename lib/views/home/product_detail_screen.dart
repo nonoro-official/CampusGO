@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:unimart/views/home/widgets/top_bar.dart';
+import 'package:campusgo/widgets/top_bar.dart';
 import '../../models/product_model.dart';
 import '../../models/enums.dart';
 import '../../providers/cart_provider.dart';

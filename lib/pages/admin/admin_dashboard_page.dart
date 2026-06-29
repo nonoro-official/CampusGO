@@ -44,7 +44,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     );
 
     if (confirm == true) {
-      await _authService.logout();
+      await _authService.signOut();
       if (!mounted) return;
       Navigator.pushAndRemoveUntil(
         context,

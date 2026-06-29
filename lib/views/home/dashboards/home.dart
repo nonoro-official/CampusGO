@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'business_dashboard.dart';
 import 'user_dashboard.dart';
-import '../widgets/toggle_pages.dart';
+import '../../../widgets/toggle_pages.dart';
 
 class HomeDashboardScreen extends StatefulWidget {
   final String accountType;

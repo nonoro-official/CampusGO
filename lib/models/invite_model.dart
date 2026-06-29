@@ -1,4 +1,4 @@
-import 'package:unimart/models/enums.dart';
+import 'enums.dart';
 
 class InviteModel {
   final String inviteId;

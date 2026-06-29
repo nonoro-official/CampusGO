@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../models/event_model.dart';
 import '../../../services/event_service.dart';
-import '../widgets/filter.dart';
+import '../../../widgets/filter.dart';
 import 'event_detail_screen.dart';
 
 class EventListScreen extends StatefulWidget {

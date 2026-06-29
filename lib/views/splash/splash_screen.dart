@@ -25,7 +25,7 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> _playJingle() async {
     try {
       await _audioPlayer.setVolume(0.5);
-      await _audioPlayer.play(AssetSource('audio/unimart_jingle.m4a'));
+      await _audioPlayer.play(AssetSource('audio/campusgo_jingle.m4a'));
     } catch (e) {
       debugPrint("Error playing audio: $e");
     }
@@ -48,7 +48,7 @@ class _SplashScreenState extends State<SplashScreen> {
           children: [
             Align(
               alignment: const Alignment(0, 0),
-              child: Image.asset('assets/images/UniMart_Logo.png', width: 235),
+              child: Image.asset('assets/images/campusgo_logo.png', width: 235),
             ),
             const SizedBox(height: 10),
             Text('Buy and Sell', style: textTheme.bodyMedium),

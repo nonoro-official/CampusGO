@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:unimart/services/message_service.dart';
-import 'package:unimart/services/business_service.dart';
-import 'package:unimart/models/business_model.dart';
-import 'package:unimart/views/home/chat_page.dart';
-import 'package:unimart/views/home/widgets/user_tile.dart';
+import 'package:campusgo/services/message_service.dart';
+import 'package:campusgo/services/business_service.dart';
+import 'package:campusgo/models/business_model.dart';
+import 'package:campusgo/views/home/chat_page.dart';
+import 'package:campusgo/widgets/user_tile.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:unimart/providers/auth_provider.dart';
-import 'package:unimart/models/enums.dart';
+import 'package:campusgo/providers/auth_provider.dart';
+import 'package:campusgo/models/enums.dart';
 
 class MessagesScreen extends ConsumerWidget {
   MessagesScreen({super.key});

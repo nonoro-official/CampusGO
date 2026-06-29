@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../models/order_model.dart';
 import '../../../providers/order_provider.dart';
 import 'order_summary.dart';
-import '../widgets/filter.dart';
+import '../../../widgets/filter.dart';
 
 class OrdersScreen extends ConsumerStatefulWidget {
   final String filter; // "Processing" or "Completed"
