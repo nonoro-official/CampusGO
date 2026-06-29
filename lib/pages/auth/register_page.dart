@@ -74,7 +74,7 @@ class _RegisterPageState extends State<RegisterPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Image.asset("assets/images/foodika_logo.png", width: 120),
+              Image.asset("assets/images/campusgo_logo.png", width: 120),
               const SizedBox(height: 30),
 
               TextField(

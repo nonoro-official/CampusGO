@@ -68,7 +68,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             const UserAccountsDrawerHeader(
               decoration: BoxDecoration(color: Color(0xFFE46A3E)),
               accountName: Text("Admin Panel", style: TextStyle(fontWeight: FontWeight.bold)),
-              accountEmail: Text("admin@foodika.com"),
+              accountEmail: Text("admin@campusgo.com"),
               currentAccountPicture: CircleAvatar(
                 backgroundColor: Colors.white,
                 child: Icon(Icons.admin_panel_settings, color: Color(0xFFE46A3E), size: 40),

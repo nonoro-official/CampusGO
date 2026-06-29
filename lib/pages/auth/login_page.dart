@@ -20,7 +20,7 @@ class _LoginPageState extends State<LoginPage> {
   bool isLoading = false;
 
   void login() async {
-    if (emailController.text == "admin@foodika.com" && passwordController.text == "admin") {
+    if (emailController.text == "admin@campusgo.com" && passwordController.text == "admin") {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const AdminDashboardPage()),
@@ -81,7 +81,7 @@ class _LoginPageState extends State<LoginPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const SizedBox(height: 50),
-              Image.asset("assets/images/foodika_logo.png", height: 120),
+              Image.asset("assets/images/campusgo_logo.png", height: 120),
               const SizedBox(height: 30),
               const Text(
                 "Welcome Back!",

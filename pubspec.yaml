@@ -1,4 +1,4 @@
-name: foodika
+name: campusgo
 description: "A new Flutter project."
 
 publish_to: 'none'
@@ -30,13 +30,14 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.13.1
+  change_app_package_name: ^1.5.0
 
 flutter_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/images/foodika_logo.png"
+  image_path: "assets/images/campusgo_logo.png"
 
 flutter:
   uses-material-design: true
   assets:
-    - assets/images/foodika_logo.png
+    - assets/images/campusgo_logo.png

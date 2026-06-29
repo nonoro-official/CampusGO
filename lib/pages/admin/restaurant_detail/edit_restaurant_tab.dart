@@ -310,7 +310,7 @@ class _EditRestaurantTabState extends State<EditRestaurantTab> {
                 onTap: (tapPosition, point) => setState(() => selectedLocation = point),
               ),
               children: [
-                TileLayer(urlTemplate: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', userAgentPackageName: 'com.foodika.app'),
+                TileLayer(urlTemplate: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', userAgentPackageName: 'com.campusgo.app'),
                 MarkerLayer(
                   markers: [
                     if (originalLocation != null)

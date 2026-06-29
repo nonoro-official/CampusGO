@@ -251,7 +251,7 @@ class _AddRestaurantPageState extends State<AddRestaurantPage> {
                   onTap: (tapPosition, point) => setState(() => selectedLocation = point),
                 ),
                 children: [
-                  TileLayer(urlTemplate: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', userAgentPackageName: 'com.foodika.app'),
+                  TileLayer(urlTemplate: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', userAgentPackageName: 'com.campusgo.app'),
                   if (selectedLocation != null)
                     MarkerLayer(markers: [
                       Marker(

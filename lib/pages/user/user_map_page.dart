@@ -142,9 +142,9 @@ class _UserMapPageState extends State<UserMapPage> {
                             ? Image.network(
                           imageUrl,
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => Image.asset('assets/images/foodika_logo.png', fit: BoxFit.cover),
+                          errorBuilder: (context, error, stackTrace) => Image.asset('assets/images/campusgo_logo.png', fit: BoxFit.cover),
                         )
-                            : Image.asset('assets/images/foodika_logo.png', fit: BoxFit.cover),
+                            : Image.asset('assets/images/campusgo_logo.png', fit: BoxFit.cover),
                       ),
                     ),
                     const SizedBox(width: 6),
@@ -215,7 +215,7 @@ class _UserMapPageState extends State<UserMapPage> {
                     borderRadius: BorderRadius.circular(10),
                     child: data['imageUrl'] != null && data['imageUrl'].toString().isNotEmpty
                         ? Image.network(data['imageUrl'], width: 80, height: 80, fit: BoxFit.cover)
-                        : Container(width: 80, height: 80, color: Colors.grey[200], child: Image.asset('assets/images/foodika_logo.png', fit: BoxFit.cover)),
+                        : Container(width: 80, height: 80, color: Colors.grey[200], child: Image.asset('assets/images/campusgo_logo.png', fit: BoxFit.cover)),
                   ),
                   const SizedBox(width: 15),
                   Expanded(
@@ -299,7 +299,7 @@ class _UserMapPageState extends State<UserMapPage> {
           interactionOptions: InteractionOptions(flags: InteractiveFlag.all & ~InteractiveFlag.rotate),
         ),
         children: [
-          TileLayer(urlTemplate: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', userAgentPackageName: 'com.foodika.app'),
+          TileLayer(urlTemplate: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', userAgentPackageName: 'com.campusgo.app'),
           MarkerLayer(markers: allMarkers),
         ],
       ),
