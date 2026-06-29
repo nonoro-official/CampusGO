@@ -1,6 +1,6 @@
 {
-    "name": "foodika",
-    "short_name": "foodika",
+    "name": "campusgo",
+    "short_name": "campusgo",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

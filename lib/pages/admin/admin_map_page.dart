@@ -64,9 +64,9 @@ class _AdminMapPageState extends State<AdminMapPage> {
                               ? Image.network(
                             imageUrl,
                             fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => Image.asset('assets/images/foodika_logo.png', fit: BoxFit.cover),
+                            errorBuilder: (context, error, stackTrace) => Image.asset('assets/images/campusgo_logo.png', fit: BoxFit.cover),
                           )
-                              : Image.asset('assets/images/foodika_logo.png', fit: BoxFit.cover),
+                              : Image.asset('assets/images/campusgo_logo.png', fit: BoxFit.cover),
                         ),
                       ),
                       const SizedBox(width: 6),
@@ -127,7 +127,7 @@ class _AdminMapPageState extends State<AdminMapPage> {
         interactionOptions: InteractionOptions(flags: InteractiveFlag.all & ~InteractiveFlag.rotate),
       ),
       children: [
-        TileLayer(urlTemplate: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', userAgentPackageName: 'com.foodika.app'),
+        TileLayer(urlTemplate: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', userAgentPackageName: 'com.campusgo.app'),
         MarkerLayer(markers: markers),
       ],
     );

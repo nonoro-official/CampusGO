@@ -1,10 +1,10 @@
-# 🍽️ Foodika: Discover, Dine, and Earn
+# 🍽️ campusgo: Discover, Dine, and Earn
 
 ![Flutter](https://img.shields.io/badge/Flutter-%2302569B.svg?style=for-the-badge&logo=Flutter&logoColor=white)
 ![Firebase](https://img.shields.io/badge/Firebase-%23039BE5.svg?style=for-the-badge&logo=firebase&logoColor=white)
 ![Dart](https://img.shields.io/badge/dart-%230175C2.svg?style=for-the-badge&logo=dart&logoColor=white)
 
-Foodika is a dual-sided, full-stack mobile application built to connect food enthusiasts with local MSMEs in the Philippines. 
+campusgo is a dual-sided, full-stack mobile application built to connect food enthusiasts with local MSMEs in the Philippines. 
 
 It moves beyond standard delivery apps by eliminating heavy merchant commissions and focusing on **discovery, gamified loyalty, and actionable demographic insights**.
 
@@ -24,7 +24,7 @@ It moves beyond standard delivery apps by eliminating heavy merchant commissions
 
 ### 👤 For Users (B2C)
 * **Interactive Map Discovery:** Find nearby hidden gems using `flutter_map` and open-source location data. Filter by tags like "Fast Food," "Cafe," or "Filipino."
-* **Gamified Loyalty Economy:** Earn Foodika Points by interacting with the app (e.g., +10 points for sharing a restaurant, +50 points for completing your demographic profile).
+* **Gamified Loyalty Economy:** Earn campusgo Points by interacting with the app (e.g., +10 points for sharing a restaurant, +50 points for completing your demographic profile).
 * **Voucher Redemption:** Exchange earned points for exclusive discounts at partner restaurants.
 * **Live Order Tracking:** Real-time state management showing order progress (Pending -> Preparing -> Ready) synced directly with the merchant's kitchen.
 
@@ -53,8 +53,8 @@ To run this project locally, you will need to have [Flutter](https://flutter.dev
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/whyburrito/Technopreneurship-Foodika.git
-cd Technopreneurship-Foodika
+git clone https://github.com/whyburrito/Technopreneurship-campusgo.git
+cd Technopreneurship-campusgo
 ```
 
 ### 2. Install Dependencies
@@ -93,7 +93,7 @@ lib/
 ---
 
 ## 💡 Lessons Learned & Future Scope
-Building Foodika required engineering a balanced, closed-loop digital economy. Managing asynchronous database updates (ensuring points are deducted, vouchers are claimed, and kitchen screens update simultaneously) highlighted the importance of robust error handling and real-time state management. 
+Building campusgo required engineering a balanced, closed-loop digital economy. Managing asynchronous database updates (ensuring points are deducted, vouchers are claimed, and kitchen screens update simultaneously) highlighted the importance of robust error handling and real-time state management. 
 
 **Future features could include:**
 * Push notifications for proximity-based deals.
