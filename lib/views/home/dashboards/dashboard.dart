@@ -10,7 +10,7 @@ import 'home.dart';
 import '../widgets/top_bar.dart';
 import '../widgets/navbar.dart';
 import 'shops_dashboard.dart';
-import '/services/auth_service.dart';
+import '../../../services/auth_service.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   final String accountType;

@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../models/business_model.dart';
-import '../models/enums.dart';
-import '../services/business_service.dart';
+import '../lib/models/business_model.dart';
+import '../lib/models/enums.dart';
+import '../lib/services/business_service.dart';
 import 'auth_provider.dart';
 
 final businessServiceProvider = Provider<BusinessService>(
