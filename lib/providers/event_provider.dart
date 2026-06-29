@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../models/event_model.dart';
-import '../services/event_service.dart';
+import '../lib/models/event_model.dart';
+import '../lib/services/event_service.dart';
 
 // 1. Provider for the Service itself
 final eventServiceProvider = Provider((ref) => EventService());
