@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:unimart/services/auth_service.dart';
-import 'package:unimart/views/home/widgets/top_bar.dart';
+import 'package:campusgo/services/auth_service.dart';
+import 'package:campusgo/widgets/top_bar.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});

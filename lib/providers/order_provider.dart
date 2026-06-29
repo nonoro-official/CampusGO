@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../lib/models/order_model.dart';
-import '../lib/services/order_service.dart';
+import '../models/order_model.dart';
+import '../services/order_service.dart';
 import 'auth_provider.dart';
-import '../lib/providers/business_provider.dart';
+import '../providers/business_provider.dart';
 
 // ─── Service ─────────────────────────────────────────────────────────────────
 

@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:unimart/providers/auth_provider.dart';
-import 'package:unimart/providers/business_provider.dart';
+import 'package:campusgo/providers/auth_provider.dart';
+import 'package:campusgo/providers/business_provider.dart';
 import '../../../models/event_model.dart';
 import '../../../services/event_service.dart';
 import '../events/event_list_screen.dart';
-import '../widgets/vendor_shop_card.dart';
-import '../widgets/analytics_grid.dart';
-import '../widgets/vendor_actions_row.dart';
+import '../../../widgets/vendor_shop_card.dart';
+import '../../../widgets/analytics_grid.dart';
+import '../../../widgets/vendor_actions_row.dart';
 
 class BusinessDashboard extends ConsumerWidget {
   const BusinessDashboard({super.key});

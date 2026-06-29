@@ -2,8 +2,8 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:unimart/views/home/widgets/message_notification_banner.dart';
-import 'package:unimart/views/home/chat_page.dart';
+import 'package:campusgo/widgets/message_notification_banner.dart';
+import 'package:campusgo/views/home/chat_page.dart';
 
 class MessageNotificationListener extends StatefulWidget {
   final Widget child;

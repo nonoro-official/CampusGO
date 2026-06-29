@@ -164,7 +164,7 @@ class _CartCardState extends ConsumerState<_CartCard> {
                             color: Colors.grey.shade700,
                           ),
                         ),
-                        error: (_, _) => Text(
+                        error: (_, __) => Text(
                           'Business: ${enriched.businessId}',
                           style: textTheme.titleSmall?.copyWith(
                             color: Colors.grey.shade700,

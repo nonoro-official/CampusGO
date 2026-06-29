@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:unimart/models/order_model.dart';
-import 'package:unimart/providers/order_provider.dart';
+import 'package:campusgo/models/order_model.dart';
+import 'package:campusgo/providers/order_provider.dart';
 import 'order_details.dart';
-import '../widgets/top_bar.dart';
-import '../widgets/search.dart';
-import '../widgets/filter.dart';
+import '../../../widgets/top_bar.dart';
+import '../../../widgets/search.dart';
+import '../../../widgets/filter.dart';
 
 class OrderList extends ConsumerStatefulWidget {
   const OrderList({super.key});

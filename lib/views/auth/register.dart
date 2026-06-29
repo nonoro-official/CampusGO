@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:unimart/models/enums.dart';
-import 'package:unimart/services/auth_service.dart';
-import 'package:unimart/views/home/widgets/top_bar.dart';
+import 'package:campusgo/models/enums.dart';
+import 'package:campusgo/services/auth_service.dart';
+import 'package:campusgo/widgets/top_bar.dart';
 import 'register_business.dart';
 
 class RedirectScreen extends StatelessWidget {
@@ -20,7 +20,7 @@ class RedirectScreen extends StatelessWidget {
           children: [
             Align(
               alignment: Alignment.center,
-              child: Image.asset('assets/images/UniMart_Logo.png', width: 235),
+              child: Image.asset('assets/images/campusgo_logo.png', width: 235),
             ),
             const SizedBox(height: 10),
             Text('Buy and Sell', style: textTheme.bodyMedium),

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../constants/categories.dart';
-import '../widgets/modal.dart';
-import '../widgets/pfp_edit.dart';
+import '../../../widgets/modal.dart';
+import '../../../widgets/pfp_edit.dart';
 import '../../../models/business_model.dart';
 import '../../../models/business_hours.dart';
 import '../../../models/faq_model.dart';

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:unimart/models/order_model.dart';
-import 'package:unimart/providers/order_provider.dart';
-import 'package:unimart/providers/product_provider.dart';
+import 'package:campusgo/models/order_model.dart';
+import 'package:campusgo/providers/order_provider.dart';
+import 'package:campusgo/providers/product_provider.dart';
 
 class AnalyticsGrid extends ConsumerWidget {
   final String businessId;

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../widgets/modal.dart';
+import '../../../widgets/modal.dart';
 
 void privacyPolicy(BuildContext context, WidgetRef ref) {
   ModalContainer.show(
@@ -25,7 +25,7 @@ void privacyPolicy(BuildContext context, WidgetRef ref) {
             _buildSection(
               context,
               "Introduction",
-              "We value your privacy. By using UniMart, you agree to the practices outlined in this policy. "
+              "We value your privacy. By using campusgo, you agree to the practices outlined in this policy. "
                   "This applies to all enrolled students using the service.",
             ),
             _buildSection(

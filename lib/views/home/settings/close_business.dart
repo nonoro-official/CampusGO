@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:unimart/providers/business_provider.dart';
+import 'package:campusgo/providers/business_provider.dart';
 import '../../../providers/auth_provider.dart';
-import '../widgets/modal.dart';
+import '../../../widgets/modal.dart';
 
 void closeBusiness(BuildContext context, WidgetRef ref) {
   final passwordController = TextEditingController();

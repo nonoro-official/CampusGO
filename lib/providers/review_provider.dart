@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../lib/models/review_model.dart';
-import '../lib/services/review_service.dart';
+import '../models/review_model.dart';
+import '../services/review_service.dart';
 
 final reviewServiceProvider = Provider((ref) {
   return ReviewService();

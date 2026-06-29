@@ -12,7 +12,7 @@ class RecommendedRow extends StatelessWidget {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: 5,
-        separatorBuilder: (_, _) => const SizedBox(width: 15),
+        separatorBuilder: (_, __) => const SizedBox(width: 15),
         itemBuilder: (context, index) {
           return Container(
             width: 100,

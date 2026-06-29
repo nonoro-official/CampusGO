@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:unimart/utils/online_utils.dart';
+import 'package:campusgo/utils/online_utils.dart';
 
 class UserTile extends StatelessWidget {
   final String displayName;

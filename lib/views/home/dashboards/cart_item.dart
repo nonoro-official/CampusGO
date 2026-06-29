@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:unimart/services/message_service.dart';
-import 'package:unimart/services/business_service.dart';
+import 'package:campusgo/services/message_service.dart';
+import 'package:campusgo/services/business_service.dart';
 import '../chat_page.dart';
-import '../widgets/top_bar.dart';
-import '../widgets/modal.dart';
+import '../../../widgets/top_bar.dart';
+import '../../../widgets/modal.dart';
 
 class CartItemScreen extends StatelessWidget {
   final String accountType;

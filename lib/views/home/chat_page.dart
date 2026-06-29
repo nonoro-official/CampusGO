@@ -1,10 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:unimart/components/chat_bubble.dart';
-import 'package:unimart/services/auth_service.dart';
-import 'package:unimart/services/message_service.dart';
-import 'package:unimart/utils/online_utils.dart';
-import 'package:unimart/main.dart' show currentChatReceiverNotifier;
+import 'package:campusgo/widgets/chat_bubble.dart';
+import 'package:campusgo/services/auth_service.dart';
+import 'package:campusgo/services/message_service.dart';
+import 'package:campusgo/utils/online_utils.dart';
+import 'package:campusgo/main.dart' show currentChatReceiverNotifier;
 
 class ChatPage extends StatefulWidget {
   final String receiverName;
@@ -246,7 +246,7 @@ class _ChatPageState extends State<ChatPage> {
               message: message,
               isCurrentUser: isCurrentUser,
               sentAt: sentAt,
-              isSeen: isSeen,
+              // isSeen: isSeen,
             ),
           ),
         ],

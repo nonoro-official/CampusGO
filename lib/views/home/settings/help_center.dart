@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../widgets/modal.dart';
+import '../../../widgets/modal.dart';
 
 void helpCenter(BuildContext context, WidgetRef ref) {
   ModalContainer.show(
@@ -12,7 +12,7 @@ void helpCenter(BuildContext context, WidgetRef ref) {
           {
             "question": "About Us",
             "answer":
-                "UniMart is a centralized campus e-commerce platform designed to bring student businesses into one accessible space, making it easier for the campus community to discover, support, and engage with them.\n\nPrototype for Mobile Application Development 2 and Science, Technology, and Society.",
+                "campusgo is a centralized campus e-commerce platform designed to bring student businesses into one accessible space, making it easier for the campus community to discover, support, and engage with them.\n\nPrototype for Mobile Application Development 2 and Science, Technology, and Society.",
           },
           {
             "question": "Contact Tech and Support",
