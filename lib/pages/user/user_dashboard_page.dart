@@ -137,7 +137,7 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
             ),
             child: ListTile(
               leading: const Icon(Icons.workspace_premium, color: Colors.white, size: 30),
-              title: const Text("Foodika PRO", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+              title: const Text("campusgo PRO", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
               subtitle: const Text("Unlock exclusive perks", style: TextStyle(color: Colors.white70, fontSize: 12)),
               onTap: () {
                 Navigator.pop(context);
@@ -207,7 +207,7 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
               child: const Icon(Icons.workspace_premium, color: Colors.orange, size: 40),
             ),
             const SizedBox(height: 15),
-            const Text("Upgrade to Foodika PRO", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            const Text("Upgrade to campusgo PRO", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             const Text("Just ₱89/month for the ultimate foodie experience.", textAlign: TextAlign.center, style: TextStyle(color: Colors.grey, fontSize: 14)),
             const SizedBox(height: 25),
@@ -224,7 +224,7 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
                 onPressed: () {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("🎉 Welcome to Foodika PRO! Payment successful."), backgroundColor: Colors.green)
+                      const SnackBar(content: Text("🎉 Welcome to campusgo PRO! Payment successful."), backgroundColor: Colors.green)
                   );
                 },
                 style: ElevatedButton.styleFrom(

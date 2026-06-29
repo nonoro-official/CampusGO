@@ -38,7 +38,7 @@ class _MockQRScannerPageState extends State<MockQRScannerPage> with SingleTicker
       Navigator.pop(context); // Close the scanner
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("🎉 Success! You earned 50 Foodika Points!"),
+          content: Text("🎉 Success! You earned 50 campusgo Points!"),
           backgroundColor: Colors.green,
           duration: Duration(seconds: 3),
         ),
@@ -119,7 +119,7 @@ class _MockQRScannerPageState extends State<MockQRScannerPage> with SingleTicker
                         child: Container(
                           height: 4,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFE46A3E), // Foodika Orange
+                            color: const Color(0xFFE46A3E), // campusgo Orange
                             boxShadow: [
                               BoxShadow(color: const Color(0xFFE46A3E).withOpacity(0.8), blurRadius: 10, spreadRadius: 2)
                             ],

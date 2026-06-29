@@ -1,16 +1,1 @@
-{
-  "hosting": {
-    "public": "build/web",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
-    ],
-    "rewrites": [
-      {
-        "source": "**",
-        "destination": "/index.html"
-      }
-    ]
-  }
-}
+{"flutter":{"platforms":{"android":{"default":{"projectId":"campusgo-9deb0","appId":"1:127792516911:android:f14daa2a05e9f6472d9bda","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"campusgo-9deb0","configurations":{"android":"1:127792516911:android:f14daa2a05e9f6472d9bda","web":"1:127792516911:web:f49ae318ceb2e6c92d9bda"}}}}}}

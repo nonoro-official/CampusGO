@@ -66,7 +66,7 @@ class _UserRestaurantDetailPageState extends State<UserRestaurantDetailPage> {
             title: Text(hasShared ? "Share with Friends!" : "Earn Points!", style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFE46A3E))),
             content: Text(hasShared
                 ? "Share this hidden gem to TikTok or Instagram!\n\n(You've already claimed your +10 points for this restaurant.)"
-                : "Share this hidden gem to TikTok or Instagram to earn +10 Foodika Points!"),
+                : "Share this hidden gem to TikTok or Instagram to earn +10 campusgo Points!"),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
             actions: [
               TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel", style: TextStyle(color: Colors.grey))),
