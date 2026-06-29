@@ -240,7 +240,7 @@ class _PersonalDetailsPageState extends State<PersonalDetailsPage> {
                   children: [
                     Icon(Icons.stars, color: Colors.orange),
                     SizedBox(width: 10),
-                    Expanded(child: Text("Complete your status and birthday to earn +50 Foodika Points! ⭐", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange))),
+                    Expanded(child: Text("Complete your status and birthday to earn +50 campusgo Points! ⭐", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange))),
                   ],
                 ),
               ),
