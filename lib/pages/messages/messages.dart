@@ -47,13 +47,13 @@ class MessagesScreen extends ConsumerWidget {
             stream: _OrganizerService.getAllOrganizers(),
             builder: (context, OrganizerSnapshot) {
               if (OrganizerSnapshot.hasError) {
-                return const Center(child: Text('Error loading Organizeres'));
+                return const Center(child: Text('Error loading Organizers'));
               }
               if (!OrganizerSnapshot.hasData) {
-                return const Center(child: Text('Loading Organizeres...'));
+                return const Center(child: Text('Loading Organizers...'));
               }
 
-              final OrganizeresByOwnerId = {
+              final OrganizersByOwnerId = {
                 for (final Organizer in OrganizerSnapshot.data!)
                   Organizer.ownerId: Organizer,
               };
@@ -83,7 +83,7 @@ class MessagesScreen extends ConsumerWidget {
                     if (otherId.isEmpty) continue;
 
                     final otherIsOrganizer =
-                        OrganizeresByOwnerId.containsKey(otherId);
+                        OrganizersByOwnerId.containsKey(otherId);
 
                     bool isValidPartner = false;
                     if (isOrganizer) {
@@ -146,7 +146,7 @@ class MessagesScreen extends ConsumerWidget {
                         }
                       }
 
-                      final Organizer = OrganizeresByOwnerId[uid];
+                      final Organizer = OrganizersByOwnerId[uid];
 
                       String displayName = 'Unknown';
                       String? avatarUrl;

@@ -1,100 +1,157 @@
-# 🍽️ campusgo: Discover, Dine, and Earn
+# 🎓 CampusGO: Discover, Participate, and Earn
 
 ![Flutter](https://img.shields.io/badge/Flutter-%2302569B.svg?style=for-the-badge&logo=Flutter&logoColor=white)
 ![Firebase](https://img.shields.io/badge/Firebase-%23039BE5.svg?style=for-the-badge&logo=firebase&logoColor=white)
 ![Dart](https://img.shields.io/badge/dart-%230175C2.svg?style=for-the-badge&logo=dart&logoColor=white)
 
-campusgo is a dual-sided, full-stack mobile application built to connect food enthusiasts with local MSMEs in the Philippines. 
+CampusGO is a full-stack mobile application designed to simplify campus event discovery, organization, and participation within the CIIT community.
 
-It moves beyond standard delivery apps by eliminating heavy merchant commissions and focusing on **discovery, gamified loyalty, and actionable demographic insights**.
+Built for students, professors, and event organizers, the application centralizes campus events, announcements, rewards, and updates into a single platform while encouraging student engagement through **QR code-based reward collection**, seamless cloud connectivity, and an intuitive event management experience.
+
+The project is developed for **Android** and **Web** platforms using Flutter, providing a consistent experience across both devices.
 
 ---
 
 ## 📸 Screen Previews
 
 <p align="center">
-  <img src="assets/screenshots/map_discovery_image.png" width="200" alt="Map Discovery"/>
-  <img src="assets/screenshots/restaurant_detail_image.png" width="200" alt="Restaurant Profile"/>
-  <img src="assets/screenshots/admin_insights_image.png" width="200" alt="Admin Insights Dashboard"/>
+  <img src="assets/screenshots/dashboard.png" width="200" alt="Dashboard"/>
+  <img src="assets/screenshots/events.png" width="200" alt="Events"/>
+  <img src="assets/screenshots/rewards.png" width="200" alt="Rewards"/>
 </p>
 
 ---
 
 ## ✨ Key Features
 
-### 👤 For Users (B2C)
-* **Interactive Map Discovery:** Find nearby hidden gems using `flutter_map` and open-source location data. Filter by tags like "Fast Food," "Cafe," or "Filipino."
-* **Gamified Loyalty Economy:** Earn campusgo Points by interacting with the app (e.g., +10 points for sharing a restaurant, +50 points for completing your demographic profile).
-* **Voucher Redemption:** Exchange earned points for exclusive discounts at partner restaurants.
-* **Live Order Tracking:** Real-time state management showing order progress (Pending -> Preparing -> Ready) synced directly with the merchant's kitchen.
+### 👤 For Students
 
-### 🏪 For Merchants (B2B Admin)
-* **Live Kitchen Dashboard:** A real-time, one-tap state machine to accept and fulfill incoming orders efficiently.
-* **Customer Insights Dashboard:** Aggregated, anonymized demographic analytics. View the percentage of customers by **User Status** (Student vs. Professional) and **Age Groups** to optimize marketing strategies.
-* **Menu & Voucher Management:** Create, edit, and set quantity limits on promotional vouchers to drive foot traffic during off-peak hours.
-* **Automated Economy Sync:** If an order is canceled, the system automatically refunds the user's points and returns the voucher to the public pool.
+- **Campus Event Discovery:** Browse upcoming seminars, workshops, competitions, and organization events from a personalized dashboard with categorized listings.
+- **Reward System:** Earn points by participating in campus events and purchasing official event merchandise. Redeem accumulated points for exclusive campus merchandise, discounts, and special rewards.
+- **Campus Map:** Easily locate event venues and important campus facilities through an interactive campus map.
+- **CIIT Authentication:** Secure login using verified CIIT email addresses and student ID numbers to ensure only authorized users can access the platform.
+- **Dashboard & Updates:** Stay informed with campus announcements, event reminders, reward availability, and the latest campus activities from a centralized dashboard.
+- **Smart Notifications:** Receive consistent but non-invasive notifications for registrations, announcements, rewards, and event updates.
+- **Theme Support:** Has both light and dark themes for a comfortable user experience.
+
+### 🏫 For Event Organizers
+
+- **Event Management Dashboard:** Create, edit, publish, and manage campus events from a centralized administrative interface.
+- **QR Code Attendance & Rewards:** Generate unique QR codes for events, allowing participants to securely claim reward points after attendance.
+- **Participant Management:** Monitor registrations, attendance, and participant information in real time.
+- **Announcement Center:** Publish announcements and important updates directly to student dashboards.
+- **Reward Management:** Create and manage redeemable merchandise, reward inventories, and point requirements.
+- **Cloud Synchronization:** Keep events, announcements, participant information, and rewards synchronized across all connected devices through Firebase.
 
 ---
 
 ## 🛠️ Tech Stack & Architecture
 
-* **Frontend:** Flutter & Dart
-* **Backend:** Firebase (Serverless Architecture)
-  * **Firestore:** Real-time NoSQL database for syncing live orders and user/merchant data.
-  * **Firebase Auth:** Secure user authentication.
-  * **Firebase Storage:** Cloud storage for menu items and user profile pictures.
-* **Mapping:** `flutter_map` (OpenStreetMap integration for zero-cost map overhead).
+- **Platforms:** Android & Web
+- **Frontend:** Flutter & Dart
+- **Backend:** Firebase (Serverless Architecture)
+  - **Firestore:** Real-time NoSQL database for events, users, rewards, announcements, and registrations.
+  - **Firebase Authentication:** Secure CIIT email authentication and account management.
+  - **Firebase Storage:** Cloud storage for event posters, merchandise images, and user assets.
+  - **Firebase Cloud Messaging:** Push notifications for event reminders and campus announcements.
+- **Cloud Connectivity:** Real-time synchronization between students, organizers, and administrators.
 
 ---
 
 ## 🚀 Getting Started
 
-To run this project locally, you will need to have [Flutter](https://flutter.dev/docs/get-started/install) installed and a Firebase project set up.
+To run this project locally, you will need to have [Flutter](https://flutter.dev/docs/get-started/install) installed together with your own Firebase project.
 
-### 1. Clone the repository
+### 1. Clone the Repository
+
 ```bash
-git clone https://github.com/whyburrito/Technopreneurship-campusgo.git
-cd Technopreneurship-campusgo
+git clone https://github.com/nonoro-official/CampusGO.git
+cd CampusGO
 ```
 
 ### 2. Install Dependencies
+
 ```bash
 flutter pub get
 ```
 
 ### 3. Firebase Configuration
-This project relies on Firebase. You must connect it to your own Firebase instance:
-1. Create a new project in the [Firebase Console](https://console.firebase.google.com/).
-2. Register an Android and/or iOS app.
-3. Download the `google-services.json` (for Android) and place it in `android/app/`.
-4. Download the `GoogleService-Info.plist` (for iOS) and place it in `ios/Runner/`.
-5. Enable **Firestore**, **Authentication** (Email/Password), and **Storage** in your Firebase console.
 
-### 4. Run the App
+This project relies on Firebase. Connect it to your own Firebase instance:
+
+1. Create a new project in the Firebase Console.
+2. Register both an **Android** application and a **Web** application.
+3. Download the `google-services.json` file and place it inside:
+
+```text
+android/app/
+```
+
+4. Configure your Firebase Web options using the generated configuration or FlutterFire CLI.
+5. Enable the following Firebase services:
+
+- Firestore Database
+- Firebase Authentication
+- Firebase Storage
+- Firebase Cloud Messaging (Optional)
+
+### 4. Run the Application
+
+For Android:
+
 ```bash
 flutter run
 ```
 
----
+For Web:
 
-## 📂 Project Structure Overview
-
-```text
-lib/
-├── pages/
-│   ├── admin/          # B2B Merchant dashboards, insights, and live orders
-│   ├── auth/           # Login and Registration flows
-│   └── user/           # B2C Map, cart, checkout, and gamified profiles
-├── services/           # Firebase authentication and database services
-├── providers/          # State management (e.g., CartProvider)
-└── main.dart           # App entry point
+```bash
+flutter run -d chrome
 ```
 
 ---
 
-## 💡 Lessons Learned & Future Scope
-Building campusgo required engineering a balanced, closed-loop digital economy. Managing asynchronous database updates (ensuring points are deducted, vouchers are claimed, and kitchen screens update simultaneously) highlighted the importance of robust error handling and real-time state management. 
+## 📂 Project Structure Overview (wip)
+
+```text
+lib/
+├── core/
+│   ├── constants/
+│   ├── services/
+│   ├── themes/
+│   └── utils/
+│
+├── features/
+│   ├── admin/
+│   ├── auth/
+│   ├── dashboard/
+│   ├── events/
+│   ├── map/
+│   ├── notifications/
+│   ├── profile/
+│   └── rewards/
+│
+├── shared/
+│   ├── models/
+│   ├── providers/
+│   ├── repositories/
+│   └── widgets/
+│
+└── main.dart
+```
+
+---
+
+## 💡 Lessons Learned & Future Scope (wip)
+
+Building **CampusGO** required designing a centralized platform capable of synchronizing event information, participant registrations, QR code reward validation, and reward transactions across multiple users in real time. Developing a cloud-connected application reinforced the importance of scalable architecture, secure authentication, efficient state management, and reliable QR code verification while balancing feature development within a limited project timeline.
 
 **Future features could include:**
-* Push notifications for proximity-based deals.
-* Integration of local payment gateways (GCash/Maya).
+
+- Digital event certificates and achievement badges
+- Google Calendar integration
+- Personalized event recommendations
+- Organization-specific pages
+- Attendance analytics dashboard
+- In-app event feedback and ratings
+- Merchandise inventory management

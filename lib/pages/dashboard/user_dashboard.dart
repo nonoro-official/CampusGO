@@ -61,7 +61,7 @@ class HomeScreen extends ConsumerWidget {
             const SizedBox(height: 30),
           ],
 
-          Text("Shop by Category", style: textTheme.titleMedium),
+          Text("Event Categories", style: textTheme.titleMedium),
           const SizedBox(height: 15),
 
           SingleChildScrollView(
