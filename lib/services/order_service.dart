@@ -28,7 +28,7 @@ class OrderService {
     // 0. Resolve what to deduct by fetching the Organizer's current product map.
     // This allows us to handle Promos, Discounts, and Bundles by mapping them to their base items.
     final allProductsSnap = await _db.collection('products')
-        .where('OrganizerId', isEqualTo: OrganizerId)
+        .where('organizerId', isEqualTo: OrganizerId)
         .get();
     final allProducts = allProductsSnap.docs
         .map((doc) => ProductModel.fromMap(doc.data(), doc.id))
@@ -100,7 +100,7 @@ class OrderService {
 
       // Create the order document
       transaction.set(orderRef, {
-        'OrganizerId': OrganizerId,
+        'organizerId': OrganizerId,
         'userId': userId,
         'orders': orders,
         'price': price,
@@ -133,11 +133,11 @@ class OrderService {
     // If already cancelled, do nothing regarding stock
     if (currentStatus == OrderStatus.cancelled) return;
 
-    final String OrganizerId = orderData['OrganizerId'];
+    final String organizerId = orderData['organizerId'];
     
     // Fetch all products for this Organizer to resolve what to restore
     final allProductsSnap = await _db.collection('products')
-        .where('OrganizerId', isEqualTo: OrganizerId)
+        .where('organizerId', isEqualTo: organizerId)
         .get();
     final allProducts = allProductsSnap.docs
         .map((doc) => ProductModel.fromMap(doc.data(), doc.id))
@@ -220,10 +220,10 @@ class OrderService {
   // ─── Streams ─────────────────────────────────────────────────────────────────
 
   /// All orders for a Organizer (vendor side) — real-time
-  Stream<List<OrderModel>> getOrdersByOrganizer(String OrganizerId) {
+  Stream<List<OrderModel>> getOrdersByOrganizer(String organizerId) {
     return _db
         .collection('orders')
-        .where('OrganizerId', isEqualTo: OrganizerId)
+        .where('organizerId', isEqualTo: organizerId)
         .orderBy('timestamp', descending: true)
         .snapshots()
         .map(

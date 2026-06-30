@@ -262,7 +262,7 @@ class AuthService {
 
       final productsQuery = await _db
           .collection('products')
-          .where('OrganizerId', isEqualTo: organizerId)
+          .where('organizerId', isEqualTo: organizerId)
           .get();
 
       for (var productDoc in productsQuery.docs) {

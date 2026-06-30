@@ -19,10 +19,10 @@ class OrganizerService {
   }) async {
     final ref = await _db.collection('Organizers').add({
       'ownerId': ownerId,
-      'OrganizerName': organizerName,
+      'organizerName': organizerName,
       'contactEmail': contactEmail,
       'contactNumber': contactNumber,
-      'OrganizerPartner': organizerPartner.name, // Store as string
+      'organizerPartner': organizerPartner.name, // Store as string
       'activeStatus': ActiveStatus.closed.name,
       'category': 'Others', // Default category
       'description': null,

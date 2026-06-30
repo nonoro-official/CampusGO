@@ -4,13 +4,13 @@ import '../../providers/auth_provider.dart';
 import '../../providers/report_provider.dart';
 
 class ReportOrganizerSheet extends ConsumerStatefulWidget {
-  final String OrganizerId;
-  final String OrganizerName;
+  final String organizerId;
+  final String organizerName;
 
   const ReportOrganizerSheet({
     super.key,
-    required this.OrganizerId,
-    required this.OrganizerName,
+    required this.organizerId,
+    required this.organizerName,
   });
 
   @override
@@ -93,8 +93,8 @@ class _ReportOrganizerSheetState extends ConsumerState<ReportOrganizerSheet> {
 
     await ref.read(reportOrganizerProvider).submitReport(
           reporterId: user.uid,
-          OrganizerId: widget.OrganizerId,
-          OrganizerName: widget.OrganizerName,
+          organizerId: widget.organizerId,
+          organizerName: widget.organizerName,
           reason: selectedReason,
           description: descController.text.trim(),
         );

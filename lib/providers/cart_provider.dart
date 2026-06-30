@@ -46,7 +46,7 @@ class CartNotifier extends AsyncNotifier<void> {
     state = await AsyncValue.guard(() async {
       await ref.read(cartServiceProvider).addToCart(
             userId: user.uid,
-            OrganizerId: organizerId,
+            organizerId: organizerId,
             product: product,
             quantity: quantity,
           );

@@ -33,10 +33,10 @@ class CartService {
 
   //Find existing cart for user + Organizer
 
-  Future<CartItemModel?> findCart(String userId, String OrganizerId) async {
+  Future<CartItemModel?> findCart(String userId, String organizerId) async {
     final snap = await _carts
         .where('userId', isEqualTo: userId)
-        .where('OrganizerId', isEqualTo: OrganizerId)
+        .where('organizerId', isEqualTo: organizerId)
         .limit(1)
         .get();
 
@@ -51,7 +51,7 @@ class CartService {
   /// Creates the cart document if it doesn't exist yet.
   Future<void> addToCart({
     required String userId,
-    required String OrganizerId,
+    required String organizerId,
     required ProductModel product,
     required int quantity,
   }) async {
@@ -64,7 +64,7 @@ class CartService {
         : int.tryParse(productDoc.data()!['stock']?.toString() ?? '0') ?? 0;
 
     // Look for an existing cart for this user + Organizer
-    var cart = await findCart(userId, OrganizerId);
+    var cart = await findCart(userId, organizerId);
 
     if (cart == null) {
       if (quantity > latestStock) {
@@ -77,7 +77,7 @@ class CartService {
 
       await _carts.add({
         'userId': userId,
-        'OrganizerId': OrganizerId,
+        'organizerId': organizerId,
         'products': products,
         'price': price,
       });

@@ -22,10 +22,10 @@ class ProductService {
   }
 
   // Get all products for a specific vendor/Organizer
-  Stream<List<ProductModel>> getVendorProductsStream(String OrganizerId) {
+  Stream<List<ProductModel>> getVendorProductsStream(String organizerId) {
     return _db
         .collection('products')
-        .where('OrganizerId', isEqualTo: OrganizerId)
+        .where('organizerId', isEqualTo: organizerId)
         .snapshots()
         .map((snap) => snap.docs
             .map((doc) => ProductModel.fromMap(doc.data(), doc.id))
@@ -34,7 +34,7 @@ class ProductService {
 
   // Create a new product for a vendor
   Future<String> createVendorProduct({
-    required String OrganizerId,
+    required String organizerId,
     required String name,
     required String description,
     required double price,
@@ -52,7 +52,7 @@ class ProductService {
     required String supplier,
   }) async {
     final ref = await _db.collection('products').add({
-      'OrganizerId': OrganizerId,
+      'organizerId': organizerId,
       'name': name,
       'description': description,
       'price': price,
@@ -139,9 +139,9 @@ class ProductService {
   }
 
   // Remove a category from all products of a Organizer
-  Future<void> removeCategoryFromOrganizer(String OrganizerId, String category) async {
+  Future<void> removeCategoryFromOrganizer(String organizerId, String category) async {
     final query = _db.collection('products')
-        .where('OrganizerId', isEqualTo: OrganizerId)
+        .where('organizerId', isEqualTo: organizerId)
         .where('categories', arrayContains: category);
     
     final snap = await query.get();
