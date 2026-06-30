@@ -22,7 +22,7 @@ class CartLineItem {
 
 class CartItemModel {
   final String id;
-  final String businessId;
+  final String organizerId;
   final String userId;
 
   ///Map of productId → quantity
@@ -38,7 +38,7 @@ class CartItemModel {
 
   CartItemModel({
     required this.id,
-    required this.businessId,
+    required this.organizerId,
     required this.userId,
     required this.products,
     required this.price,
@@ -59,7 +59,7 @@ class CartItemModel {
 
     return CartItemModel(
       id: id,
-      businessId: data['businessId'] ?? '',
+      organizerId: data['organizerId'] ?? '',
       userId: data['userId'] ?? '',
       products: productsMap,
       price: (data['price'] ?? 0).toDouble(),
@@ -70,7 +70,7 @@ class CartItemModel {
 
   Map<String, dynamic> toMap() {
     return {
-      'businessId': businessId,
+      'organizerId': organizerId,
       'userId': userId,
       'products': products,
       'price': price,
@@ -84,7 +84,7 @@ class CartItemModel {
   }) {
     return CartItemModel(
       id: id,
-      businessId: businessId,
+      organizerId: organizerId,
       userId: userId,
       products: products ?? this.products,
       price: price ?? this.price,
@@ -95,7 +95,7 @@ class CartItemModel {
   CartItemModel copyWithLineItems(List<CartLineItem> lineItems) {
     return CartItemModel(
       id: id,
-      businessId: businessId,
+      organizerId: organizerId,
       userId: userId,
       products: products,
       price: price,

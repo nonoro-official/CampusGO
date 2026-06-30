@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/order_model.dart';
-import '../models/product_model.dart';
+import '../models/redemption_order_model.dart';
+import '../models/reward_item_model.dart';
 import '../models/enums.dart';
 
 class OrderService {
@@ -10,7 +10,7 @@ class OrderService {
 
   /// Place a new order and decrease product stock. [orders] is a map of productId → quantity.
   Future<String> placeOrder({
-    required String businessId,
+    required String OrganizerId,
     required String userId,
     required Map<String, int> orders,
     required double price,
@@ -25,10 +25,10 @@ class OrderService {
         '${now.minute.toString().padLeft(2, '0')}'
         '${now.second.toString().padLeft(2, '0')}';
 
-    // 0. Resolve what to deduct by fetching the business's current product map.
+    // 0. Resolve what to deduct by fetching the Organizer's current product map.
     // This allows us to handle Promos, Discounts, and Bundles by mapping them to their base items.
     final allProductsSnap = await _db.collection('products')
-        .where('businessId', isEqualTo: businessId)
+        .where('OrganizerId', isEqualTo: OrganizerId)
         .get();
     final allProducts = allProductsSnap.docs
         .map((doc) => ProductModel.fromMap(doc.data(), doc.id))
@@ -100,7 +100,7 @@ class OrderService {
 
       // Create the order document
       transaction.set(orderRef, {
-        'businessId': businessId,
+        'OrganizerId': OrganizerId,
         'userId': userId,
         'orders': orders,
         'price': price,
@@ -124,7 +124,7 @@ class OrderService {
     }
 
     // Handle Cancellation: Restore Stock
-    // Fetch order first to get businessId and orders map
+    // Fetch order first to get OrganizerId and orders map
     final orderDoc = await _db.collection('orders').doc(orderId).get();
     if (!orderDoc.exists) throw Exception('Order not found.');
     final orderData = orderDoc.data()!;
@@ -133,11 +133,11 @@ class OrderService {
     // If already cancelled, do nothing regarding stock
     if (currentStatus == OrderStatus.cancelled) return;
 
-    final String businessId = orderData['businessId'];
+    final String OrganizerId = orderData['OrganizerId'];
     
-    // Fetch all products for this business to resolve what to restore
+    // Fetch all products for this Organizer to resolve what to restore
     final allProductsSnap = await _db.collection('products')
-        .where('businessId', isEqualTo: businessId)
+        .where('OrganizerId', isEqualTo: OrganizerId)
         .get();
     final allProducts = allProductsSnap.docs
         .map((doc) => ProductModel.fromMap(doc.data(), doc.id))
@@ -219,11 +219,11 @@ class OrderService {
 
   // ─── Streams ─────────────────────────────────────────────────────────────────
 
-  /// All orders for a business (vendor side) — real-time
-  Stream<List<OrderModel>> getOrdersByBusiness(String businessId) {
+  /// All orders for a Organizer (vendor side) — real-time
+  Stream<List<OrderModel>> getOrdersByOrganizer(String OrganizerId) {
     return _db
         .collection('orders')
-        .where('businessId', isEqualTo: businessId)
+        .where('OrganizerId', isEqualTo: OrganizerId)
         .orderBy('timestamp', descending: true)
         .snapshots()
         .map(

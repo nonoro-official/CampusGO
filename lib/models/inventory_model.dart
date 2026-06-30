@@ -1,6 +1,6 @@
 class InventoryModel {
   final String id;
-  final String businessId; // Links to BusinessModel
+  final String organizerId; // Links to OrganizerModel
   final String productId; // Links to ProductModel
   final String name; // Copy of product name for faster UI
   final double price; // Vendor-specific price
@@ -9,7 +9,7 @@ class InventoryModel {
 
   InventoryModel({
     required this.id,
-    required this.businessId,
+    required this.organizerId,
     required this.productId,
     required this.name,
     required this.price,
@@ -23,7 +23,7 @@ class InventoryModel {
   factory InventoryModel.fromMap(Map<String, dynamic> data, String id) {
     return InventoryModel(
       id: id,
-      businessId: data['businessId'] ?? '',
+      organizerId: data['organizerId'] ?? '',
       productId: data['productId'] ?? '',
       name: data['name'] ?? '',
       price: (data['price'] ?? 0.0).toDouble(),
@@ -34,7 +34,7 @@ class InventoryModel {
 
   Map<String, dynamic> toMap() {
     return {
-      'businessId': businessId,
+      'organizerId': organizerId,
       'productId': productId,
       'name': name,
       'price': price,

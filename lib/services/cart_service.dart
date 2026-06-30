@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/cart_item_model.dart';
-import '../models/product_model.dart';
+import '../models/reward_item_model.dart';
 
 class CartService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -31,12 +31,12 @@ class CartService {
         );
   }
 
-  //Find existing cart for user + business
+  //Find existing cart for user + Organizer
 
-  Future<CartItemModel?> findCart(String userId, String businessId) async {
+  Future<CartItemModel?> findCart(String userId, String OrganizerId) async {
     final snap = await _carts
         .where('userId', isEqualTo: userId)
-        .where('businessId', isEqualTo: businessId)
+        .where('OrganizerId', isEqualTo: OrganizerId)
         .limit(1)
         .get();
 
@@ -47,11 +47,11 @@ class CartService {
 
   //Add / update a product in the cart
 
-  /// Adds [quantity] of [product] to the user's cart for [businessId].
+  /// Adds [quantity] of [product] to the user's cart for [OrganizerId].
   /// Creates the cart document if it doesn't exist yet.
   Future<void> addToCart({
     required String userId,
-    required String businessId,
+    required String OrganizerId,
     required ProductModel product,
     required int quantity,
   }) async {
@@ -63,8 +63,8 @@ class CartService {
         ? productDoc.data()!['stock']
         : int.tryParse(productDoc.data()!['stock']?.toString() ?? '0') ?? 0;
 
-    // Look for an existing cart for this user + business
-    var cart = await findCart(userId, businessId);
+    // Look for an existing cart for this user + Organizer
+    var cart = await findCart(userId, OrganizerId);
 
     if (cart == null) {
       if (quantity > latestStock) {
@@ -77,7 +77,7 @@ class CartService {
 
       await _carts.add({
         'userId': userId,
-        'businessId': businessId,
+        'OrganizerId': OrganizerId,
         'products': products,
         'price': price,
       });

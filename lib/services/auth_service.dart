@@ -52,7 +52,7 @@ class AuthService {
       'lastName': lastName,
       'phoneNumber': phoneNumber,
       'role': role.toName,
-      'businessId': null,
+      'organizerId': null,
       'createdAt': FieldValue.serverTimestamp(),
       'isOnline': true,
       'lastSeen': FieldValue.serverTimestamp(),
@@ -199,7 +199,7 @@ class AuthService {
   }
 
   Future<void> deleteAccount({required String password}) async {
-    // deletes business and products
+    // deletes organizer and products
     final user = _auth.currentUser;
 
     if (user == null || user.email == null) {
@@ -214,13 +214,13 @@ class AuthService {
 
       await user.reauthenticateWithCredential(credential);
 
-      final businessQuery = await _db
-          .collection('businesses')
+      final organizerQuery = await _db
+          .collection('organizeres')
           .where('ownerId', isEqualTo: user.uid)
           .get();
 
-      for (var doc in businessQuery.docs) {
-        await deleteBusiness(businessId: doc.id, password: password);
+      for (var doc in organizerQuery.docs) {
+        await deleteOrganizer(organizerId: doc.id, password: password);
       }
 
       await _db.collection('users').doc(user.uid).delete();
@@ -235,8 +235,8 @@ class AuthService {
     }
   }
 
-  Future<void> deleteBusiness({
-    required String businessId,
+  Future<void> deleteOrganizer({
+    required String organizerId,
     required String password,
   }) async {
     final user = _auth.currentUser;
@@ -253,16 +253,16 @@ class AuthService {
 
       await user.reauthenticateWithCredential(credential);
 
-      final docRef = _db.collection('businesses').doc(businessId);
+      final docRef = _db.collection('Organizeres').doc(organizerId);
 
       final doc = await docRef.get();
       if (!doc.exists) {
-        throw Exception("Business not found");
+        throw Exception("Organizer not found");
       }
 
       final productsQuery = await _db
           .collection('products')
-          .where('businessId', isEqualTo: businessId)
+          .where('OrganizerId', isEqualTo: organizerId)
           .get();
 
       for (var productDoc in productsQuery.docs) {
@@ -274,9 +274,9 @@ class AuthService {
       await updateUserRoleToCustomer();
     } on FirebaseAuthException catch (e) {
       if (e.code == 'wrong-password') {
-        throw Exception("Incorrect password. Business closure failed.");
+        throw Exception("Incorrect password. Organizer closure failed.");
       } else {
-        throw Exception(e.message ?? "Failed to close business.");
+        throw Exception(e.message ?? "Failed to close Organizer.");
       }
     }
   }

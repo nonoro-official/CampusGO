@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:campusgo/views/home/chat_page.dart';
+import 'package:campusgo/pages/messages/chat_page.dart';
 import '../../../providers/auth_provider.dart';
 
 class TopBar extends ConsumerWidget implements PreferredSizeWidget {

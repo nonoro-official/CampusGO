@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:path/path.dart' as p;
-import '../models/product_model.dart';
+import '../models/reward_item_model.dart';
 import '../models/enums.dart';
 
 class ProductService {
@@ -21,11 +21,11 @@ class ProductService {
         .toList();
   }
 
-  // Get all products for a specific vendor/business
-  Stream<List<ProductModel>> getVendorProductsStream(String businessId) {
+  // Get all products for a specific vendor/Organizer
+  Stream<List<ProductModel>> getVendorProductsStream(String OrganizerId) {
     return _db
         .collection('products')
-        .where('businessId', isEqualTo: businessId)
+        .where('OrganizerId', isEqualTo: OrganizerId)
         .snapshots()
         .map((snap) => snap.docs
             .map((doc) => ProductModel.fromMap(doc.data(), doc.id))
@@ -34,7 +34,7 @@ class ProductService {
 
   // Create a new product for a vendor
   Future<String> createVendorProduct({
-    required String businessId,
+    required String OrganizerId,
     required String name,
     required String description,
     required double price,
@@ -52,7 +52,7 @@ class ProductService {
     required String supplier,
   }) async {
     final ref = await _db.collection('products').add({
-      'businessId': businessId,
+      'OrganizerId': OrganizerId,
       'name': name,
       'description': description,
       'price': price,
@@ -82,7 +82,7 @@ class ProductService {
   // Update an existing product
   Future<void> updateVendorProduct({
     required String productId,
-    required String businessId,
+    required String OrganizerId,
     required String name,
     String? description,
     required double price,
@@ -138,10 +138,10 @@ class ProductService {
     });
   }
 
-  // Remove a category from all products of a business
-  Future<void> removeCategoryFromBusiness(String businessId, String category) async {
+  // Remove a category from all products of a Organizer
+  Future<void> removeCategoryFromOrganizer(String OrganizerId, String category) async {
     final query = _db.collection('products')
-        .where('businessId', isEqualTo: businessId)
+        .where('OrganizerId', isEqualTo: OrganizerId)
         .where('categories', arrayContains: category);
     
     final snap = await query.get();
