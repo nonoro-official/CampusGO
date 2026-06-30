@@ -281,7 +281,7 @@ class AuthService {
     }
   }
 
-  Future<void> updateUserRoleToVendor() async {
+  Future<void> updateUserRoleToOrganizer() async {
     final uid = currentUser?.uid;
     if (uid == null) throw Exception("User not logged in");
 
@@ -289,8 +289,8 @@ class AuthService {
 
     if (!doc.exists) throw Exception("User not found");
 
-    if (doc['role'] != 'Vendor') {
-      await doc.reference.update({'role': Role.vendor.toName});
+    if (doc['role'] != 'Organizer') {
+      await doc.reference.update({'role': Role.organizer.toName});
     }
   }
 

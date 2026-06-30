@@ -9,7 +9,7 @@ class ProductService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
-  // Search the global catalog (e.g., for a vendor adding items)
+  // Search the global catalog (e.g., for a organizer adding items)
   Future<List<ProductModel>> searchGlobalProducts(String query) async {
     final snap = await _db
         .collection('products')
@@ -21,8 +21,8 @@ class ProductService {
         .toList();
   }
 
-  // Get all products for a specific vendor/Organizer
-  Stream<List<ProductModel>> getVendorProductsStream(String organizerId) {
+  // Get all products for a specific organizer/Organizer
+  Stream<List<ProductModel>> getOrganizerProductsStream(String organizerId) {
     return _db
         .collection('products')
         .where('organizerId', isEqualTo: organizerId)
@@ -32,8 +32,8 @@ class ProductService {
             .toList());
   }
 
-  // Create a new product for a vendor
-  Future<String> createVendorProduct({
+  // Create a new product for a organizer
+  Future<String> createOrganizerProduct({
     required String organizerId,
     required String name,
     required String description,
@@ -80,7 +80,7 @@ class ProductService {
   }
 
   // Update an existing product
-  Future<void> updateVendorProduct({
+  Future<void> updateOrganizerProduct({
     required String productId,
     required String OrganizerId,
     required String name,
@@ -123,7 +123,7 @@ class ProductService {
   }
 
   // Delete a product
-  Future<void> deleteVendorProduct(String productId) async {
+  Future<void> deleteOrganizerProduct(String productId) async {
     await _db.collection('products').doc(productId).delete();
   }
 

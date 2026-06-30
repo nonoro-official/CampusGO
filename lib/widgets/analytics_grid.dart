@@ -16,7 +16,7 @@ class AnalyticsGrid extends ConsumerWidget {
     final primaryColor = theme.primaryColor;
 
     final ordersAsync = ref.watch(OrganizerOrdersProvider);
-    final productsAsync = ref.watch(vendorProductsProvider(organizerId));
+    final productsAsync = ref.watch(organizerProductsProvider(organizerId));
 
     return ordersAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),

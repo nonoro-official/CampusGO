@@ -9,7 +9,7 @@ final OrganizerServiceProvider = Provider<OrganizerService>(
   (ref) => OrganizerService(),
 );
 
-final allVendorsProvider = StreamProvider<List<OrganizerModel>>((ref) {
+final allOrganizersProvider = StreamProvider<List<OrganizerModel>>((ref) {
   final OrganizerService = ref.watch(OrganizerServiceProvider);
   return OrganizerService.getAllOrganizers();
 });
@@ -31,7 +31,7 @@ final OrganizerProvider = StreamProvider.family<OrganizerModel?, String>((
   return service.getOrganizerStream(organizerId);
 });
 
-class VendorStatusNotifier extends Notifier<ActiveStatus> {
+class OrganizerStatusNotifier extends Notifier<ActiveStatus> {
   @override
   ActiveStatus build() {
     // Listens to the Organizer stream. If DB changes, UI updates automatically.
@@ -57,7 +57,7 @@ class VendorStatusNotifier extends Notifier<ActiveStatus> {
   }
 }
 
-final vendorStatusProvider =
-    NotifierProvider<VendorStatusNotifier, ActiveStatus>(
-      VendorStatusNotifier.new,
+final organizerStatusProvider =
+    NotifierProvider<OrganizerStatusNotifier, ActiveStatus>(
+      OrganizerStatusNotifier.new,
     );

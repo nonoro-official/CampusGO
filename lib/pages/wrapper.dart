@@ -59,8 +59,8 @@ class Wrapper extends ConsumerWidget {
         // This ensures the UI stays reactive to auth changes without
         // intermediate loading frames.
         return DashboardScreen(
-          accountType: (user.role == Role.vendor || user.role == Role.coVendor)
-              ? 'Vendor'
+          accountType: (user.role == Role.organizer || user.role == Role.coOrganizer)
+              ? 'Organizer'
               : 'Customer',
         );
       },

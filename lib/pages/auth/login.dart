@@ -37,7 +37,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
 
       // Manual navigation as a fallback if not handled by Wrapper (e.g., if on /login route)
-      if (role == Role.vendor || role == Role.coVendor) {
+      if (role == Role.organizer || role == Role.coOrganizer) {
         Navigator.pushNamedAndRemoveUntil(
           context,
           '/organizer-dashboard',

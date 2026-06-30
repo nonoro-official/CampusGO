@@ -3,8 +3,8 @@ class InventoryModel {
   final String organizerId; // Links to OrganizerModel
   final String productId; // Links to ProductModel
   final String name; // Copy of product name for faster UI
-  final double price; // Vendor-specific price
-  final int stock; // Vendor-specific stock
+  final double price; // Organizer-specific price
+  final int stock; // Organizer-specific stock
   final bool isAvailable;
 
   InventoryModel({

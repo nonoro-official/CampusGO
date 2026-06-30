@@ -27,7 +27,7 @@ class _ShopsScreenState extends ConsumerState<ShopsScreen> {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final titleLabel = widget.category ?? "All Shops";
-    final allVendorsAsync = ref.watch(allVendorsProvider);
+    final allOrganizersAsync = ref.watch(allOrganizersProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
@@ -50,7 +50,7 @@ class _ShopsScreenState extends ConsumerState<ShopsScreen> {
                 children: [
                   Text(titleLabel, style: textTheme.titleLarge),
                   const SizedBox(height: 4),
-                  Text("Browse vendors", style: textTheme.bodySmall),
+                  Text("Browse organizers", style: textTheme.bodySmall),
                 ],
               ),
             ),
@@ -74,9 +74,9 @@ class _ShopsScreenState extends ConsumerState<ShopsScreen> {
             const SizedBox(height: 10),
 
             Expanded(
-              child: allVendorsAsync.when(
-                data: (vendors) {
-                  final filteredVendors = vendors.where((v) {
+              child: allOrganizersAsync.when(
+                data: (organizers) {
+                  final filteredOrganizers = organizers.where((v) {
                     final matchesSearch = v.organizerName
                         .toLowerCase()
                         .contains(searchQuery.toLowerCase());
@@ -97,9 +97,9 @@ class _ShopsScreenState extends ConsumerState<ShopsScreen> {
 
                   return Stack(
                     children: [
-                      filteredVendors.isEmpty
-                          ? const Center(child: Text("No vendors found"))
-                          : VendorFeed(vendors: filteredVendors),
+                      filteredOrganizers.isEmpty
+                          ? const Center(child: Text("No organizers found"))
+                          : OrganizerFeed(organizers: filteredOrganizers),
 
                       Positioned(
                         bottom: 10,
@@ -128,39 +128,39 @@ class _ShopsScreenState extends ConsumerState<ShopsScreen> {
   }
 }
 
-class VendorFeed extends StatelessWidget {
-  final List<OrganizerModel> vendors;
+class OrganizerFeed extends StatelessWidget {
+  final List<OrganizerModel> organizers;
 
-  const VendorFeed({super.key, required this.vendors});
+  const OrganizerFeed({super.key, required this.organizers});
 
   @override
   Widget build(BuildContext context) {
-    if (vendors.isEmpty) {
-      return const Center(child: Text("No vendors found"));
+    if (organizers.isEmpty) {
+      return const Center(child: Text("No organizers found"));
     }
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      itemCount: vendors.length,
+      itemCount: organizers.length,
       itemBuilder: (context, index) {
-        return VendorCard(vendor: vendors[index]);
+        return OrganizerCard(organizer: organizers[index]);
       },
     );
   }
 }
 
-class VendorCard extends ConsumerWidget {
-  final OrganizerModel vendor;
+class OrganizerCard extends ConsumerWidget {
+  final OrganizerModel organizer;
 
-  const VendorCard({super.key, required this.vendor});
+  const OrganizerCard({super.key, required this.organizer});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final primaryColor = Theme.of(context).primaryColor;
     final textTheme = Theme.of(context).textTheme;
 
-    final productsAsync = ref.watch(vendorProductsProvider(vendor.id));
+    final productsAsync = ref.watch(organizerProductsProvider(organizer.id));
     final hasImage =
-        vendor.imageUrl != null && vendor.imageUrl!.isNotEmpty;
+        organizer.imageUrl != null && organizer.imageUrl!.isNotEmpty;
 
     return InkWell(
       borderRadius: BorderRadius.circular(20),
@@ -168,7 +168,7 @@ class VendorCard extends ConsumerWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => VendorProfileScreen(organizer: vendor),
+            builder: (_) => OrganizerProfileScreen(organizer: organizer),
           ),
         );
       },
@@ -196,7 +196,7 @@ class VendorCard extends ConsumerWidget {
                   backgroundColor:
                       primaryColor.withValues(alpha: 0.1),
                   backgroundImage: hasImage
-                      ? NetworkImage(vendor.imageUrl!)
+                      ? NetworkImage(organizer.imageUrl!)
                       : null,
                   child: hasImage
                       ? null
@@ -208,11 +208,11 @@ class VendorCard extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(vendor.organizerName,
+                      Text(organizer.organizerName,
                           style: textTheme.titleMedium),
                       const SizedBox(height: 2),
                       Text(
-                        vendor.category ?? 'Vendor',
+                        organizer.category ?? 'Organizer',
                         style: textTheme.bodySmall?.copyWith(
                           color: Colors.grey,
                         ),
@@ -229,7 +229,7 @@ class VendorCard extends ConsumerWidget {
               data: (products) {
                 if (products.isEmpty) {
                   return Text(
-                    vendor.description ??
+                    organizer.description ??
                         "No description available.",
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,

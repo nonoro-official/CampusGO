@@ -26,8 +26,8 @@ class MessagesScreen extends ConsumerWidget {
     }
 
     final currentUserId = currentUser.uid;
-    final isVendor =
-        currentUser.role == Role.vendor || currentUser.role == Role.coVendor;
+    final isOrganizer =
+        currentUser.role == Role.organizer || currentUser.role == Role.coOrganizer;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Messages')),
@@ -86,7 +86,7 @@ class MessagesScreen extends ConsumerWidget {
                         OrganizeresByOwnerId.containsKey(otherId);
 
                     bool isValidPartner = false;
-                    if (isVendor) {
+                    if (isOrganizer) {
                       if (otherIsOrganizer) {
                         if (contactInitiatedBy.contains(currentUserId)) {
                           isValidPartner = true;

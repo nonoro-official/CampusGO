@@ -33,7 +33,7 @@ class OrganizerDashboard extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 80), // Space for toggle buttons
-              const VendorShopCard(),
+              const OrganizerShopCard(),
               const SizedBox(height: 25),
 
               Row(
@@ -64,7 +64,7 @@ class OrganizerDashboard extends ConsumerWidget {
 
               Text("Quick Actions", style: textTheme.titleMedium),
               const SizedBox(height: 15),
-              const VendorActionsRow(),
+              const OrganizerActionsRow(),
 
               const SizedBox(height: 120), // Bottom padding for navbar
             ],

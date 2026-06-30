@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-class VendorActionsRow extends StatelessWidget {
-  const VendorActionsRow({super.key});
+class OrganizerActionsRow extends StatelessWidget {
+  const OrganizerActionsRow({super.key});
 
   @override
   Widget build(BuildContext context) {

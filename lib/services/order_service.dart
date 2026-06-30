@@ -219,7 +219,7 @@ class OrderService {
 
   // ─── Streams ─────────────────────────────────────────────────────────────────
 
-  /// All orders for a Organizer (vendor side) — real-time
+  /// All orders for a Organizer (organizer side) — real-time
   Stream<List<OrderModel>> getOrdersByOrganizer(String organizerId) {
     return _db
         .collection('orders')

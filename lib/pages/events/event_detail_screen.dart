@@ -17,7 +17,7 @@ class EventDetailScreen extends ConsumerWidget {
     final eventAsync = ref.watch(singleEventProvider(event.id));
 
     final user = ref.watch(currentUserProvider);
-    final isVendor = user?.role.name.toLowerCase() == 'vendor';
+    final isOrganizer = user?.role.name.toLowerCase() == 'organizer';
     final organizerId = user?.organizerId;
     final eventService = ref.watch(eventServiceProvider);
     final organizerService = ref.watch(OrganizerServiceProvider);
@@ -105,12 +105,12 @@ class EventDetailScreen extends ConsumerWidget {
                 Text(currentEvent.description),
                 const SizedBox(height: 30),
                 Text(
-                  "Attending Vendors",
+                  "Attending Organizers",
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 10),
                 if (currentEvent.attendingOrganizerIds.isEmpty)
-                  const Text("No vendors attending yet.")
+                  const Text("No organizers attending yet.")
                 else
                   ListView.builder(
                     shrinkWrap: true,
@@ -133,7 +133,7 @@ class EventDetailScreen extends ConsumerWidget {
                               onTap: () {
                                  Navigator.pushNamed(
                                   context,
-                                  '/vendor-profile',
+                                  '/organizer-profile',
                                   arguments: organizer,
                                 );
                               },
@@ -145,7 +145,7 @@ class EventDetailScreen extends ConsumerWidget {
                     },
                   ),
                 const SizedBox(height: 40),
-                if (isVendor && organizerId != null && !currentEvent.isEnded)
+                if (isOrganizer && organizerId != null && !currentEvent.isEnded)
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
