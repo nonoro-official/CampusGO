@@ -1,63 +1,160 @@
-import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../models/cart_item_model.dart';
+import '../models/product_model.dart';
+import '../services/cart_service.dart';
+import '../services/order_service.dart';
+import 'auth_provider.dart';
 
-class CartItem {
-  final String id;
-  final String name;
-  final double price;
-  int quantity;
+//Service
 
-  CartItem({required this.id, required this.name, required this.price, this.quantity = 1});
+final cartServiceProvider = Provider<CartService>((ref) => CartService());
+
+//Stream: all carts for the current user
+
+final myCartsProvider = StreamProvider<List<CartItemModel>>((ref) {
+  final user = ref.watch(currentUserProvider);
+  if (user == null) return Stream.value([]);
+
+  final service = ref.watch(cartServiceProvider);
+  return service.getCartsByUser(user.uid);
+});
+
+//Enriched cart (with product details for display)
+
+final enrichedCartProvider =
+    FutureProvider.family<CartItemModel, CartItemModel>((ref, cart) async {
+  final service = ref.read(cartServiceProvider);
+  return service.enrichCart(cart);
+});
+
+//Notifier: add to cart
+
+class CartNotifier extends AsyncNotifier<void> {
+  @override
+  Future<void> build() async {}
+
+  /// Add quantity of product to the current user's cart for businessId.
+  Future<void> addToCart({
+    required String businessId,
+    required ProductModel product,
+    required int quantity,
+  }) async {
+    final user = ref.read(currentUserProvider);
+    if (user == null) return;
+
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      await ref.read(cartServiceProvider).addToCart(
+            userId: user.uid,
+            businessId: businessId,
+            product: product,
+            quantity: quantity,
+          );
+    });
+  }
+
+  /// Update quantity for a specific product inside a cart.
+  Future<void> updateQuantity({
+    required String cartId,
+    required String productId,
+    required int newQuantity,
+    required Map<String, int> currentProducts,
+  }) async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      await ref.read(cartServiceProvider).updateProductQuantity(
+            cartId: cartId,
+            productId: productId,
+            newQuantity: newQuantity,
+            currentProducts: currentProducts,
+          );
+    });
+  }
+
+  /// Remove a product from a cart.
+  Future<void> removeProduct({
+    required String cartId,
+    required String productId,
+    required Map<String, int> currentProducts,
+  }) async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      await ref.read(cartServiceProvider).removeProduct(
+            cartId: cartId,
+            productId: productId,
+            currentProducts: currentProducts,
+          );
+    });
+  }
+
+  /// Delete an entire cart.
+  Future<void> deleteCart(String cartId) async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      await ref.read(cartServiceProvider).deleteCart(cartId);
+    });
+  }
+
+  /// Clear all carts for the current user.
+  Future<void> clearAll() async {
+    final user = ref.read(currentUserProvider);
+    if (user == null) return;
+
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      await ref.read(cartServiceProvider).clearAllCarts(user.uid);
+    });
+  }
+
+  /// Checkout a single cart: place an order, then delete the cart.
+  Future<void> checkout(CartItemModel cart) async {
+    final user = ref.read(currentUserProvider);
+    if (user == null) return;
+
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      final orderService = OrderService();
+      // Calculate total including 10 pesos service fee.
+      // We explicitly pass the total with fee to ensure database consistency.
+      final totalWithFee = cart.price + 10.0;
+      
+      await orderService.placeOrder(
+        businessId: cart.businessId,
+        userId: user.uid,
+        orders: cart.products,
+        price: totalWithFee,
+      );
+
+      // Delete the cart after the order is placed
+      await ref.read(cartServiceProvider).deleteCart(cart.id);
+    });
+  }
+
+  /// Buy now: place an order immediately without adding to cart.
+  Future<void> buyNow({
+    required String businessId,
+    required ProductModel product,
+    required int quantity,
+  }) async {
+    final user = ref.read(currentUserProvider);
+    if (user == null) return;
+
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      final orderService = OrderService();
+      // Calculate total including 10 pesos service fee.
+      final totalWithFee = (product.price * quantity) + 10.0;
+      
+      await orderService.placeOrder(
+        businessId: businessId,
+        userId: user.uid,
+        orders: {product.id: quantity},
+        price: totalWithFee,
+      );
+    });
+  }
 }
 
-class CartProvider extends ChangeNotifier {
-  final Map<String, CartItem> _items = {};
-  double discountPercentage = 0.0;
-  String? appliedVoucherCode;
-  int appliedVoucherCost = 0; // NEW: Tracks the point cost of the voucher
-  String? currentRestaurantId;
-
-  Map<String, CartItem> get items => _items;
-  int get totalItems => _items.values.fold(0, (sum, item) => sum + item.quantity);
-  double get subtotal => _items.values.fold(0, (sum, item) => sum + (item.price * item.quantity));
-  double get total => subtotal * (1 - (discountPercentage / 100));
-
-  void addItem(String restaurantId, String id, String name, double price) {
-    if (currentRestaurantId != null && currentRestaurantId != restaurantId) {
-      _items.clear();
-      discountPercentage = 0.0;
-      appliedVoucherCode = null;
-      appliedVoucherCost = 0;
-    }
-    currentRestaurantId = restaurantId;
-
-    if (_items.containsKey(id)) {
-      _items[id]!.quantity++;
-    } else {
-      _items[id] = CartItem(id: id, name: name, price: price);
-    }
-    notifyListeners();
-  }
-
-  void removeItem(String id) {
-    _items.remove(id);
-    if (_items.isEmpty) currentRestaurantId = null;
-    notifyListeners();
-  }
-
-  // NEW: Now requires the point cost when applying
-  void applyVoucher(String code, double percentage, int pointCost) {
-    appliedVoucherCode = code;
-    discountPercentage = percentage;
-    appliedVoucherCost = pointCost;
-    notifyListeners();
-  }
-
-  void clear() {
-    _items.clear();
-    discountPercentage = 0.0;
-    appliedVoucherCode = null;
-    appliedVoucherCost = 0;
-    currentRestaurantId = null;
-    notifyListeners();
-  }
-}
+final cartNotifierProvider = AsyncNotifierProvider<CartNotifier, void>(
+  CartNotifier.new,
+);

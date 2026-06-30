@@ -42,7 +42,7 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
     );
 
     if (confirm == true) {
-      await _authService.logout();
+      await _authService.signOut();
       if (!mounted) return;
       Navigator.pushAndRemoveUntil(
           context,
