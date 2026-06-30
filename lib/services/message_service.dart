@@ -102,16 +102,16 @@ class MessageService {
       final userData = userDoc.data();
 
       if (userData != null) {
-        final String? businessNameInUser = userData['businessName'];
-        final String? businessId = userData['businessId'];
+        final String? OrganizerNameInUser = userData['OrganizerName'];
+        final String? OrganizerId = userData['OrganizerId'];
 
-        if (businessNameInUser != null && businessNameInUser.isNotEmpty) {
-          senderName = businessNameInUser;
-        } else if (businessId != null && businessId.isNotEmpty) {
-          final businessDoc =
-              await _firestore.collection('businesses').doc(businessId).get();
-          if (businessDoc.exists) {
-            senderName = businessDoc.data()?['businessName'] ?? senderName;
+        if (OrganizerNameInUser != null && OrganizerNameInUser.isNotEmpty) {
+          senderName = OrganizerNameInUser;
+        } else if (OrganizerId != null && OrganizerId.isNotEmpty) {
+          final OrganizerDoc =
+              await _firestore.collection('Organizeres').doc(OrganizerId).get();
+          if (OrganizerDoc.exists) {
+            senderName = OrganizerDoc.data()?['OrganizerName'] ?? senderName;
           }
         } else {
           final String firstName = userData['firstName'] ?? '';

@@ -1,21 +1,21 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../models/order_model.dart';
+import '../models/redemption_order_model.dart';
 import '../services/order_service.dart';
 import 'auth_provider.dart';
-import '../providers/business_provider.dart';
+import '../providers/organizer_provider.dart';
 
 // ─── Service ─────────────────────────────────────────────────────────────────
 
 final orderServiceProvider = Provider<OrderService>((ref) => OrderService());
 
-// ─── Vendor: stream all orders for my business ───────────────────────────────
+// ─── Vendor: stream all orders for my Organizer ───────────────────────────────
 
-final businessOrdersProvider = StreamProvider<List<OrderModel>>((ref) {
-  final business = ref.watch(myBusinessProvider).value;
-  if (business == null) return Stream.value([]);
+final OrganizerOrdersProvider = StreamProvider<List<OrderModel>>((ref) {
+  final Organizer = ref.watch(myOrganizerProvider).value;
+  if (Organizer == null) return Stream.value([]);
 
   final service = ref.watch(orderServiceProvider);
-  return service.getOrdersByBusiness(business.id);
+  return service.getOrdersByOrganizer(Organizer.id);
 });
 
 // ─── Customer: stream all orders placed by me ────────────────────────────────

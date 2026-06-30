@@ -8,13 +8,13 @@ class InviteService {
   // Vendor sends an invite to a co-vendor by email
   // Called from vendor dashboard
   Future<void> sendInvite({
-    required String fromBusinessId,
+    required String fromOrganizerId,
     required String recipientEmail,
   }) async {
-    // Check if invite already exists for this email + business
+    // Check if invite already exists for this email + Organizer
     final existing = await _db
         .collection('invites')
-        .where('fromBusinessId', isEqualTo: fromBusinessId)
+        .where('fromOrganizerId', isEqualTo: fromOrganizerId)
         .where('recipientEmail', isEqualTo: recipientEmail)
         .where('status', isEqualTo: InviteStatus.pending.name)
         .get();
@@ -22,7 +22,7 @@ class InviteService {
     if (existing.docs.isNotEmpty) return; // don't send duplicates
 
     await _db.collection('invites').add({
-      'fromBusinessId': fromBusinessId,
+      'fromOrganizerId': fromOrganizerId,
       'recipientEmail': recipientEmail,
       'status': InviteStatus.pending.name,
       'createdAt': FieldValue.serverTimestamp(),
@@ -47,7 +47,7 @@ class InviteService {
   // Co-vendor accepts invite
   Future<void> acceptInvite({
     required String inviteId,
-    required String fromBusinessId,
+    required String fromOrganizerId,
     required String coVendorUserId,
   }) async {
     final batch = _db.batch();
@@ -57,13 +57,13 @@ class InviteService {
       'status': InviteStatus.accepted.name,
     });
 
-    // 2. Link co-vendor to business
+    // 2. Link co-vendor to Organizer
     batch.update(_db.collection('users').doc(coVendorUserId), {
-      'businessId': fromBusinessId,
+      'OrganizerId': fromOrganizerId,
     });
 
-    // 3. Add co-vendor to business's coVendorIds list
-    batch.update(_db.collection('businesses').doc(fromBusinessId), {
+    // 3. Add co-vendor to Organizer's coVendorIds list
+    batch.update(_db.collection('Organizeres').doc(fromOrganizerId), {
       'coVendorIds': FieldValue.arrayUnion([coVendorUserId]),
     });
 

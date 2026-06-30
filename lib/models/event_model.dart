@@ -8,7 +8,7 @@ class EventModel {
   final DateTime endDate;     // End Date
   final String location;
   final String? imageUrl;
-  final List<String> attendingBusinessIds;
+  final List<String> attendingOrganizerIds;
 
   EventModel({
     required this.id,
@@ -18,7 +18,7 @@ class EventModel {
     required this.endDate,
     required this.location,
     this.imageUrl,
-    this.attendingBusinessIds = const [],
+    this.attendingOrganizerIds = const [],
   });
 
   bool get isEnded {
@@ -43,7 +43,7 @@ class EventModel {
           : startDate, // Fallback to start date if end is missing
       location: data['location'] ?? '',
       imageUrl: data['imageUrl'],
-      attendingBusinessIds: List<String>.from(data['attendingBusinessIds'] ?? []),
+      attendingOrganizerIds: List<String>.from(data['attendingOrganizerIds'] ?? []),
     );
   }
 
@@ -55,7 +55,7 @@ class EventModel {
       'endDate': Timestamp.fromDate(endDate),
       'location': location,
       'imageUrl': imageUrl,
-      'attendingBusinessIds': attendingBusinessIds,
+      'attendingOrganizerIds': attendingOrganizerIds,
     };
   }
 }

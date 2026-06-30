@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:campusgo/widgets/message_notification_banner.dart';
-import 'package:campusgo/views/home/chat_page.dart';
+import 'package:campusgo/pages/messages/chat_page.dart';
 
 class MessageNotificationListener extends StatefulWidget {
   final Widget child;
@@ -181,14 +181,14 @@ class _MessageNotificationListenerState
       if (userDoc.exists) {
         final data = userDoc.data();
         if (data != null) {
-          final String? bNameInUser = data['businessName']?.toString();
+          final String? bNameInUser = data['organizerName']?.toString();
           if (bNameInUser != null && bNameInUser.isNotEmpty) return bNameInUser;
 
-          final String? businessId = data['businessId'];
-          if (businessId != null && businessId.isNotEmpty) {
-            final businessDoc = await FirebaseFirestore.instance.collection('businesses').doc(businessId).get();
-            if (businessDoc.exists) {
-              final bName = businessDoc.data()?['businessName']?.toString();
+          final String? organizerId = data['organizerId'];
+          if (organizerId != null && organizerId.isNotEmpty) {
+            final OrganizerDoc = await FirebaseFirestore.instance.collection('Organizers').doc(organizerId).get();
+            if (OrganizerDoc.exists) {
+              final bName = OrganizerDoc.data()?['OrganizerName']?.toString();
               if (bName != null && bName.isNotEmpty) return bName;
             }
           }
@@ -203,14 +203,14 @@ class _MessageNotificationListenerState
         }
       }
 
-      final businessQuery = await FirebaseFirestore.instance
-          .collection('businesses')
+      final OrganizerQuery = await FirebaseFirestore.instance
+          .collection('Organizers')
           .where('ownerId', isEqualTo: senderId)
           .limit(1)
           .get();
 
-      if (businessQuery.docs.isNotEmpty) {
-        final bName = businessQuery.docs.first.data()['businessName']?.toString();
+      if (OrganizerQuery.docs.isNotEmpty) {
+        final bName = OrganizerQuery.docs.first.data()['OrganizerName']?.toString();
         if (bName != null && bName.isNotEmpty) return bName;
       }
     } catch (_) {}

@@ -10,7 +10,7 @@ class UserModel {
   final Role role;
   final Timestamp lastSeen;
   final UserTier userTier;
-  final String? businessId;
+  final String? organizerId;
   final String? imageUrl;
   final bool isOnline;
 
@@ -23,7 +23,7 @@ class UserModel {
     required this.role,
     required this.lastSeen,
     required this.userTier,
-    this.businessId,
+    this.organizerId,
     this.imageUrl,
     this.isOnline = false,
   });
@@ -41,7 +41,7 @@ class UserModel {
           ? data['lastSeen'] as Timestamp
           : (data['lastOnline'] is Timestamp ? data['lastOnline'] as Timestamp : Timestamp.now()),
       userTier: UserTier.fromString(data['userTier'] ?? 'Free'),
-      businessId: data['businessId'],
+      organizerId: data['organizerId'],
       imageUrl: data['imageUrl'],
       isOnline: data['isOnline'] ?? false,
     );
@@ -57,7 +57,7 @@ class UserModel {
       'role': role.toName,
       'lastSeen': lastSeen,
       'userTier': userTier.toName,
-      'businessId': businessId,
+      'organizerId': organizerId,
       'imageUrl': imageUrl,
       'isOnline': isOnline,
     };

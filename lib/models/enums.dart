@@ -22,21 +22,21 @@ enum Role {
 }
 
 // Invite Status
-enum BusinessPartner {
+enum OrganizerPartner {
   campus,
   organization,
   student;
 
-  static BusinessPartner fromString(String value) {
+  static OrganizerPartner fromString(String value) {
     switch (value.toLowerCase()) {
       case 'campus':
-        return BusinessPartner.campus;
+        return OrganizerPartner.campus;
       case 'organization':
-        return BusinessPartner.organization;
+        return OrganizerPartner.organization;
       case 'student':
-        return BusinessPartner.student;
+        return OrganizerPartner.student;
       default:
-        return BusinessPartner.student; // Default fallback
+        return OrganizerPartner.student; // Default fallback
     }
   }
 }
