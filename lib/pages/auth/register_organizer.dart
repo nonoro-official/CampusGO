@@ -88,7 +88,7 @@ class _RegisterOrganizerScreenState extends State<RegisterOrganizerScreen> {
         );
 
         await AuthService().signOut();
-        Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+        Navigator.pushNamedAndRemoveUntil(context, '/auth-wrapper', (route) => false);
       }
       // CASE 2: EXISTING USER
       else if (currentUid != null) {

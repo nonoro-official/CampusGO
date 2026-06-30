@@ -80,7 +80,7 @@ class AuthService {
       return user.role;
     }
 
-    return Role.customer;
+    throw Exception("Account data not found in Firestore. Please register again.");
   }
 
   Future<UserModel?> getUserData() async {
@@ -215,7 +215,7 @@ class AuthService {
       await user.reauthenticateWithCredential(credential);
 
       final organizerQuery = await _db
-          .collection('organizeres')
+          .collection('Organizers')
           .where('ownerId', isEqualTo: user.uid)
           .get();
 
@@ -253,7 +253,7 @@ class AuthService {
 
       await user.reauthenticateWithCredential(credential);
 
-      final docRef = _db.collection('Organizeres').doc(organizerId);
+      final docRef = _db.collection('Organizers').doc(organizerId);
 
       final doc = await docRef.get();
       if (!doc.exists) {

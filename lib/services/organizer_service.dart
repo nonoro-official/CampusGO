@@ -17,7 +17,7 @@ class OrganizerService {
     required String contactNumber,
     required OrganizerPartner organizerPartner,
   }) async {
-    final ref = await _db.collection('Organizeres').add({
+    final ref = await _db.collection('Organizers').add({
       'ownerId': ownerId,
       'OrganizerName': organizerName,
       'contactEmail': contactEmail,
