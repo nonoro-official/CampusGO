@@ -93,7 +93,7 @@ class EventDetailScreen extends ConsumerWidget {
                   children: [
                     const Icon(Icons.location_on, size: 18, color: Colors.grey),
                     const SizedBox(width: 8),
-                    Text(currentEvent.location),
+                    Text("${currentEvent.location}${currentEvent.floor != null ? ' - ${currentEvent.floor}' : ''}"),
                   ],
                 ),
                 const SizedBox(height: 20),
