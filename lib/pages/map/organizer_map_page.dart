@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../components/admin/restaurant_detail/restaurant_detail_dashboard.dart';
+import '../../models/event_model.dart';
+import '../events/event_detail_screen.dart';
 
 class AdminMapPage extends StatefulWidget {
   const AdminMapPage({super.key});
@@ -16,44 +17,41 @@ class _AdminMapPageState extends State<AdminMapPage> {
   @override
   void initState() {
     super.initState();
-    loadRestaurants();
+    loadEvents();
   }
 
-  void loadRestaurants() {
-    FirebaseFirestore.instance.collection("restaurants").snapshots().listen((snapshot) {
-      final newMarkers = snapshot.docs.map((doc) {
+  void loadEvents() {
+    FirebaseFirestore.instance.collection("events").snapshots().listen((snapshot) {
+      final newMarkers = snapshot.docs.where((doc) {
         final data = doc.data();
-
-        double lat = data["latitude"] ?? 0.0;
-        double lng = data["longitude"] ?? 0.0;
-        bool isSponsored = data['isSponsored'] == true;
+        return data['latitude'] != null && data['longitude'] != null;
+      }).map((doc) {
+        final data = doc.data();
+        final event = EventModel.fromMap(data, doc.id);
         String imageUrl = data['imageUrl'] ?? '';
 
         return Marker(
-          point: LatLng(lat, lng),
-          width: 160, // Widened to safely fit the new card layout
+          point: LatLng(event.latitude!, event.longitude!),
+          width: 160,
           height: 85,
           alignment: Alignment.topCenter,
           child: GestureDetector(
             onTap: () => Navigator.push(context, MaterialPageRoute(
-              builder: (_) => RestaurantDetailDashboard(restaurantId: doc.id, restaurantData: data),
+              builder: (_) => EventDetailScreen(event: event),
             )),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // THE NEW CLEAN CARD UI
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
                   decoration: BoxDecoration(
-                    color: isSponsored ? Colors.amber.shade50 : Colors.white,
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(10),
-                    border: isSponsored ? Border.all(color: Colors.amber, width: 1.5) : null,
                     boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4)],
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Left Side: The Restaurant Image
                       ClipRRect(
                         borderRadius: BorderRadius.circular(5),
                         child: Container(
@@ -70,43 +68,37 @@ class _AdminMapPageState extends State<AdminMapPage> {
                         ),
                       ),
                       const SizedBox(width: 6),
-                      // Right Side: The Text and Rating
-                      Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            data["name"] ?? "Unknown",
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 10,
-                                color: isSponsored ? Colors.orange.shade900 : Colors.black
+                      Flexible(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              event.name,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 10,
+                                  color: Colors.black
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          if (data['avgRating'] != null && data['avgRating'] > 0)
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.star, color: Colors.amber, size: 10),
-                                const SizedBox(width: 2),
-                                Text("${data['avgRating']}", style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
-                                const SizedBox(width: 2),
-                                Text("(${data['reviewCount'] ?? '0'})", style: const TextStyle(fontSize: 9, color: Colors.grey)),
-                              ],
+                            Text(
+                              "${event.location}${event.floor != null ? ' - ${event.floor}' : ''}",
+                              style: const TextStyle(fontSize: 8, color: Colors.grey),
+                              overflow: TextOverflow.ellipsis,
                             ),
-                        ],
+                          ],
+                        ),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 2),
-                // CLEAN TEARDROP PIN
-                Icon(
+                const Icon(
                   Icons.location_on,
-                  color: isSponsored ? Colors.amber : const Color(0xFFE46A3E),
-                  size: isSponsored ? 45 : 35,
-                  shadows: const [Shadow(color: Colors.black45, blurRadius: 5, offset: Offset(0, 2))],
+                  color: Color(0xFFE46A3E),
+                  size: 35,
+                  shadows: [Shadow(color: Colors.black45, blurRadius: 5, offset: Offset(0, 2))],
                 ),
               ],
             ),
@@ -123,11 +115,14 @@ class _AdminMapPageState extends State<AdminMapPage> {
     return FlutterMap(
       options: const MapOptions(
         initialCenter: LatLng(14.6291, 121.0419),
-        initialZoom: 16.0,
+        initialZoom: 17.0,
         interactionOptions: InteractionOptions(flags: InteractiveFlag.all & ~InteractiveFlag.rotate),
       ),
       children: [
-        TileLayer(urlTemplate: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', userAgentPackageName: 'com.campusgo.app'),
+        TileLayer(
+          urlTemplate: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', 
+          userAgentPackageName: 'com.campusgo.app'
+        ),
         MarkerLayer(markers: markers),
       ],
     );

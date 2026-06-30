@@ -9,7 +9,8 @@ import 'package:campusgo/pages/rewards/redemption_history.dart';
 import 'home.dart';
 import '../../widgets/top_bar.dart';
 import '../../widgets/navbar.dart';
-import '../rewards/shops_dashboard.dart';
+import '../rewards/rewards_shops_screen.dart';
+import '../map/campus_map_page.dart';
 import '../../services/auth_service.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
@@ -83,7 +84,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   Widget build(BuildContext context) {
     final screens = [
       HomeDashboardScreen(accountType: widget.accountType),
-      ShopsDashboardScreen(),
+      const UserMapPage(searchQuery: '', activeFilter: 'All'),
+      const ShopsDashboardScreen(),
       HistoryScreen(
         accountType: widget.accountType,
         openTab: widget.backToProcessing == true ? 1 : 0,

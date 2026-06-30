@@ -14,21 +14,21 @@ class CartProvider extends ChangeNotifier {
   double discountPercentage = 0.0;
   String? appliedVoucherCode;
   int appliedVoucherCost = 0; // NEW: Tracks the point cost of the voucher
-  String? currentRestaurantId;
+  String? currentOrganizerId;
 
   Map<String, CartItem> get items => _items;
   int get totalItems => _items.values.fold(0, (sum, item) => sum + item.quantity);
   double get subtotal => _items.values.fold(0, (sum, item) => sum + (item.price * item.quantity));
   double get total => subtotal * (1 - (discountPercentage / 100));
 
-  void addItem(String restaurantId, String id, String name, double price) {
-    if (currentRestaurantId != null && currentRestaurantId != restaurantId) {
+  void addItem(String organizerId, String id, String name, double price) {
+    if (currentOrganizerId != null && currentOrganizerId != organizerId) {
       _items.clear();
       discountPercentage = 0.0;
       appliedVoucherCode = null;
       appliedVoucherCost = 0;
     }
-    currentRestaurantId = restaurantId;
+    currentOrganizerId = organizerId;
 
     if (_items.containsKey(id)) {
       _items[id]!.quantity++;
@@ -40,7 +40,7 @@ class CartProvider extends ChangeNotifier {
 
   void removeItem(String id) {
     _items.remove(id);
-    if (_items.isEmpty) currentRestaurantId = null;
+    if (_items.isEmpty) currentOrganizerId = null;
     notifyListeners();
   }
 
@@ -57,7 +57,7 @@ class CartProvider extends ChangeNotifier {
     discountPercentage = 0.0;
     appliedVoucherCode = null;
     appliedVoucherCost = 0;
-    currentRestaurantId = null;
+    currentOrganizerId = null;
     notifyListeners();
   }
 }

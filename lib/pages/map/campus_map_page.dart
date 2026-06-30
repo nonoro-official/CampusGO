@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:geolocator/geolocator.dart';
 import 'dart:async';
-import '../../components/user/user_restaurant_detail_page.dart';
+import '../../models/event_model.dart';
+import '../events/event_detail_screen.dart';
 import '../rewards/qr_scanner_page.dart';
 
 class UserMapPage extends StatefulWidget {
@@ -25,55 +25,14 @@ class _UserMapPageState extends State<UserMapPage> {
   List<Marker> markers = [];
   final MapController _mapController = MapController();
 
-  LatLng? _currentLocation;
-  StreamSubscription<Position>? _positionStreamSubscription;
-
   @override
   void initState() {
     super.initState();
-    _listenToRestaurants();
-    _startLocationTracking();
+    _listenToEvents();
   }
 
-  Future<void> _startLocationTracking() async {
-    bool serviceEnabled;
-    LocationPermission permission;
-
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) return;
-
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) return;
-    }
-
-    if (permission == LocationPermission.deniedForever) return;
-
-    Position initialPosition = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
-    setState(() {
-      _currentLocation = LatLng(initialPosition.latitude, initialPosition.longitude);
-    });
-
-    _positionStreamSubscription = Geolocator.getPositionStream(
-      locationSettings: const LocationSettings(accuracy: LocationAccuracy.high, distanceFilter: 5),
-    ).listen((Position position) {
-      if (mounted) {
-        setState(() {
-          _currentLocation = LatLng(position.latitude, position.longitude);
-        });
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _positionStreamSubscription?.cancel();
-    super.dispose();
-  }
-
-  void _listenToRestaurants() {
-    FirebaseFirestore.instance.collection('restaurants').snapshots().listen((snapshot) {
+  void _listenToEvents() {
+    FirebaseFirestore.instance.collection('events').snapshots().listen((snapshot) {
       _updateMarkers(snapshot.docs);
     });
   }
@@ -84,54 +43,49 @@ class _UserMapPageState extends State<UserMapPage> {
     final newMarkers = docs.where((doc) {
       final data = doc.data();
       final String name = (data['name'] ?? '').toString().toLowerCase();
-      final String category = (data['cuisine'] ?? '').toString().toLowerCase();
+      final String location = (data['location'] ?? '').toString().toLowerCase();
       final String desc = (data['description'] ?? '').toString().toLowerCase();
 
       bool matchesSearch = query.isEmpty ||
           name.contains(query) ||
           desc.contains(query) ||
-          category.contains(query);
+          location.contains(query);
 
       bool matchesFilter = true;
       if (widget.activeFilter != "All") {
-        if (widget.activeFilter == "Budget") {
-          matchesFilter = data['priceRange'] == '₱ (Budget)';
-        } else if (widget.activeFilter == "Free WiFi") {
-          matchesFilter = data['hasWiFi'] == true;
-        } else {
-          matchesFilter = category == widget.activeFilter.toLowerCase();
-        }
+        // Assuming filters could be floors or specific event types if they were added
+        // For now, simple location/name match for filter if it's not "All"
+        matchesFilter = location.contains(widget.activeFilter.toLowerCase()) || 
+                        name.contains(widget.activeFilter.toLowerCase());
       }
 
-      return matchesSearch && matchesFilter;
+      // Only show events that have coordinates
+      return matchesSearch && matchesFilter && data['latitude'] != null && data['longitude'] != null;
     }).map((doc) {
       final data = doc.data();
-      bool isSponsored = data['isSponsored'] == true;
+      final event = EventModel.fromMap(data, doc.id);
       String imageUrl = data['imageUrl'] ?? '';
 
       return Marker(
         point: LatLng(data["latitude"], data["longitude"]),
-        width: 160, // Widened to fit the new image card layout safely
+        width: 160,
         height: 85,
         alignment: Alignment.topCenter,
         child: GestureDetector(
-          onTap: () => _showRestaurantPreview(context, doc.id, data),
+          onTap: () => _showEventPreview(context, event),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // THE NEW CLEAN CARD UI
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
                 decoration: BoxDecoration(
-                  color: isSponsored ? Colors.amber.shade50 : Colors.white,
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(10),
-                  border: isSponsored ? Border.all(color: Colors.amber, width: 1.5) : null,
                   boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4)],
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Left Side: The Restaurant Image / Logo Fallback
                     ClipRRect(
                       borderRadius: BorderRadius.circular(5),
                       child: Container(
@@ -148,41 +102,37 @@ class _UserMapPageState extends State<UserMapPage> {
                       ),
                     ),
                     const SizedBox(width: 6),
-                    // Right Side: The Text and Rating
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start, // Left align text next to image
-                      children: [
-                        Text(
-                          data["name"] ?? "Unknown",
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 10,
-                              color: isSponsored ? Colors.orange.shade900 : Colors.black
+                    Flexible(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            event.name,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10,
+                                color: Colors.black
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        if (data['avgRating'] != null && data['avgRating'] > 0)
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.star, color: Colors.amber, size: 10),
-                              const SizedBox(width: 2),
-                              Text("${data['avgRating']}", style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
-                            ],
+                          Text(
+                            "${event.location}${event.floor != null ? ' - ${event.floor}' : ''}",
+                            style: const TextStyle(fontSize: 8, color: Colors.grey),
+                            overflow: TextOverflow.ellipsis,
                           ),
-                      ],
+                        ],
+                      ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 2), // Small gap before the pin
-              // CLEAN TEARDROP PIN
-              Icon(
+              const SizedBox(height: 2),
+              const Icon(
                 Icons.location_on,
-                color: isSponsored ? Colors.amber : const Color(0xFFE46A3E),
-                size: isSponsored ? 45 : 35,
-                shadows: const [Shadow(color: Colors.black45, blurRadius: 5, offset: Offset(0, 2))],
+                color: Color(0xFFE46A3E),
+                size: 35,
+                shadows: [Shadow(color: Colors.black45, blurRadius: 5, offset: Offset(0, 2))],
               ),
             ],
           ),
@@ -197,7 +147,7 @@ class _UserMapPageState extends State<UserMapPage> {
     }
   }
 
-  void _showRestaurantPreview(BuildContext context, String docId, Map<String, dynamic> data) {
+  void _showEventPreview(BuildContext context, EventModel event) {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
@@ -213,8 +163,8 @@ class _UserMapPageState extends State<UserMapPage> {
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(10),
-                    child: data['imageUrl'] != null && data['imageUrl'].toString().isNotEmpty
-                        ? Image.network(data['imageUrl'], width: 80, height: 80, fit: BoxFit.cover)
+                    child: event.imageUrl != null && event.imageUrl!.isNotEmpty
+                        ? Image.network(event.imageUrl!, width: 80, height: 80, fit: BoxFit.cover)
                         : Container(width: 80, height: 80, color: Colors.grey[200], child: Image.asset('assets/images/campusgo_logo.png', fit: BoxFit.cover)),
                   ),
                   const SizedBox(width: 15),
@@ -222,16 +172,15 @@ class _UserMapPageState extends State<UserMapPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(data["name"] ?? "Unknown", style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                        Text(data["cuisine"] ?? "Various", style: const TextStyle(color: Colors.grey)),
+                        Text(event.name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                        Text("${event.location}${event.floor != null ? ' - ${event.floor}' : ''}", style: const TextStyle(color: Colors.grey)),
                         const SizedBox(height: 5),
-                        Row(
-                          children: [
-                            const Icon(Icons.star, color: Colors.amber, size: 16),
-                            const SizedBox(width: 4),
-                            Text("${data['avgRating'] ?? 0.0} (${data['reviewCount'] ?? 0} reviews)"),
-                          ],
-                        )
+                        Text(
+                          event.description,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 12),
+                        ),
                       ],
                     ),
                   )
@@ -244,9 +193,9 @@ class _UserMapPageState extends State<UserMapPage> {
                   style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFE46A3E), padding: const EdgeInsets.symmetric(vertical: 15)),
                   onPressed: () {
                     Navigator.pop(context);
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => UserRestaurantDetailPage(restaurantId: docId, data: data)));
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => EventDetailScreen(event: event)));
                   },
-                  child: const Text("View Details", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                  child: const Text("View Event Details", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
               )
             ],
@@ -260,7 +209,7 @@ class _UserMapPageState extends State<UserMapPage> {
   void didUpdateWidget(covariant UserMapPage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.searchQuery != widget.searchQuery || oldWidget.activeFilter != widget.activeFilter) {
-      FirebaseFirestore.instance.collection('restaurants').get().then((snapshot) {
+      FirebaseFirestore.instance.collection('events').get().then((snapshot) {
         _updateMarkers(snapshot.docs);
       });
     }
@@ -268,39 +217,20 @@ class _UserMapPageState extends State<UserMapPage> {
 
   @override
   Widget build(BuildContext context) {
-    List<Marker> allMarkers = List.from(markers);
-    if (_currentLocation != null) {
-      allMarkers.add(
-          Marker(
-            point: _currentLocation!,
-            width: 50,
-            height: 50,
-            alignment: Alignment.topCenter, // Keep alignment consistent!
-            child: Column(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.all(Radius.circular(10)), boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 4)]),
-                  child: const Text("You are here", style: TextStyle(fontSize: 10, color: Colors.grey)),
-                ),
-                const Icon(Icons.person_pin_circle, color: Colors.green, size: 45),
-              ],
-            ),
-          )
-      );
-    }
-
     return Scaffold(
       body: FlutterMap(
         mapController: _mapController,
         options: const MapOptions(
           initialCenter: LatLng(14.6291, 121.0419),
-          initialZoom: 15.0,
+          initialZoom: 17.0, // Zoomed in more for campus view
           interactionOptions: InteractionOptions(flags: InteractiveFlag.all & ~InteractiveFlag.rotate),
         ),
         children: [
-          TileLayer(urlTemplate: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', userAgentPackageName: 'com.campusgo.app'),
-          MarkerLayer(markers: allMarkers),
+          TileLayer(
+            urlTemplate: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', 
+            userAgentPackageName: 'com.campusgo.app'
+          ),
+          MarkerLayer(markers: markers),
         ],
       ),
       floatingActionButton: Padding(
@@ -318,16 +248,12 @@ class _UserMapPageState extends State<UserMapPage> {
             ),
             const SizedBox(height: 15),
             FloatingActionButton(
-              heroTag: "btn_gps",
+              heroTag: "btn_recenter",
               backgroundColor: Colors.white,
               onPressed: () {
-                if (_currentLocation != null) {
-                  _mapController.move(_currentLocation!, 16.0);
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Fetching GPS... please wait.")));
-                }
+                _mapController.move(const LatLng(14.6291, 121.0419), 17.0);
               },
-              child: const Icon(Icons.my_location, color: Color(0xFFE46A3E)),
+              child: const Icon(Icons.home, color: Color(0xFFE46A3E)),
             ),
           ],
         ),

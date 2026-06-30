@@ -7,6 +7,9 @@ class EventModel {
   final DateTime date;        // Start Date
   final DateTime endDate;     // End Date
   final String location;
+  final String? floor;
+  final double? latitude;
+  final double? longitude;
   final String? imageUrl;
   final List<String> attendingOrganizerIds;
 
@@ -17,6 +20,9 @@ class EventModel {
     required this.date,
     required this.endDate,
     required this.location,
+    this.floor,
+    this.latitude,
+    this.longitude,
     this.imageUrl,
     this.attendingOrganizerIds = const [],
   });
@@ -42,6 +48,9 @@ class EventModel {
           ? (data['endDate'] as Timestamp).toDate()
           : startDate, // Fallback to start date if end is missing
       location: data['location'] ?? '',
+      floor: data['floor'],
+      latitude: (data['latitude'] as num?)?.toDouble(),
+      longitude: (data['longitude'] as num?)?.toDouble(),
       imageUrl: data['imageUrl'],
       attendingOrganizerIds: List<String>.from(data['attendingOrganizerIds'] ?? []),
     );
@@ -54,6 +63,9 @@ class EventModel {
       'date': Timestamp.fromDate(date),
       'endDate': Timestamp.fromDate(endDate),
       'location': location,
+      'floor': floor,
+      'latitude': latitude,
+      'longitude': longitude,
       'imageUrl': imageUrl,
       'attendingOrganizerIds': attendingOrganizerIds,
     };

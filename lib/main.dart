@@ -12,7 +12,7 @@ import 'pages/auth/register.dart';
 import 'pages/auth/forgot_password.dart';
 import 'pages/dashboard/dashboard.dart';
 import 'pages/splash/splash_screen.dart';
-import 'pages/rewards/shops.dart';
+import 'pages/rewards/rewards.dart';
 import 'pages/settings/menu.dart';
 import 'pages/rewards/organizer/reward_inventory.dart';
 import 'pages/messages/messages.dart';

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:campusgo/pages/settings/close_organizer.dart';
+import 'package:campusgo/pages/settings/deactivate_organizer.dart';
 import 'package:campusgo/pages/settings/privacy_policy.dart';
 import 'package:campusgo/pages/settings/terms_and_conditions.dart';
 import 'package:campusgo/widgets/top_bar.dart';
