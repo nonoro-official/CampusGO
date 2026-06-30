@@ -5,16 +5,16 @@ import '../models/enums.dart';
 class InviteService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  // Vendor sends an invite to a co-vendor by email
-  // Called from vendor dashboard
+  // Organizer sends an invite to a co-organizer by email
+  // Called from organizer dashboard
   Future<void> sendInvite({
-    required String fromBusinessId,
+    required String fromOrganizerId,
     required String recipientEmail,
   }) async {
-    // Check if invite already exists for this email + business
+    // Check if invite already exists for this email + Organizer
     final existing = await _db
         .collection('invites')
-        .where('fromBusinessId', isEqualTo: fromBusinessId)
+        .where('fromOrganizerId', isEqualTo: fromOrganizerId)
         .where('recipientEmail', isEqualTo: recipientEmail)
         .where('status', isEqualTo: InviteStatus.pending.name)
         .get();
@@ -22,14 +22,14 @@ class InviteService {
     if (existing.docs.isNotEmpty) return; // don't send duplicates
 
     await _db.collection('invites').add({
-      'fromBusinessId': fromBusinessId,
+      'fromOrganizerId': fromOrganizerId,
       'recipientEmail': recipientEmail,
       'status': InviteStatus.pending.name,
       'createdAt': FieldValue.serverTimestamp(),
     });
   }
 
-  // Co-vendor listens for pending invites sent to their email (real-time)
+  // Co-organizer listens for pending invites sent to their email (real-time)
   // Called from pending_invite_screen.dart
   Stream<List<InviteModel>> getPendingInvites(String email) {
     return _db
@@ -44,11 +44,11 @@ class InviteService {
         );
   }
 
-  // Co-vendor accepts invite
+  // Co-organizer accepts invite
   Future<void> acceptInvite({
     required String inviteId,
-    required String fromBusinessId,
-    required String coVendorUserId,
+    required String fromOrganizerId,
+    required String coOrganizerUserId,
   }) async {
     final batch = _db.batch();
 
@@ -57,20 +57,20 @@ class InviteService {
       'status': InviteStatus.accepted.name,
     });
 
-    // 2. Link co-vendor to business
-    batch.update(_db.collection('users').doc(coVendorUserId), {
-      'businessId': fromBusinessId,
+    // 2. Link co-organizer to Organizer
+    batch.update(_db.collection('users').doc(coOrganizerUserId), {
+      'organizerId': fromOrganizerId,
     });
 
-    // 3. Add co-vendor to business's coVendorIds list
-    batch.update(_db.collection('businesses').doc(fromBusinessId), {
-      'coVendorIds': FieldValue.arrayUnion([coVendorUserId]),
+    // 3. Add co-organizer to Organizer's coOrganizerIds list
+    batch.update(_db.collection('Organizers').doc(fromOrganizerId), {
+      'coOrganizerIds': FieldValue.arrayUnion([coOrganizerUserId]),
     });
 
     await batch.commit();
   }
 
-  // Co-vendor declines invite
+  // Co-organizer declines invite
   Future<void> declineInvite(String inviteId) async {
     await _db.collection('invites').doc(inviteId).update({
       'status': InviteStatus.declined.name,

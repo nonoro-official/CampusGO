@@ -52,7 +52,7 @@ class AuthService {
       'lastName': lastName,
       'phoneNumber': phoneNumber,
       'role': role.toName,
-      'businessId': null,
+      'organizerId': null,
       'createdAt': FieldValue.serverTimestamp(),
       'isOnline': true,
       'lastSeen': FieldValue.serverTimestamp(),
@@ -80,7 +80,7 @@ class AuthService {
       return user.role;
     }
 
-    return Role.customer;
+    throw Exception("Account data not found in Firestore. Please register again.");
   }
 
   Future<UserModel?> getUserData() async {
@@ -199,7 +199,7 @@ class AuthService {
   }
 
   Future<void> deleteAccount({required String password}) async {
-    // deletes business and products
+    // deletes organizer and products
     final user = _auth.currentUser;
 
     if (user == null || user.email == null) {
@@ -214,13 +214,13 @@ class AuthService {
 
       await user.reauthenticateWithCredential(credential);
 
-      final businessQuery = await _db
-          .collection('businesses')
+      final organizerQuery = await _db
+          .collection('Organizers')
           .where('ownerId', isEqualTo: user.uid)
           .get();
 
-      for (var doc in businessQuery.docs) {
-        await deleteBusiness(businessId: doc.id, password: password);
+      for (var doc in organizerQuery.docs) {
+        await deleteOrganizer(organizerId: doc.id, password: password);
       }
 
       await _db.collection('users').doc(user.uid).delete();
@@ -235,8 +235,8 @@ class AuthService {
     }
   }
 
-  Future<void> deleteBusiness({
-    required String businessId,
+  Future<void> deleteOrganizer({
+    required String organizerId,
     required String password,
   }) async {
     final user = _auth.currentUser;
@@ -253,16 +253,16 @@ class AuthService {
 
       await user.reauthenticateWithCredential(credential);
 
-      final docRef = _db.collection('businesses').doc(businessId);
+      final docRef = _db.collection('Organizers').doc(organizerId);
 
       final doc = await docRef.get();
       if (!doc.exists) {
-        throw Exception("Business not found");
+        throw Exception("Organizer not found");
       }
 
       final productsQuery = await _db
           .collection('products')
-          .where('businessId', isEqualTo: businessId)
+          .where('organizerId', isEqualTo: organizerId)
           .get();
 
       for (var productDoc in productsQuery.docs) {
@@ -274,14 +274,14 @@ class AuthService {
       await updateUserRoleToCustomer();
     } on FirebaseAuthException catch (e) {
       if (e.code == 'wrong-password') {
-        throw Exception("Incorrect password. Business closure failed.");
+        throw Exception("Incorrect password. Organizer closure failed.");
       } else {
-        throw Exception(e.message ?? "Failed to close business.");
+        throw Exception(e.message ?? "Failed to close Organizer.");
       }
     }
   }
 
-  Future<void> updateUserRoleToVendor() async {
+  Future<void> updateUserRoleToOrganizer() async {
     final uid = currentUser?.uid;
     if (uid == null) throw Exception("User not logged in");
 
@@ -289,8 +289,8 @@ class AuthService {
 
     if (!doc.exists) throw Exception("User not found");
 
-    if (doc['role'] != 'Vendor') {
-      await doc.reference.update({'role': Role.vendor.toName});
+    if (doc['role'] != 'Organizer') {
+      await doc.reference.update({'role': Role.organizer.toName});
     }
   }
 

@@ -1,22 +1,22 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../models/product_model.dart';
+import '../models/reward_item_model.dart';
 import '../services/product_service.dart';
 
 final productServiceProvider = Provider<ProductService>(
   (ref) => ProductService(),
 );
 
-// Get products for a specific vendor (family provider)
-final vendorProductsProvider =
-    StreamProvider.family<List<ProductModel>, String>((ref, businessId) {
+// Get products for a specific organizer (family provider)
+final organizerProductsProvider =
+    StreamProvider.family<List<ProductModel>, String>((ref, OrganizerId) {
       final productService = ref.watch(productServiceProvider);
-      return productService.getVendorProductsStream(businessId);
+      return productService.getOrganizerProductsStream(OrganizerId);
     });
 
-// Get unique categories for a specific vendor
-final vendorCategoriesProvider =
-    Provider.family<AsyncValue<List<String>>, String>((ref, businessId) {
-  final productsAsync = ref.watch(vendorProductsProvider(businessId));
+// Get unique categories for a specific organizer
+final organizerCategoriesProvider =
+    Provider.family<AsyncValue<List<String>>, String>((ref, OrganizerId) {
+  final productsAsync = ref.watch(organizerProductsProvider(OrganizerId));
   
   return productsAsync.whenData((products) {
     final categories = <String>{};

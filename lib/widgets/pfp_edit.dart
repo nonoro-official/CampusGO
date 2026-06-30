@@ -4,11 +4,11 @@ import 'package:file_picker/file_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../providers/auth_provider.dart';
-import '../../../providers/business_provider.dart';
+import '../../../providers/organizer_provider.dart';
 
 class EditProfilePicture extends ConsumerStatefulWidget {
-  final bool isBusiness;
-  const EditProfilePicture({super.key, this.isBusiness = false});
+  final bool isOrganizer;
+  const EditProfilePicture({super.key, this.isOrganizer = false});
 
   @override
   ConsumerState<EditProfilePicture> createState() => _EditProfilePictureState();
@@ -20,8 +20,8 @@ class _EditProfilePictureState extends ConsumerState<EditProfilePicture> {
 
   @override
   Widget build(BuildContext context) {
-    final imageUrl = widget.isBusiness
-        ? ref.watch(myBusinessProvider).value?.imageUrl
+    final imageUrl = widget.isOrganizer
+        ? ref.watch(myOrganizerProvider).value?.imageUrl
         : ref.watch(userDocProvider).value?.imageUrl;
 
     final primaryColor = Theme.of(context).primaryColor;
@@ -57,7 +57,7 @@ class _EditProfilePictureState extends ConsumerState<EditProfilePicture> {
                         )
                       : Center(
                           child: Icon(
-                            widget.isBusiness ? Icons.store : Icons.person,
+                            widget.isOrganizer ? Icons.store : Icons.person,
                             size: 80,
                             color: primaryColor,
                           ),
@@ -110,8 +110,8 @@ class _EditProfilePictureState extends ConsumerState<EditProfilePicture> {
     if (result != null && result.files.single.path != null) {
       File file = File(result.files.single.path!);
 
-      final oldUrl = widget.isBusiness
-          ? ref.read(myBusinessProvider).value?.imageUrl
+      final oldUrl = widget.isOrganizer
+          ? ref.read(myOrganizerProvider).value?.imageUrl
           : ref.read(userDocProvider).value?.imageUrl;
 
       setState(() {
@@ -120,10 +120,10 @@ class _EditProfilePictureState extends ConsumerState<EditProfilePicture> {
       });
 
       try {
-        if (widget.isBusiness) {
+        if (widget.isOrganizer) {
           await ref
-              .read(vendorStatusProvider.notifier)
-              .uploadBusinessPhoto(file);
+              .read(organizerStatusProvider.notifier)
+              .uploadOrganizerPhoto(file);
         } else {
           await ref.read(authServiceProvider).updateProfileImage(file);
         }
@@ -138,8 +138,8 @@ class _EditProfilePictureState extends ConsumerState<EditProfilePicture> {
         // We wait until the watch(imageUrl) produces a DIFFERENT string than oldUrl.
         int attempts = 0;
         while (attempts < 10) {
-          final currentUrl = widget.isBusiness
-              ? ref.read(myBusinessProvider).value?.imageUrl
+          final currentUrl = widget.isOrganizer
+              ? ref.read(myOrganizerProvider).value?.imageUrl
               : ref.read(userDocProvider).value?.imageUrl;
 
           if (currentUrl != oldUrl) break; // New URL has arrived!

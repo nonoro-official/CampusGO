@@ -3,8 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class ReportModel {
   final String id;
   final String reporterId;
-  final String businessId;
-  final String businessName;
+  final String organizerId;
+  final String organizerName;
   final String reason;
   final String description;
   final Timestamp timestamp;
@@ -13,8 +13,8 @@ class ReportModel {
   ReportModel({
     required this.id,
     required this.reporterId,
-    required this.businessId,
-    required this.businessName,
+    required this.organizerId,
+    required this.organizerName,
     required this.reason,
     required this.description,
     required this.timestamp,
@@ -25,8 +25,8 @@ class ReportModel {
     return ReportModel(
       id: id,
       reporterId: data['reporterId'] ?? '',
-      businessId: data['businessId'] ?? '',
-      businessName: data['businessName'] ?? '',
+      organizerId: data['organizerId'] ?? '',
+      organizerName: data['organizerName'] ?? '',
       reason: data['reason'] ?? '',
       description: data['description'] ?? '',
       timestamp: data['timestamp'] ?? Timestamp.now(),
@@ -37,8 +37,8 @@ class ReportModel {
   Map<String, dynamic> toMap() {
     return {
       'reporterId': reporterId,
-      'businessId': businessId,
-      'businessName': businessName,
+      'organizerId': organizerId,
+      'organizerName': organizerName,
       'reason': reason,
       'description': description,
       'timestamp': timestamp,
