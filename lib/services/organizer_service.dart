@@ -30,7 +30,7 @@ class OrganizerService {
       'createdAt': FieldValue.serverTimestamp(),
     });
 
-    // Link Organizer back to the vendor's user doc
+    // Link Organizer back to the organizer's user doc
     await _db.collection('users').doc(ownerId).update({'organizerId': ref.id});
   }
 

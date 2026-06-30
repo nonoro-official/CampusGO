@@ -12,8 +12,8 @@ import '../../pages/events/event_list_screen.dart';
 import '../../pages/events/event_detail_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
-  final bool isVendor;
-  const HomeScreen({super.key, this.isVendor = false});
+  final bool isOrganizer;
+  const HomeScreen({super.key, this.isOrganizer = false});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -26,7 +26,7 @@ class HomeScreen extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(height: isVendor ? 80 : 20),
+          SizedBox(height: isOrganizer ? 80 : 20),
           const WelcomeCard(),
           const SizedBox(height: 25),
 
@@ -182,7 +182,7 @@ class EventCarousel extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
-                          "${event.attendingOrganizerIds.length} Vendors Attending",
+                          "${event.attendingOrganizerIds.length} Organizers Attending",
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 11,

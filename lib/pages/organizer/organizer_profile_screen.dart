@@ -19,10 +19,10 @@ import '../../models/enums.dart';
 import '../messages/chat_page.dart';
 import '../../services/message_service.dart';
 
-class VendorProfileScreen extends ConsumerWidget {
+class OrganizerProfileScreen extends ConsumerWidget {
   final OrganizerModel organizer;
 
-  const VendorProfileScreen({super.key, required this.organizer});
+  const OrganizerProfileScreen({super.key, required this.organizer});
 
   String formatPartner(OrganizerPartner partner) {
     return partner.name[0].toUpperCase() + partner.name.substring(1);
@@ -390,7 +390,7 @@ class VendorProfileScreen extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
   ) {
-    final productsAsync = ref.watch(vendorProductsProvider(organizerId));
+    final productsAsync = ref.watch(organizerProductsProvider(organizerId));
     final textTheme = Theme.of(context).textTheme;
 
     return productsAsync.when(

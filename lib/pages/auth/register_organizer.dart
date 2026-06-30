@@ -81,7 +81,7 @@ class _RegisterOrganizerScreenState extends State<RegisterOrganizerScreen> {
           organizerPartner: selectedOrganizerPartner!,
         );
 
-        await AuthService().updateUserRoleToVendor();
+        await AuthService().updateUserRoleToOrganizer();
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Organizer registered! Please sign in.')),
@@ -100,11 +100,11 @@ class _RegisterOrganizerScreenState extends State<RegisterOrganizerScreen> {
           organizerPartner: selectedOrganizerPartner!,
         );
 
-        await AuthService().updateUserRoleToVendor();
+        await AuthService().updateUserRoleToOrganizer();
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Organizer registered! You are now a vendor.'),
+            content: Text('Organizer registered! You are now a organizer.'),
           ),
         );
 

@@ -6,8 +6,8 @@ import '../pages/organizer/organizer_profile_screen.dart';
 import '../../../utils/organizer_utils.dart';
 import '../../../models/enums.dart';
 
-class VendorShopCard extends ConsumerWidget {
-  const VendorShopCard({super.key});
+class OrganizerShopCard extends ConsumerWidget {
+  const OrganizerShopCard({super.key});
 
   String formatPartner(OrganizerPartner partner) {
     return partner.name[0].toUpperCase() +
@@ -183,7 +183,7 @@ class VendorShopCard extends ConsumerWidget {
                               context,
                               MaterialPageRoute(
                                 builder: (_) =>
-                                    VendorProfileScreen(organizer: organizer),
+                                    OrganizerProfileScreen(organizer: organizer),
                               ),
                             );
                           },

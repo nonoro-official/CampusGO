@@ -102,8 +102,8 @@ class MyApp extends StatelessWidget {
         '/listings': (context) => const ListingScreen(),
         '/history-customer': (context) =>
         const HistoryScreen(accountType: 'Customer'),
-        '/history-vendor': (context) =>
-        const HistoryScreen(accountType: 'Vendor'),
+        '/history-organizer': (context) =>
+        const HistoryScreen(accountType: 'Organizer'),
         '/dashboard': (context) {
           final args =
           ModalRoute.of(context)?.settings.arguments
@@ -122,15 +122,15 @@ class MyApp extends StatelessWidget {
           as Map<String, dynamic>?;
 
           return DashboardScreen(
-            accountType: 'Vendor',
+            accountType: 'Organizer',
             openTab: args?['openTab'],
             backToProcessing: args?['backToProcessing'],
           );
         },
-        '/vendor-profile': (context) {
+        '/organizer-profile': (context) {
           final organizer =
           ModalRoute.of(context)!.settings.arguments as OrganizerModel;
-          return VendorProfileScreen(organizer: organizer);
+          return OrganizerProfileScreen(organizer: organizer);
         },
         '/menu': (context) => const MenuScreen(),
         '/messages': (context) => MessagesScreen(),

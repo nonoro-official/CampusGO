@@ -41,10 +41,10 @@ class RedirectScreen extends StatelessWidget {
                 context,
                 MaterialPageRoute(
                   builder: (context) =>
-                      const RegisterScreen(accountType: 'Vendor'),
+                      const RegisterScreen(accountType: 'Organizer'),
                 ),
               ),
-              child: const Text('Vendor'),
+              child: const Text('Organizer'),
             ),
           ],
         ),
@@ -137,9 +137,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     try {
       final cleanEmail = email.trim().toLowerCase();
 
-      if (widget.accountType == 'Vendor') {
-        // DON'T register yet if Vendor. Pass data to the next screen.
-        // This prevents "empty vendor" accounts if they quit mid-setup.
+      if (widget.accountType == 'Organizer') {
+        // DON'T register yet if Organizer. Pass data to the next screen.
+        // This prevents "empty organizer" accounts if they quit mid-setup.
         if (!mounted) return;
         Navigator.push(
           context,
@@ -193,7 +193,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isVendor = widget.accountType == 'Vendor';
+    final isOrganizer = widget.accountType == 'Organizer';
 
     return Scaffold(
       appBar: const TopBar(title: 'Register', showBack: true, dark: false),
@@ -299,7 +299,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               color: Colors.white,
                             ),
                           )
-                        : isVendor
+                        : isOrganizer
                         ? const Text('Next')
                         : const Text('Register'),
                   ),

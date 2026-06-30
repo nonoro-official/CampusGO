@@ -324,7 +324,7 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
       int? promoQty = int.tryParse(promoQuantityController.text);
 
       if (widget.product == null) {
-        await productService.createVendorProduct(
+        await productService.createOrganizerProduct(
           organizerId: widget.organizerId,
           name: name,
           description: description,
@@ -345,7 +345,7 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
           supplier: supplier,
         );
       } else {
-        await productService.updateVendorProduct(
+        await productService.updateOrganizerProduct(
           productId: widget.product!.id,
           OrganizerId: widget.organizerId,
           name: name,
@@ -385,7 +385,7 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
     final textTheme = Theme.of(context).textTheme;
     final primaryColor = Theme.of(context).primaryColor;
 
-    final productsAsync = ref.watch(vendorProductsProvider(widget.organizerId));
+    final productsAsync = ref.watch(organizerProductsProvider(widget.organizerId));
     final allProducts = productsAsync.value ?? [];
 
     final baseProducts = allProducts

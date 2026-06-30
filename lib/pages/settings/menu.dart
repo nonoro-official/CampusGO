@@ -68,7 +68,7 @@ class MenuScreen extends ConsumerWidget {
                   ]),
 
                   _header(context, "Organizer Settings", false),
-                  if (user.role == Role.vendor) ...[
+                  if (user.role == Role.organizer) ...[
                     organizerAsync.when(
                       data: (biz) => _buildList(context, [
                         {
@@ -157,7 +157,7 @@ class MenuScreen extends ConsumerWidget {
 
                   _header(context, "Danger Zone", true),
                   _buildList(context, [
-                    if (user.role == Role.vendor) ...[
+                    if (user.role == Role.organizer) ...[
                       {
                         'icon': Icons.storefront,
                         'label': 'Close Organizer',

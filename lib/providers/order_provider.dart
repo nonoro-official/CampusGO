@@ -8,7 +8,7 @@ import '../providers/organizer_provider.dart';
 
 final orderServiceProvider = Provider<OrderService>((ref) => OrderService());
 
-// ─── Vendor: stream all orders for my Organizer ───────────────────────────────
+// ─── Organizer: stream all orders for my Organizer ───────────────────────────────
 
 final OrganizerOrdersProvider = StreamProvider<List<OrderModel>>((ref) {
   final Organizer = ref.watch(myOrganizerProvider).value;

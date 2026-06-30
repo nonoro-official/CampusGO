@@ -1,23 +1,23 @@
 // User Roles
 enum Role {
   customer,
-  vendor,
-  coVendor;
+  organizer,
+  coOrganizer;
 
   // Convert String from Firestore to Enum
   static Role fromString(String role) {
     switch (role.toLowerCase()) {
-      case 'vendor':
-        return Role.vendor;
-      case 'covendor':
-      case 'co-vendor':
-        return Role.coVendor;
+      case 'organizer':
+        return Role.organizer;
+      case 'coorganizer':
+      case 'co-organizer':
+        return Role.coOrganizer;
       default:
         return Role.customer;
     }
   }
 
-  // Convert Enum to String for Firestore (e.g., "Vendor")
+  // Convert Enum to String for Firestore (e.g., "Organizer")
   String get toName => name[0].toUpperCase() + name.substring(1);
 }
 
@@ -72,7 +72,7 @@ enum UserTier {
   String get toName => name[0].toUpperCase() + name.substring(1);
 }
 
-// Vendor Status
+// Organizer Status
 enum ActiveStatus {
   open,
   onBreak,
@@ -103,7 +103,7 @@ enum ProductType {
     );
   }
 
-  // Convert Enum to String for Firestore (e.g., "Vendor")
+  // Convert Enum to String for Firestore (e.g., "Organizer")
   String get toName => name[0].toUpperCase() + name.substring(1);
 }
 

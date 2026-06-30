@@ -6,17 +6,17 @@ final productServiceProvider = Provider<ProductService>(
   (ref) => ProductService(),
 );
 
-// Get products for a specific vendor (family provider)
-final vendorProductsProvider =
+// Get products for a specific organizer (family provider)
+final organizerProductsProvider =
     StreamProvider.family<List<ProductModel>, String>((ref, OrganizerId) {
       final productService = ref.watch(productServiceProvider);
-      return productService.getVendorProductsStream(OrganizerId);
+      return productService.getOrganizerProductsStream(OrganizerId);
     });
 
-// Get unique categories for a specific vendor
-final vendorCategoriesProvider =
+// Get unique categories for a specific organizer
+final organizerCategoriesProvider =
     Provider.family<AsyncValue<List<String>>, String>((ref, OrganizerId) {
-  final productsAsync = ref.watch(vendorProductsProvider(OrganizerId));
+  final productsAsync = ref.watch(organizerProductsProvider(OrganizerId));
   
   return productsAsync.whenData((products) {
     final categories = <String>{};

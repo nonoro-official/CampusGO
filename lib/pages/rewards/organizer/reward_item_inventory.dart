@@ -157,7 +157,7 @@ class _AddItemModalState extends ConsumerState<_AddItemModal> {
     final user = ref.watch(currentUserProvider);
     final organizerId = user?.organizerId ?? '';
     final existingCategoriesAsync = ref.watch(
-      vendorCategoriesProvider(organizerId),
+      organizerCategoriesProvider(organizerId),
     );
     final existingCategories = existingCategoriesAsync.value ?? [];
 
@@ -377,7 +377,7 @@ class _AddItemModalState extends ConsumerState<_AddItemModal> {
         imageUrl = await productService.uploadProductImage(selectedImage!);
       }
 
-      await productService.createVendorProduct(
+      await productService.createOrganizerProduct(
         organizerId: user!.organizerId!,
         name: name,
         description: description,
@@ -445,7 +445,7 @@ Future<void> deleteItemInventory(
   if (confirmed == true) {
     try {
       final productService = ProductService();
-      await productService.deleteVendorProduct(product.id);
+      await productService.deleteOrganizerProduct(product.id);
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -644,7 +644,7 @@ class _EditItemModalState extends ConsumerState<_EditItemModal> {
             basePrice * (1 - (widget.product.discountPercentage! / 100));
       }
 
-      await productService.updateVendorProduct(
+      await productService.updateOrganizerProduct(
         productId: widget.product.id,
         OrganizerId: widget.product.organizerId,
         name: name,
@@ -684,7 +684,7 @@ class _EditItemModalState extends ConsumerState<_EditItemModal> {
     final isDiscounted = widget.product.type == ListingType.discount;
     final organizerId = widget.product.organizerId;
     final existingCategoriesAsync = ref.watch(
-      vendorCategoriesProvider(organizerId),
+      organizerCategoriesProvider(organizerId),
     );
     final existingCategories = existingCategoriesAsync.value ?? [];
 

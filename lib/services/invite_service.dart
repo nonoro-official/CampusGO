@@ -5,8 +5,8 @@ import '../models/enums.dart';
 class InviteService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  // Vendor sends an invite to a co-vendor by email
-  // Called from vendor dashboard
+  // Organizer sends an invite to a co-organizer by email
+  // Called from organizer dashboard
   Future<void> sendInvite({
     required String fromOrganizerId,
     required String recipientEmail,
@@ -29,7 +29,7 @@ class InviteService {
     });
   }
 
-  // Co-vendor listens for pending invites sent to their email (real-time)
+  // Co-organizer listens for pending invites sent to their email (real-time)
   // Called from pending_invite_screen.dart
   Stream<List<InviteModel>> getPendingInvites(String email) {
     return _db
@@ -44,11 +44,11 @@ class InviteService {
         );
   }
 
-  // Co-vendor accepts invite
+  // Co-organizer accepts invite
   Future<void> acceptInvite({
     required String inviteId,
     required String fromOrganizerId,
-    required String coVendorUserId,
+    required String coOrganizerUserId,
   }) async {
     final batch = _db.batch();
 
@@ -57,20 +57,20 @@ class InviteService {
       'status': InviteStatus.accepted.name,
     });
 
-    // 2. Link co-vendor to Organizer
-    batch.update(_db.collection('users').doc(coVendorUserId), {
+    // 2. Link co-organizer to Organizer
+    batch.update(_db.collection('users').doc(coOrganizerUserId), {
       'organizerId': fromOrganizerId,
     });
 
-    // 3. Add co-vendor to Organizer's coVendorIds list
+    // 3. Add co-organizer to Organizer's coOrganizerIds list
     batch.update(_db.collection('Organizers').doc(fromOrganizerId), {
-      'coVendorIds': FieldValue.arrayUnion([coVendorUserId]),
+      'coOrganizerIds': FieldValue.arrayUnion([coOrganizerUserId]),
     });
 
     await batch.commit();
   }
 
-  // Co-vendor declines invite
+  // Co-organizer declines invite
   Future<void> declineInvite(String inviteId) async {
     await _db.collection('invites').doc(inviteId).update({
       'status': InviteStatus.declined.name,

@@ -7,12 +7,12 @@ import '../../../widgets/modal.dart';
 
 class OrderDetails extends ConsumerWidget {
   final OrderModel order;
-  final String accountType; // 'Customer' or 'Vendor'
+  final String accountType; // 'Customer' or 'Organizer'
 
   const OrderDetails({
     super.key,
     required this.order,
-    this.accountType = 'Vendor',
+    this.accountType = 'Organizer',
   });
 
   @override
@@ -65,8 +65,8 @@ class OrderDetails extends ConsumerWidget {
                     style: textTheme.titleMedium?.copyWith(color: primaryColor),
                   ),
                 ),
-                // ─── Vendor view ───────────────────────────────────
-                if (accountType == 'Vendor' && status != OrderStatus.completed)
+                // ─── Organizer view ───────────────────────────────────
+                if (accountType == 'Organizer' && status != OrderStatus.completed)
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
@@ -79,7 +79,7 @@ class OrderDetails extends ConsumerWidget {
                     ),
                     onPressed: statusNotifier.isLoading
                         ? null
-                        : () => _onVendorAction(
+                        : () => _onOrganizerAction(
                             context,
                             ref,
                             enriched,
@@ -237,9 +237,9 @@ class OrderDetails extends ConsumerWidget {
     );
   }
 
-  // ─── Vendor action button handler ─────────────────────────────────────────
+  // ─── Organizer action button handler ─────────────────────────────────────────
 
-  void _onVendorAction(
+  void _onOrganizerAction(
     BuildContext context,
     WidgetRef ref,
     OrderModel enriched,

@@ -15,13 +15,13 @@ class HomeDashboardScreen extends StatefulWidget {
 class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
   @override
   Widget build(BuildContext context) {
-    final isVendor = widget.accountType == "Vendor";
+    final isOrganizer = widget.accountType == "Organizer";
 
-    return isVendor
+    return isOrganizer
         ? TogglePagesButton(
-            pages: [HomeScreen(isVendor: true), const OrganizerDashboard()],
+            pages: [HomeScreen(isOrganizer: true), const OrganizerDashboard()],
             customTitles: ["Home", "Organizer"],
           )
-        : const HomeScreen(isVendor: false);
+        : const HomeScreen(isOrganizer: false);
   }
 }

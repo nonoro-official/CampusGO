@@ -142,7 +142,7 @@ class _CategoryFilter extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final productsAsync = ref.watch(vendorProductsProvider(OrganizerId));
+    final productsAsync = ref.watch(organizerProductsProvider(OrganizerId));
 
     return productsAsync.when(
       data: (products) {
@@ -181,7 +181,7 @@ class InventoryList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final productsAsync = ref.watch(vendorProductsProvider(organizerId));
+    final productsAsync = ref.watch(organizerProductsProvider(organizerId));
 
     return productsAsync.when(
       data: (products) {
@@ -476,7 +476,7 @@ class ListingCard extends ConsumerWidget {
     );
 
     if (confirmed == true) {
-      await ref.read(productServiceProvider).deleteVendorProduct(product.id);
+      await ref.read(productServiceProvider).deleteOrganizerProduct(product.id);
     }
   }
 

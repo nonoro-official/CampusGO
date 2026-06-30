@@ -122,7 +122,7 @@ class _EditProfilePictureState extends ConsumerState<EditProfilePicture> {
       try {
         if (widget.isOrganizer) {
           await ref
-              .read(vendorStatusProvider.notifier)
+              .read(organizerStatusProvider.notifier)
               .uploadOrganizerPhoto(file);
         } else {
           await ref.read(authServiceProvider).updateProfileImage(file);

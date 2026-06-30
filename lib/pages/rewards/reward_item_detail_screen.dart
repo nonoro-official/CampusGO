@@ -25,7 +25,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     final initialProduct = widget.product as ProductModel;
     
     // Watch the product stream to get real-time stock updates
-    final productsAsync = ref.watch(vendorProductsProvider(initialProduct.organizerId));
+    final productsAsync = ref.watch(organizerProductsProvider(initialProduct.organizerId));
     
     return productsAsync.when(
       loading: () => _buildScaffold(context, initialProduct),

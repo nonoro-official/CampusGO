@@ -10,12 +10,12 @@ import '../messages/chat_page.dart';
 
 class OrderSummary extends ConsumerWidget {
   final OrderModel order;
-  final String accountType; // 'Customer' or 'Vendor'
+  final String accountType; // 'Customer' or 'Organizer'
 
   const OrderSummary({
     super.key,
     required this.order,
-    this.accountType = 'Vendor',
+    this.accountType = 'Organizer',
   });
 
   @override
@@ -115,7 +115,7 @@ class OrderSummary extends ConsumerWidget {
                     )
                 ]
 
-                /// SELLER VIEW (Vendor viewing incoming orders from customers)
+                /// SELLER VIEW (Organizer viewing incoming orders from customers)
                 else ...[
                   if (status == OrderStatus.processing ||
                       status == OrderStatus.readyForPickup)
@@ -125,14 +125,14 @@ class OrderSummary extends ConsumerWidget {
                         ElevatedButton(
                           onPressed: statusNotifier.isLoading 
                               ? null 
-                              : () => _onVendorAction(context, ref, enriched, status, total),
+                              : () => _onOrganizerAction(context, ref, enriched, status, total),
                           child: const Text("Mark Ready"),
                         ),
                         if (status == OrderStatus.readyForPickup)
                           ElevatedButton(
                             onPressed: statusNotifier.isLoading 
                                 ? null 
-                                : () => _onVendorAction(context, ref, enriched, status, total),
+                                : () => _onOrganizerAction(context, ref, enriched, status, total),
                             child: const Text("Confirm Payment"),
                           ),
                         const SizedBox(width: 8),
@@ -141,7 +141,7 @@ class OrderSummary extends ConsumerWidget {
                             side: const BorderSide(color: Colors.red),
                           ),
                           onPressed: () =>
-                              _cancelVendorOrder(context, ref, enriched, status),
+                              _cancelOrganizerOrder(context, ref, enriched, status),
                           child: const Text(
                             "Cancel",
                             style: TextStyle(color: Colors.red),
@@ -291,7 +291,7 @@ class OrderSummary extends ConsumerWidget {
     );
   }
 
-  void _onVendorAction(
+  void _onOrganizerAction(
     BuildContext context,
     WidgetRef ref,
     OrderModel order,
@@ -348,10 +348,10 @@ class OrderSummary extends ConsumerWidget {
       final organizer = await organizerService.getOrganizer(organizerId);
 
       if (organizer != null && context.mounted) {
-        Navigator.pushNamed(context, '/vendor-profile', arguments: organizer);
+        Navigator.pushNamed(context, '/organizer-profile', arguments: organizer);
       } else if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Vendor no longer available')),
+          const SnackBar(content: Text('Organizer no longer available')),
         );
       }
     } catch (e) {
@@ -363,7 +363,7 @@ class OrderSummary extends ConsumerWidget {
     }
   }
 
-  void _cancelVendorOrder(
+  void _cancelOrganizerOrder(
     BuildContext context,
     WidgetRef ref,
     OrderModel order,
