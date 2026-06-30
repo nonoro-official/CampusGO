@@ -32,7 +32,7 @@ class _ShopsScreenState extends ConsumerState<ShopsScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: TopBar(
-        title: 'campusgo',
+        title: 'CampusGO',
         showBack: true,
         rightIcon: Icons.chat_bubble_outline,
         onRightPressed: () => Navigator.pushNamed(context, "/messages"),

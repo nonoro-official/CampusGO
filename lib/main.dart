@@ -76,7 +76,7 @@ class MyApp extends StatelessWidget {
       navigatorKey: navigatorKey,
       navigatorObservers: [RouteNameObserver(currentRouteNotifier)],
       debugShowCheckedModeBanner: false,
-      title: 'campusgo',
+      title: 'CampusGO',
       theme: AppTheme.lightTheme,
 
       builder: (context, child) {

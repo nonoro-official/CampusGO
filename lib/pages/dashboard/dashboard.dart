@@ -94,7 +94,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
 
     return Scaffold(
       extendBody: true,
-      appBar: const TopBar(title: "campusgo", dashboard: true),
+      appBar: const TopBar(title: "CampusGO", dashboard: true),
       body: SafeArea(
         bottom: false,
         child: Stack(

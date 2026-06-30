@@ -38,7 +38,7 @@ class _MockQRScannerPageState extends State<MockQRScannerPage> with SingleTicker
       Navigator.pop(context); // Close the scanner
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("🎉 Success! You earned 50 campusgo Points!"),
+          content: Text("🎉 Success! You earned 50 CampusGO Points!"),
           backgroundColor: Colors.green,
           duration: Duration(seconds: 3),
         ),

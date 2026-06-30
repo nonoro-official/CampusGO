@@ -12,7 +12,7 @@ void helpCenter(BuildContext context, WidgetRef ref) {
           {
             "question": "About Us",
             "answer":
-                "campusgo is a centralized campus e-commerce platform designed to bring student Organizeres into one accessible space, making it easier for the campus community to discover, support, and engage with them.\n\nPrototype for Mobile Application Development 2 and Science, Technology, and Society.",
+                "CampusGO is a centralized campus e-commerce platform designed to bring student Organizers into one accessible space, making it easier for the campus community to discover, support, and engage with them.\n\nPrototype for Mobile Application Development 2 and Science, Technology, and Society.",
           },
           {
             "question": "Contact Tech and Support",
