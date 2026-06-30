@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:campusgo/models/enums.dart';
 import 'package:campusgo/services/auth_service.dart';
 import 'package:campusgo/widgets/top_bar.dart';
 
@@ -28,11 +29,27 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       // Login will trigger authStateChanges, which the Wrapper watches.
-      // We no longer need to manually navigate here.
-      await AuthService().login(
+      final Role role = await AuthService().login(
         _emailController.text.trim(),
         _passwordController.text,
       );
+
+      if (!mounted) return;
+
+      // Manual navigation as a fallback if not handled by Wrapper (e.g., if on /login route)
+      if (role == Role.vendor || role == Role.coVendor) {
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          '/organizer-dashboard',
+          (route) => false,
+        );
+      } else {
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          '/dashboard',
+          (route) => false,
+        );
+      }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(
