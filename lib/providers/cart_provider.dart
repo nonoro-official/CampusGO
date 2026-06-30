@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/cart_item_model.dart';
-import '../models/product_model.dart';
+import '../models/reward_item_model.dart';
 import '../services/cart_service.dart';
 import '../services/order_service.dart';
 import 'auth_provider.dart';
@@ -33,9 +33,9 @@ class CartNotifier extends AsyncNotifier<void> {
   @override
   Future<void> build() async {}
 
-  /// Add quantity of product to the current user's cart for businessId.
+  /// Add quantity of product to the current user's cart for organizerId.
   Future<void> addToCart({
-    required String businessId,
+    required String organizerId,
     required ProductModel product,
     required int quantity,
   }) async {
@@ -46,7 +46,7 @@ class CartNotifier extends AsyncNotifier<void> {
     state = await AsyncValue.guard(() async {
       await ref.read(cartServiceProvider).addToCart(
             userId: user.uid,
-            businessId: businessId,
+            organizerId: organizerId,
             product: product,
             quantity: quantity,
           );
@@ -119,7 +119,7 @@ class CartNotifier extends AsyncNotifier<void> {
       final totalWithFee = cart.price + 10.0;
       
       await orderService.placeOrder(
-        businessId: cart.businessId,
+        OrganizerId: cart.organizerId,
         userId: user.uid,
         orders: cart.products,
         price: totalWithFee,
@@ -132,7 +132,7 @@ class CartNotifier extends AsyncNotifier<void> {
 
   /// Buy now: place an order immediately without adding to cart.
   Future<void> buyNow({
-    required String businessId,
+    required String organizerId,
     required ProductModel product,
     required int quantity,
   }) async {
@@ -146,7 +146,7 @@ class CartNotifier extends AsyncNotifier<void> {
       final totalWithFee = (product.price * quantity) + 10.0;
       
       await orderService.placeOrder(
-        businessId: businessId,
+        OrganizerId: organizerId,
         userId: user.uid,
         orders: {product.id: quantity},
         price: totalWithFee,

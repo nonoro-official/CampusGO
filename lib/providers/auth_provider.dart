@@ -40,7 +40,7 @@ final currentUserProvider = Provider<UserModel?>((ref) {
   return ref.watch(userDocProvider).value;
 });
 
-// Stream of a specific user's online flag (used for vendor availability)
+// Stream of a specific user's online flag (used for organizer availability)
 final userOnlineStatusProvider = StreamProvider.family<bool, String>((
   ref,
   uid,

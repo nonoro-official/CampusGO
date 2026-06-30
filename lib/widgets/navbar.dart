@@ -10,7 +10,7 @@ class NavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final primaryColor = Theme.of(context).primaryColor;
 
-    final items = [Icons.home, Icons.store, Icons.shopping_cart];
+    final items = [Icons.home, Icons.map, Icons.store, Icons.shopping_cart];
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,

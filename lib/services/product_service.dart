@@ -2,14 +2,14 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:path/path.dart' as p;
-import '../models/product_model.dart';
+import '../models/reward_item_model.dart';
 import '../models/enums.dart';
 
 class ProductService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
-  // Search the global catalog (e.g., for a vendor adding items)
+  // Search the global catalog (e.g., for a organizer adding items)
   Future<List<ProductModel>> searchGlobalProducts(String query) async {
     final snap = await _db
         .collection('products')
@@ -21,20 +21,20 @@ class ProductService {
         .toList();
   }
 
-  // Get all products for a specific vendor/business
-  Stream<List<ProductModel>> getVendorProductsStream(String businessId) {
+  // Get all products for a specific organizer/Organizer
+  Stream<List<ProductModel>> getOrganizerProductsStream(String organizerId) {
     return _db
         .collection('products')
-        .where('businessId', isEqualTo: businessId)
+        .where('organizerId', isEqualTo: organizerId)
         .snapshots()
         .map((snap) => snap.docs
             .map((doc) => ProductModel.fromMap(doc.data(), doc.id))
             .toList());
   }
 
-  // Create a new product for a vendor
-  Future<String> createVendorProduct({
-    required String businessId,
+  // Create a new product for a organizer
+  Future<String> createOrganizerProduct({
+    required String organizerId,
     required String name,
     required String description,
     required double price,
@@ -52,7 +52,7 @@ class ProductService {
     required String supplier,
   }) async {
     final ref = await _db.collection('products').add({
-      'businessId': businessId,
+      'organizerId': organizerId,
       'name': name,
       'description': description,
       'price': price,
@@ -80,9 +80,9 @@ class ProductService {
   }
 
   // Update an existing product
-  Future<void> updateVendorProduct({
+  Future<void> updateOrganizerProduct({
     required String productId,
-    required String businessId,
+    required String OrganizerId,
     required String name,
     String? description,
     required double price,
@@ -123,7 +123,7 @@ class ProductService {
   }
 
   // Delete a product
-  Future<void> deleteVendorProduct(String productId) async {
+  Future<void> deleteOrganizerProduct(String productId) async {
     await _db.collection('products').doc(productId).delete();
   }
 
@@ -138,10 +138,10 @@ class ProductService {
     });
   }
 
-  // Remove a category from all products of a business
-  Future<void> removeCategoryFromBusiness(String businessId, String category) async {
+  // Remove a category from all products of a Organizer
+  Future<void> removeCategoryFromOrganizer(String organizerId, String category) async {
     final query = _db.collection('products')
-        .where('businessId', isEqualTo: businessId)
+        .where('organizerId', isEqualTo: organizerId)
         .where('categories', arrayContains: category);
     
     final snap = await query.get();

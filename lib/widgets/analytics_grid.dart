@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:campusgo/models/order_model.dart';
+import 'package:campusgo/models/redemption_order_model.dart';
 import 'package:campusgo/providers/order_provider.dart';
 import 'package:campusgo/providers/product_provider.dart';
 
 class AnalyticsGrid extends ConsumerWidget {
-  final String businessId;
+  final String organizerId;
 
-  const AnalyticsGrid({super.key, required this.businessId});
+  const AnalyticsGrid({super.key, required this.organizerId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -15,8 +15,8 @@ class AnalyticsGrid extends ConsumerWidget {
     final textTheme = theme.textTheme;
     final primaryColor = theme.primaryColor;
 
-    final ordersAsync = ref.watch(businessOrdersProvider);
-    final productsAsync = ref.watch(vendorProductsProvider(businessId));
+    final ordersAsync = ref.watch(OrganizerOrdersProvider);
+    final productsAsync = ref.watch(organizerProductsProvider(organizerId));
 
     return ordersAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),

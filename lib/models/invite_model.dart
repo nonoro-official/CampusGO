@@ -2,13 +2,13 @@ import 'enums.dart';
 
 class InviteModel {
   final String inviteId;
-  final String fromBusinessId;
+  final String fromOrganizerId;
   final String recipientEmail;
   final InviteStatus status; // 'pending' or 'accepted'
 
   InviteModel({
     required this.inviteId,
-    required this.fromBusinessId,
+    required this.fromOrganizerId,
     required this.recipientEmail,
     required this.status,
   });
@@ -16,7 +16,7 @@ class InviteModel {
   factory InviteModel.fromMap(Map<String, dynamic> data, String id) {
     return InviteModel(
       inviteId: id,
-      fromBusinessId: data['fromBusinessId'] ?? '',
+      fromOrganizerId: data['fromOrganizerId'] ?? '',
       recipientEmail: data['recipientEmail'] ?? '',
       status: data['status'] ?? 'pending',
     );
@@ -24,7 +24,7 @@ class InviteModel {
 
   Map<String, dynamic> toMap() {
     return {
-      'fromBusinessId': fromBusinessId,
+      'fromOrganizerId': fromOrganizerId,
       'recipientEmail': recipientEmail,
       'status': status,
     };
