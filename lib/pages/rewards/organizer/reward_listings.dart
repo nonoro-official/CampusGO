@@ -39,7 +39,7 @@ class _ListingScreenState extends ConsumerState<ListingScreen> {
             showListingModal(
               context: context,
               ref: ref,
-              OrganizerId: user!.organizerId!,
+              organizerId: user!.organizerId!,
             );
           }
         },
@@ -280,7 +280,7 @@ class ListingCard extends ConsumerWidget {
         showListingModal(
           context: context,
           ref: ref,
-          OrganizerId: product.organizerId,
+          organizerId: product.organizerId,
           product: product,
         );
       },

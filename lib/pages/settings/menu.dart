@@ -88,7 +88,7 @@ class MenuScreen extends ConsumerWidget {
                         'icon': Icons.storefront,
                         'label': 'Add Organizer',
                         'action': () {
-                          Navigator.pushNamed(context, '/register-Organizer');
+                          Navigator.pushNamed(context, '/register-organizer');
                         },
                       },
                     ]),

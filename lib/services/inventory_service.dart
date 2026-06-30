@@ -10,10 +10,10 @@ class InventoryService {
   }
 
   // Get all items for ONE specific shop (the "Menu")
-  Stream<List<InventoryModel>> getShopInventory(String OrganizerId) {
+  Stream<List<InventoryModel>> getShopInventory(String organizerId) {
     return _db
         .collection('inventory')
-        .where('OrganizerId', isEqualTo: OrganizerId)
+        .where('organizerId', isEqualTo: organizerId)
         .snapshots()
         .map(
           (snapshot) => snapshot.docs

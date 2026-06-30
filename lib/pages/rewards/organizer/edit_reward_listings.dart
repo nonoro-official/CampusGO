@@ -21,20 +21,20 @@ String _generateAutoSku() {
 void showListingModal({
   required BuildContext context,
   required WidgetRef ref,
-  required String OrganizerId,
+  required String organizerId,
   ProductModel? product,
 }) {
   ModalContainer.show(
     context: context,
-    child: _ListingModal(OrganizerId: OrganizerId, product: product),
+    child: _ListingModal(organizerId: organizerId, product: product),
   );
 }
 
 class _ListingModal extends ConsumerStatefulWidget {
-  final String OrganizerId;
+  final String organizerId;
   final ProductModel? product;
 
-  const _ListingModal({required this.OrganizerId, this.product});
+  const _ListingModal({required this.organizerId, this.product});
 
   @override
   ConsumerState<_ListingModal> createState() => _ListingModalState();
@@ -186,7 +186,7 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
         try {
           await ref
               .read(productServiceProvider)
-              .removeCategoryFromOrganizer(widget.OrganizerId, cat);
+              .removeCategoryFromOrganizer(widget.organizerId, cat);
           if (mounted) {
             setState(() {
               categories.remove(cat);
@@ -325,7 +325,7 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
 
       if (widget.product == null) {
         await productService.createVendorProduct(
-          OrganizerId: widget.OrganizerId,
+          organizerId: widget.organizerId,
           name: name,
           description: description,
           price: finalPrice,
@@ -347,7 +347,7 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
       } else {
         await productService.updateVendorProduct(
           productId: widget.product!.id,
-          OrganizerId: widget.OrganizerId,
+          OrganizerId: widget.organizerId,
           name: name,
           description: description,
           price: finalPrice,
@@ -385,7 +385,7 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
     final textTheme = Theme.of(context).textTheme;
     final primaryColor = Theme.of(context).primaryColor;
 
-    final productsAsync = ref.watch(vendorProductsProvider(widget.OrganizerId));
+    final productsAsync = ref.watch(vendorProductsProvider(widget.organizerId));
     final allProducts = productsAsync.value ?? [];
 
     final baseProducts = allProducts

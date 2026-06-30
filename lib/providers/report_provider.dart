@@ -10,15 +10,15 @@ class ReportOrganizerService {
 
   Future<void> submitReport({
     required String reporterId,
-    required String OrganizerId,
-    required String OrganizerName,
+    required String organizerId,
+    required String organizerName,
     required String reason,
     required String description,
   }) async {
     await _db.collection('reports').add({
       'reporterId': reporterId,
-      'OrganizerId': OrganizerId,
-      'OrganizerName': OrganizerName,
+      'organizerId': organizerId,
+      'organizerName': organizerName,
       'reason': reason,
       'description': description,
       'timestamp': Timestamp.now(),

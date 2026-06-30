@@ -378,7 +378,7 @@ class _AddItemModalState extends ConsumerState<_AddItemModal> {
       }
 
       await productService.createVendorProduct(
-        OrganizerId: user!.organizerId!,
+        organizerId: user!.organizerId!,
         name: name,
         description: description,
         price: price,

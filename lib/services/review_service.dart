@@ -4,10 +4,10 @@ import '../models/review_model.dart';
 class ReviewService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  Stream<List<ReviewModel>> getReviews(String OrganizerId) {
+  Stream<List<ReviewModel>> getReviews(String organizerId) {
     return _firestore
-        .collection('Organizeres')
-        .doc(OrganizerId)
+        .collection('Organizers')
+        .doc(organizerId)
         .collection('reviews')
         .orderBy('createdAt', descending: true)
         .snapshots()
@@ -18,10 +18,10 @@ class ReviewService {
     });
   }
 
-  Future<void> addReview(String OrganizerId, ReviewModel review) async {
+  Future<void> addReview(String organizerId, ReviewModel review) async {
     await _firestore
-        .collection('Organizeres')
-        .doc(OrganizerId)
+        .collection('Organizers')
+        .doc(organizerId)
         .collection('reviews')
         .add(review.toMap());
   }

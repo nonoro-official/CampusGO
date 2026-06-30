@@ -186,9 +186,9 @@ class _MessageNotificationListenerState
 
           final String? organizerId = data['organizerId'];
           if (organizerId != null && organizerId.isNotEmpty) {
-            final OrganizerDoc = await FirebaseFirestore.instance.collection('Organizers').doc(organizerId).get();
-            if (OrganizerDoc.exists) {
-              final bName = OrganizerDoc.data()?['OrganizerName']?.toString();
+            final organizerDoc = await FirebaseFirestore.instance.collection('Organizers').doc(organizerId).get();
+            if (organizerDoc.exists) {
+              final bName = organizerDoc.data()?['organizerName']?.toString();
               if (bName != null && bName.isNotEmpty) return bName;
             }
           }
@@ -203,14 +203,14 @@ class _MessageNotificationListenerState
         }
       }
 
-      final OrganizerQuery = await FirebaseFirestore.instance
+      final organizerQuery = await FirebaseFirestore.instance
           .collection('Organizers')
           .where('ownerId', isEqualTo: senderId)
           .limit(1)
           .get();
 
-      if (OrganizerQuery.docs.isNotEmpty) {
-        final bName = OrganizerQuery.docs.first.data()['OrganizerName']?.toString();
+      if (organizerQuery.docs.isNotEmpty) {
+        final bName = organizerQuery.docs.first.data()['organizerName']?.toString();
         if (bName != null && bName.isNotEmpty) return bName;
       }
     } catch (_) {}

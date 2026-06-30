@@ -59,11 +59,11 @@ class InviteService {
 
     // 2. Link co-vendor to Organizer
     batch.update(_db.collection('users').doc(coVendorUserId), {
-      'OrganizerId': fromOrganizerId,
+      'organizerId': fromOrganizerId,
     });
 
     // 3. Add co-vendor to Organizer's coVendorIds list
-    batch.update(_db.collection('Organizeres').doc(fromOrganizerId), {
+    batch.update(_db.collection('Organizers').doc(fromOrganizerId), {
       'coVendorIds': FieldValue.arrayUnion([coVendorUserId]),
     });
 

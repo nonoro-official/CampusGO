@@ -56,7 +56,7 @@ void editOrganizerProfile(
           setModalState(() => isLoading = true);
           try {
             final Map<String, dynamic> data = {
-              'OrganizerName': name,
+              'organizerName': name,
               'contactEmail': email,
               'contactNumber': contact,
               'description': description,

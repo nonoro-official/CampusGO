@@ -238,8 +238,8 @@ class VendorProfileScreen extends ConsumerWidget {
                           context: context,
                           isScrollControlled: true,
                           builder: (_) => ReportOrganizerSheet(
-                            OrganizerId: currentOrganizer.id,
-                            OrganizerName: currentOrganizer.organizerName,
+                            organizerId: currentOrganizer.id,
+                            organizerName: currentOrganizer.organizerName,
                           ),
                         );
                       },

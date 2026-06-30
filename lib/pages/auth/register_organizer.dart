@@ -110,7 +110,7 @@ class _RegisterOrganizerScreenState extends State<RegisterOrganizerScreen> {
 
         Navigator.pushNamedAndRemoveUntil(
           context,
-          '/Organizer-dashboard',
+          '/organizer-dashboard',
           (route) => false,
         ); // Back to menu
       }
