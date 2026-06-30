@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
-import '../../providers/cart_provider.dart';
+import '../../providers/cart_item_provider.dart';
 
 class UserRestaurantDetailPage extends StatefulWidget {
   final String restaurantId;
