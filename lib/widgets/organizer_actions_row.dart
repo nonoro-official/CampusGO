@@ -23,7 +23,7 @@ class OrganizerActionsRow extends StatelessWidget {
       {
         'icon': Icons.qr_code,
         'label': 'Manage Listings',
-        'route': '/qr-scanner',
+        'route': '/qr-generator',
       },
     ];
 

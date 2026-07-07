@@ -1,7 +1,8 @@
+import 'dart:convert'; // Required for JSON decoding
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'dart:async';
+import 'package:mobile_scanner/mobile_scanner.dart'; // New import
 
 class MockQRScannerPage extends StatefulWidget {
   const MockQRScannerPage({super.key});
@@ -10,74 +11,132 @@ class MockQRScannerPage extends StatefulWidget {
   State<MockQRScannerPage> createState() => _MockQRScannerPageState();
 }
 
-class _MockQRScannerPageState extends State<MockQRScannerPage> with SingleTickerProviderStateMixin {
+class _MockQRScannerPageState extends State<MockQRScannerPage>
+    with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
+
+  // Controller for the live camera
+  final MobileScannerController _scannerController = MobileScannerController();
+
+  // Prevents multiple scans of the same code in a split second
+  bool _isProcessing = false;
 
   @override
   void initState() {
     super.initState();
-    // Faster, smoother animation for the laser
-    _animationController = AnimationController(vsync: this, duration: const Duration(seconds: 2))..repeat(reverse: true);
-
-    // Simulates finding a QR code after 2.5 seconds
-    Timer(const Duration(milliseconds: 2500), _simulateScanSuccess);
-  }
-
-  void _simulateScanSuccess() async {
-    _animationController.stop();
-
-    // Add 50 points to the user's account in Firebase!
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-        'points': FieldValue.increment(50)
-      }, SetOptions(merge: true));
-    }
-
-    if (mounted) {
-      Navigator.pop(context); // Close the scanner
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("🎉 Success! You earned 50 CampusGO Points!"),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 3),
-        ),
-      );
-    }
+    // Keeps the nice laser animation
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
   }
 
   @override
   void dispose() {
     _animationController.dispose();
+    _scannerController.dispose(); // Always dispose of the camera
     super.dispose();
+  }
+
+  // --- Core Scanning Logic ---
+  Future<void> _onDetect(BarcodeCapture capture) async {
+    if (_isProcessing) return; // Block further reads while processing
+
+    final List<Barcode> barcodes = capture.barcodes;
+    if (barcodes.isEmpty) return;
+
+    final String? rawValue = barcodes.first.rawValue;
+    if (rawValue == null) return;
+
+    setState(() {
+      _isProcessing = true; // Lock the scanner
+    });
+
+    try {
+      // 1. Decode the QR code data.
+      // We expect a JSON string from your upcoming Part 2 Generator.
+      final Map<String, dynamic> qrData = jsonDecode(rawValue);
+
+      // 2. Validate that this QR belongs to YOUR app.
+      if (qrData['app'] == 'CampusGO' && qrData['type'] == 'reward') {
+
+        final int pointsToAward = qrData['points'] ?? 0;
+        final String qrId = qrData['qrId'] ?? ''; // Useful for preventing duplicate scans later
+
+        // Stop the camera since we got a valid hit
+        await _scannerController.stop();
+
+        // 3. Award the points in Firebase
+        final user = FirebaseAuth.instance.currentUser;
+        if (user != null) {
+          await FirebaseFirestore.instance.collection('users').doc(user.uid).set(
+            {'points': FieldValue.increment(pointsToAward)},
+            SetOptions(merge: true),
+          );
+        }
+
+        // 4. Show success and exit
+        if (mounted) {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("🎉 Success! You earned $pointsToAward CampusGO Points!"),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+      } else {
+        // Valid JSON, but not from this app
+        _showError("This QR code is not valid for CampusGO rewards.");
+      }
+    } catch (e) {
+      // Not a JSON format (e.g., someone scanned a random website link)
+      _showError("Unrecognized QR format.");
+    }
+  }
+
+  void _showError(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.redAccent,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+
+    // Unlock the scanner after a short delay so they can try again
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) {
+        setState(() {
+          _isProcessing = false;
+        });
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    // Makes the scanner box responsive to whatever phone you use
     final scanWindowSize = MediaQuery.of(context).size.width * 0.7;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF121212), // Dark camera-like background
+      backgroundColor: const Color(0xFF121212),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         iconTheme: const IconThemeData(color: Colors.white),
         elevation: 0,
-        title: const Text("Scan QR Code", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: const Text("Scan QR Code",
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         centerTitle: true,
       ),
       extendBodyBehindAppBar: true,
       body: Stack(
         children: [
-          // 1. Fake Camera Feed Background
-          Container(
-            decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF2A2A2A), Color(0xFF121212)],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                )
-            ),
+          // 1. Live Camera Feed (Replaced the fake background)
+          MobileScanner(
+            controller: _scannerController,
+            onDetect: _onDetect,
           ),
 
           // 2. The Dark Overlay with the Transparent Center Cutout
@@ -87,9 +146,10 @@ class _MockQRScannerPageState extends State<MockQRScannerPage> with SingleTicker
               height: scanWindowSize,
               decoration: BoxDecoration(
                 color: Colors.transparent,
-                // This massive shadow creates the dark dimming effect OUTSIDE the box
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.7), spreadRadius: 2000),
+                  BoxShadow(
+                      color: Colors.black.withOpacity(0.7),
+                      spreadRadius: 2000),
                 ],
               ),
             ),
@@ -102,26 +162,27 @@ class _MockQRScannerPageState extends State<MockQRScannerPage> with SingleTicker
               height: scanWindowSize,
               child: Stack(
                 children: [
-                  // Corner Brackets
                   Positioned(top: 0, left: 0, child: _buildCorner(isTop: true, isLeft: true)),
                   Positioned(top: 0, right: 0, child: _buildCorner(isTop: true, isLeft: false)),
                   Positioned(bottom: 0, left: 0, child: _buildCorner(isTop: false, isLeft: true)),
                   Positioned(bottom: 0, right: 0, child: _buildCorner(isTop: false, isLeft: false)),
 
-                  // Animated Laser strictly inside the box
                   AnimatedBuilder(
                     animation: _animationController,
                     builder: (context, child) {
                       return Positioned(
-                        top: _animationController.value * (scanWindowSize - 4), // Subtract laser thickness
+                        top: _animationController.value * (scanWindowSize - 4),
                         left: 0,
                         right: 0,
                         child: Container(
                           height: 4,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFE46A3E), // campusgo Orange
+                            color: const Color(0xFFE46A3E),
                             boxShadow: [
-                              BoxShadow(color: const Color(0xFFE46A3E).withOpacity(0.8), blurRadius: 10, spreadRadius: 2)
+                              BoxShadow(
+                                  color: const Color(0xFFE46A3E).withOpacity(0.8),
+                                  blurRadius: 10,
+                                  spreadRadius: 2)
                             ],
                           ),
                         ),
@@ -144,14 +205,17 @@ class _MockQRScannerPageState extends State<MockQRScannerPage> with SingleTicker
                 SizedBox(height: 10),
                 Text(
                   "Align the QR code within the frame",
-                  style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500),
                   textAlign: TextAlign.center,
                 ),
               ],
             ),
           ),
 
-          // 5. Mock Action Buttons (Flashlight & Gallery)
+          // 5. Working Flashlight Toggle
           Positioned(
             bottom: 50,
             left: 0,
@@ -159,8 +223,12 @@ class _MockQRScannerPageState extends State<MockQRScannerPage> with SingleTicker
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildMockActionButton(Icons.image, "Gallery"),
-                _buildMockActionButton(Icons.flashlight_on, "Flashlight"),
+                _buildMockActionButton(Icons.image, "Gallery", () {
+                  // TODO: Implement picking from gallery using mobile_scanner's analyzeImage
+                }),
+                _buildMockActionButton(Icons.flashlight_on, "Flashlight", () {
+                  _scannerController.toggleTorch();
+                }),
               ],
             ),
           )
@@ -169,35 +237,45 @@ class _MockQRScannerPageState extends State<MockQRScannerPage> with SingleTicker
     );
   }
 
-  // Helper function to draw the GCash-style corners
   Widget _buildCorner({required bool isTop, required bool isLeft}) {
     return Container(
       width: 40,
       height: 40,
       decoration: BoxDecoration(
         border: Border(
-          top: isTop ? const BorderSide(color: Color(0xFFE46A3E), width: 4) : BorderSide.none,
-          bottom: !isTop ? const BorderSide(color: Color(0xFFE46A3E), width: 4) : BorderSide.none,
-          left: isLeft ? const BorderSide(color: Color(0xFFE46A3E), width: 4) : BorderSide.none,
-          right: !isLeft ? const BorderSide(color: Color(0xFFE46A3E), width: 4) : BorderSide.none,
+          top: isTop
+              ? const BorderSide(color: Color(0xFFE46A3E), width: 4)
+              : BorderSide.none,
+          bottom: !isTop
+              ? const BorderSide(color: Color(0xFFE46A3E), width: 4)
+              : BorderSide.none,
+          left: isLeft
+              ? const BorderSide(color: Color(0xFFE46A3E), width: 4)
+              : BorderSide.none,
+          right: !isLeft
+              ? const BorderSide(color: Color(0xFFE46A3E), width: 4)
+              : BorderSide.none,
         ),
       ),
     );
   }
 
-  // Helper function for the bottom buttons
-  Widget _buildMockActionButton(IconData icon, String label) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(color: Colors.white.withOpacity(0.15), shape: BoxShape.circle),
-          child: Icon(icon, color: Colors.white, size: 28),
-        ),
-        const SizedBox(height: 8),
-        Text(label, style: const TextStyle(color: Colors.white, fontSize: 12)),
-      ],
+  Widget _buildMockActionButton(IconData icon, String label, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15), shape: BoxShape.circle),
+            child: Icon(icon, color: Colors.white, size: 28),
+          ),
+          const SizedBox(height: 8),
+          Text(label, style: const TextStyle(color: Colors.white, fontSize: 12)),
+        ],
+      ),
     );
   }
 }

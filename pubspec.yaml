@@ -38,6 +38,10 @@ dependencies:
   flutter_local_notifications: ^21.0.0
   firebase_messaging: ^16.1.2
 
+  # Added for CampusGO QR Scanner and Generator features
+  mobile_scanner: ^5.2.3
+  qr_flutter: ^4.1.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
