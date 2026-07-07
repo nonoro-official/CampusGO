@@ -449,7 +449,7 @@ Future<void> deleteItemInventory(
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Product deleted successfully')),
+          const SnackBar(content: Text('Reward deleted successfully')),
         );
       }
     } catch (e) {

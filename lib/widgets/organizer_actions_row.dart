@@ -9,7 +9,7 @@ class OrganizerActionsRow extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     final actions = [
-      {'icon': Icons.add_box, 'label': 'Add Product', 'route': '/inventory'},
+      {'icon': Icons.add_box, 'label': 'Add Rewards', 'route': '/inventory'},
       {
         'icon': Icons.receipt_long,
         'label': 'View Orders',
@@ -19,6 +19,11 @@ class OrganizerActionsRow extends StatelessWidget {
         'icon': Icons.inventory,
         'label': 'Manage Listings',
         'route': '/listings',
+      },
+      {
+        'icon': Icons.qr_code,
+        'label': 'Manage Listings',
+        'route': '/qr-scanner',
       },
     ];
 

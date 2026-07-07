@@ -22,6 +22,7 @@ import 'pages/organizer/organizer_profile_screen.dart';
 import 'pages/rewards/redemption_history.dart';
 import 'models/organizer_model.dart';
 import 'widgets/message_notification_listener.dart';
+import 'pages/rewards/reward_qr_generator.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 final ValueNotifier<String?> currentRouteNotifier = ValueNotifier<String?>(
@@ -100,6 +101,7 @@ class MyApp extends StatelessWidget {
         '/inventory': (context) => const InventoryScreen(),
         '/incoming-orders': (context) => const OrderList(),
         '/listings': (context) => const ListingScreen(),
+        '/qr-generator': (context) => const QRGeneratorScreen(),
         '/history-customer': (context) =>
         const HistoryScreen(accountType: 'Customer'),
         '/history-organizer': (context) =>
