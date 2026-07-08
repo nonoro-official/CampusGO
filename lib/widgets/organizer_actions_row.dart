@@ -10,6 +10,7 @@ class OrganizerActionsRow extends StatelessWidget {
 
     final actions = [
       {'icon': Icons.add_box, 'label': 'Add Rewards', 'route': '/inventory'},
+      {'icon': Icons.add_box, 'label': 'Create Events', 'route': '/inventory'},
       {
         'icon': Icons.receipt_long,
         'label': 'View Orders',
@@ -22,7 +23,7 @@ class OrganizerActionsRow extends StatelessWidget {
       },
       {
         'icon': Icons.qr_code,
-        'label': 'Manage Listings',
+        'label': 'Generate QR',
         'route': '/qr-generator',
       },
     ];

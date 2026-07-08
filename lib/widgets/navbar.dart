@@ -10,7 +10,7 @@ class NavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final primaryColor = Theme.of(context).primaryColor;
 
-    final items = [Icons.home, Icons.map, Icons.store, Icons.shopping_cart];
+    final items = [Icons.home, Icons.map, Icons.qr_code_scanner, Icons.store, Icons.shopping_cart];
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -20,7 +20,7 @@ class NavBar extends StatelessWidget {
           onTap: () => onTap(index),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
               color: selectedIndex == index ? primaryColor : Colors.transparent,
               borderRadius: BorderRadius.circular(30),
