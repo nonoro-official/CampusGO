@@ -15,7 +15,7 @@ class ShopsDashboardScreen extends StatefulWidget {
 class _ShopsDashboardScreenState extends State<ShopsDashboardScreen> {
   @override
   Widget build(BuildContext context) {
-    return CategoryGridView();
+    return const OrganizationListView();
     // TogglePagesButton(
     //   pages: [CategoryGridView() /*, CategoryGridView()*/],
     //   customTitles: ["Shops"],

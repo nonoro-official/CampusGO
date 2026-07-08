@@ -9,7 +9,6 @@ class OrganizerModel {
   final String contactNumber;
   final OrganizerPartner organizerPartner;
   final String? description;
-  final String? category;
   final String? imageUrl;
   final ActiveStatus activeStatus;
   final bool isMobile;
@@ -23,7 +22,6 @@ class OrganizerModel {
     required this.contactNumber,
     required this.organizerPartner,
     this.description,
-    this.category,
     this.imageUrl,
     required this.activeStatus,
     this.isMobile = true,
@@ -41,7 +39,6 @@ class OrganizerModel {
         (data['organizerPartner'] ?? 'student').toString(),
       ),
       description: data['description'],
-      category: data['category'] ?? 'Others',
       imageUrl: data['imageUrl'],
       activeStatus: ActiveStatus.fromString(data['activeStatus'] ?? 'closed'),
       isMobile: data['isMobile'] ?? true,
@@ -57,7 +54,6 @@ class OrganizerModel {
       'contactNumber': contactNumber,
       'organizerPartner': organizerPartner.name,
       'description': description,
-      'category': category,
       'imageUrl': imageUrl,
       'activeStatus': activeStatus.name,
       'isMobile': isMobile,

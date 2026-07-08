@@ -109,7 +109,7 @@ class MessageService {
           senderName = organizerNameInUser;
         } else if (organizerId != null && organizerId.isNotEmpty) {
           final organizerDoc =
-              await _firestore.collection('Organizers').doc(organizerId).get();
+              await _firestore.collection('organizers').doc(organizerId).get();
           if (organizerDoc.exists) {
             senderName = organizerDoc.data()?['organizerName'] ?? senderName;
           }

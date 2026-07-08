@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/reward_item_model.dart';
-import '../services/product_service.dart';
+import '../services/reward_service.dart';
 
 final productServiceProvider = Provider<ProductService>(
   (ref) => ProductService(),

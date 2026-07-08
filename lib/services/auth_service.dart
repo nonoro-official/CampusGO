@@ -215,7 +215,7 @@ class AuthService {
       await user.reauthenticateWithCredential(credential);
 
       final organizerQuery = await _db
-          .collection('Organizers')
+          .collection('organizers')
           .where('ownerId', isEqualTo: user.uid)
           .get();
 
@@ -253,7 +253,7 @@ class AuthService {
 
       await user.reauthenticateWithCredential(credential);
 
-      final docRef = _db.collection('Organizers').doc(organizerId);
+      final docRef = _db.collection('organizers').doc(organizerId);
 
       final doc = await docRef.get();
       if (!doc.exists) {

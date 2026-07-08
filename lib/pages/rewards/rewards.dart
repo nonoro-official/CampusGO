@@ -11,9 +11,7 @@ import '../../utils/organizer_utils.dart';
 import '../organizer/organizer_profile_screen.dart';
 
 class ShopsScreen extends ConsumerStatefulWidget {
-  final String? category;
-
-  const ShopsScreen({super.key, this.category});
+  const ShopsScreen({super.key});
 
   @override
   ConsumerState<ShopsScreen> createState() => _ShopsScreenState();
@@ -26,7 +24,7 @@ class _ShopsScreenState extends ConsumerState<ShopsScreen> {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final titleLabel = widget.category ?? "All Shops";
+    const titleLabel = "All Shops";
     final allOrganizersAsync = ref.watch(allOrganizersProvider);
 
     return Scaffold(
@@ -81,18 +79,12 @@ class _ShopsScreenState extends ConsumerState<ShopsScreen> {
                         .toLowerCase()
                         .contains(searchQuery.toLowerCase());
 
-                    final matchesCategory =
-                        widget.category == null ||
-                        v.category == widget.category;
-
                     final matchesPartner =
                         selectedPartner == "All" ||
                         v.organizerPartner.name.toLowerCase() ==
                             selectedPartner.toLowerCase();
 
-                    return matchesSearch &&
-                        matchesCategory &&
-                        matchesPartner;
+                    return matchesSearch && matchesPartner;
                   }).toList();
 
                   return Stack(
@@ -210,13 +202,6 @@ class OrganizerCard extends ConsumerWidget {
                     children: [
                       Text(organizer.organizerName,
                           style: textTheme.titleMedium),
-                      const SizedBox(height: 2),
-                      Text(
-                        organizer.category ?? 'Organizer',
-                        style: textTheme.bodySmall?.copyWith(
-                          color: Colors.grey,
-                        ),
-                      ),
                     ],
                   ),
                 ),

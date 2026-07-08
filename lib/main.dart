@@ -136,14 +136,7 @@ class MyApp extends StatelessWidget {
         },
         '/menu': (context) => const MenuScreen(),
         '/messages': (context) => MessagesScreen(),
-        '/shops': (context) {
-          final args =
-          ModalRoute.of(context)?.settings.arguments
-          as Map<String, dynamic>?;
-          return ShopsScreen(
-            category: args?['category']?.toString() ?? 'Other',
-          );
-        },
+        '/shops': (context) => const ShopsScreen(),
       },
     );
   }

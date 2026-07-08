@@ -17,14 +17,13 @@ class OrganizerService {
     required String contactNumber,
     required OrganizerPartner organizerPartner,
   }) async {
-    final ref = await _db.collection('Organizers').add({
+    final ref = await _db.collection('organizers').add({
       'ownerId': ownerId,
       'organizerName': organizerName,
       'contactEmail': contactEmail,
       'contactNumber': contactNumber,
       'organizerPartner': organizerPartner.name, // Store as string
       'activeStatus': ActiveStatus.closed.name,
-      'category': 'Others', // Default category
       'description': null,
       'OrganizerHours': null,
       'createdAt': FieldValue.serverTimestamp(),
@@ -40,7 +39,7 @@ class OrganizerService {
     ActiveStatus status, {
     String? eta,
   }) async {
-    await _db.collection('Organizers').doc(organizerId).update({
+    await _db.collection('organizers').doc(organizerId).update({
       'activeStatus': status.name, // Use .name to store string "open", etc.
       'eta': eta,
     });
@@ -54,7 +53,7 @@ class OrganizerService {
     final Map<String, dynamic> data = {};
     if (description != null) data['description'] = description;
     if (data.isEmpty) return;
-    await _db.collection('Organizers').doc(organizerId).update(data);
+    await _db.collection('organizers').doc(organizerId).update(data);
   }
 
   Future<void> updateOrganizerImage(String organizerId, File imageFile) async {
@@ -73,7 +72,7 @@ class OrganizerService {
 
       // 4. Get the URL and save to Firestore
       String downloadUrl = await ref.getDownloadURL();
-      await _db.collection('Organizers').doc(organizerId).update({
+      await _db.collection('organizers').doc(organizerId).update({
         'imageUrl': downloadUrl,
       });
     } on FirebaseException catch (e) {
@@ -91,7 +90,7 @@ class OrganizerService {
     required Map<String, dynamic> data,
   }) async {
     try {
-      await _db.collection('Organizers').doc(organizerId).update(data);
+      await _db.collection('organizers').doc(organizerId).update(data);
     } catch (e) {
       throw Exception("Failed to update Organizer: $e");
     }
@@ -100,14 +99,14 @@ class OrganizerService {
   // Getters
 
   Future<OrganizerModel?> getOrganizer(String organizerId) async {
-    final doc = await _db.collection('Organizers').doc(organizerId).get();
+    final doc = await _db.collection('organizers').doc(organizerId).get();
     if (!doc.exists) return null;
     return OrganizerModel.fromMap(doc.data()!, doc.id);
   }
 
   Stream<OrganizerModel?> getOrganizerStream(String organizerId) {
     return _db
-        .collection('Organizers')
+        .collection('organizers')
         .doc(organizerId)
         .snapshots()
         .map(
@@ -118,7 +117,7 @@ class OrganizerService {
 
   Future<OrganizerModel?> getMyOrganizer(String ownerId) async {
     final query = await _db
-        .collection('Organizers')
+        .collection('organizers')
         .where('ownerId', isEqualTo: ownerId)
         .limit(1)
         .get();
@@ -128,7 +127,7 @@ class OrganizerService {
 
   Stream<List<OrganizerModel>> getAllOrganizers() {
     return _db
-        .collection('Organizers')
+        .collection('organizers')
         .snapshots()
         .map(
           (snap) => snap.docs

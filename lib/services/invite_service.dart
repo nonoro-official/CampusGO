@@ -63,7 +63,7 @@ class InviteService {
     });
 
     // 3. Add co-organizer to Organizer's coOrganizerIds list
-    batch.update(_db.collection('Organizers').doc(fromOrganizerId), {
+    batch.update(_db.collection('organizers').doc(fromOrganizerId), {
       'coOrganizerIds': FieldValue.arrayUnion([coOrganizerUserId]),
     });
 

@@ -6,7 +6,7 @@ import '../../../widgets/modal.dart';
 import '../../../widgets/product_image_picker.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/product_provider.dart';
-import '../../../services/product_service.dart';
+import '../../../services/reward_service.dart';
 import '../../../models/reward_item_model.dart';
 import '../../../models/enums.dart';
 
