@@ -21,7 +21,6 @@ void privacyPolicy(BuildContext context, WidgetRef ref) {
               style: Theme.of(context).textTheme.bodySmall,
             ),
             const SizedBox(height: 20),
-
             _buildSection(
               context,
               "Introduction",
@@ -94,9 +93,10 @@ Widget _buildSection(BuildContext context, String title, String content) {
         Text(
           title,
           style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            color: Theme.of(context).primaryColor,
-            fontWeight: FontWeight(600),
-          ),
+                color: Theme.of(context).primaryColor,
+                fontWeight:
+                    FontWeight.w600, 
+              ),
         ),
         const SizedBox(height: 5),
         Text(content, style: Theme.of(context).textTheme.bodyMedium),
