@@ -7,6 +7,9 @@ import '../../../providers/event_provider.dart';
 import '../../../models/organizer_model.dart';
 import '../../../providers/organizer_provider.dart';
 
+import 'edit_event_screen.dart';
+import 'delete_event_screen.dart';
+
 class EventDetailScreen extends ConsumerWidget {
   final EventModel event;
   const EventDetailScreen({super.key, required this.event});
@@ -32,16 +35,75 @@ class EventDetailScreen extends ConsumerWidget {
         final currentEvent = updatedEvent ?? event;
         final hasJoined = organizerId != null && currentEvent.attendingOrganizerIds.contains(organizerId);
         
+        final isCreator = organizerId != null && currentEvent.creatorId == organizerId;
+
         final isMultiDay = currentEvent.endDate.isAfter(currentEvent.date) && 
                            (currentEvent.endDate.day != currentEvent.date.day || currentEvent.endDate.month != currentEvent.date.month);
 
         return Scaffold(
-          appBar: AppBar(title: Text(currentEvent.name)),
+          appBar: AppBar(
+            title: Text(currentEvent.name),
+            actions: isCreator
+              ? [
+                IconButton(
+                  icon: const Icon(Icons.edit),
+                  tooltip: "Edit Event",
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => EditEventScreen(event: currentEvent),
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.red),
+                  tooltip: "Delete Event",
+                  onPressed: () async {
+                    final deletedSuccessfully = await showDialog<bool>(
+                      context: context,
+                      builder: (_) => DeleteEventScreen(eventId: currentEvent.id),
+                    );
+
+                    if (deletedSuccessfully == true && context.mounted) {
+                      Navigator.pop(context); 
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Event deleted successfully.")),
+                      );
+                    }
+                  },
+                ),
+              ]
+              : null,
+          ),
           body: SingleChildScrollView(
             padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (currentEvent.status == 'pending')
+                  Container(
+                    width: double.infinity,
+                    margin: const EdgeInsets.only(bottom: 20),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.shade100,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.amber.shade400),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.hourglass_empty, color: Colors.amber.shade800),
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Text(
+                            "This event is currently pending approval from admin, thus it may not be visible to all users yet.",
+                            style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w500, fontSize: 13),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
                 if (currentEvent.imageUrl != null)
                   ClipRRect(
                     borderRadius: BorderRadius.circular(12),
