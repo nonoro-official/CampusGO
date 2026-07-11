@@ -104,6 +104,8 @@ class _MockQRScannerPageState extends ConsumerState<MockQRScannerPage>
         }
 
         final String productName = ledgerDoc.data()?['productName'] ?? 'Reward Item';
+        final String? productId = ledgerDoc.data()?['productId'];
+        final int quantity = ledgerDoc.data()?['quantity'] ?? 1;
 
         // --- VALIDATION PASSED: EXECUTE SECURE CLAIM ---
 
@@ -124,9 +126,58 @@ class _MockQRScannerPageState extends ConsumerState<MockQRScannerPage>
             {'points': FieldValue.increment(pointsToAward)},
             SetOptions(merge: true),
           );
+
+          // 3. Decrement product stock via transaction
+          if (productId != null) {
+            try {
+              await FirebaseFirestore.instance.runTransaction((transaction) async {
+                final productRef = FirebaseFirestore.instance.collection('products').doc(productId);
+                final productDoc = await transaction.get(productRef);
+
+                if (productDoc.exists) {
+                  final data = productDoc.data()!;
+                  final String? linkedId = data['linkedProductId'];
+                  final String type = data['type'] ?? 'regular';
+                  
+                  String targetId = productId;
+                  int decrementAmount = quantity;
+
+                  // Promo logic: 1 QR might represent a bundle of items (e.g., "Buy 1 Get 1")
+                  if (type == 'promo' && data['promoQuantity'] != null) {
+                    decrementAmount = quantity * (data['promoQuantity'] as int);
+                  }
+
+                  // Linked logic: Deduct from the source of truth (base product)
+                  if (linkedId != null && linkedId.isNotEmpty) {
+                     targetId = linkedId;
+                  }
+
+                  final targetRef = FirebaseFirestore.instance.collection('products').doc(targetId);
+                  
+                  // If target is different, we must get it too within the transaction
+                  DocumentSnapshot? targetDoc;
+                  if (targetId == productId) {
+                    targetDoc = productDoc;
+                  } else {
+                    targetDoc = await transaction.get(targetRef);
+                  }
+
+                  if (targetDoc.exists) {
+                    final int currentStock = (targetDoc.data() as Map<String, dynamic>)['stock'] ?? 0;
+                    transaction.update(targetRef, {
+                      'stock': currentStock - decrementAmount,
+                      'updatedAt': FieldValue.serverTimestamp(),
+                    });
+                  }
+                }
+              });
+            } catch (e) {
+              debugPrint("Error updating stock in transaction: $e");
+            }
+          }
         }
 
-        // 3. Complete UX Flow
+        // 4. Complete UX Flow
         if (mounted) {
           _showSuccessDialog(productName, pointsToAward);
         }

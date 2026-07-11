@@ -81,7 +81,10 @@ class RewardProductList extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           itemCount: products.length,
           itemBuilder: (context, index) {
-            return RewardSelectionCard(product: products[index]);
+            return RewardSelectionCard(
+              product: products[index],
+              allProducts: products,
+            );
           },
         );
       },
@@ -93,76 +96,88 @@ class RewardProductList extends ConsumerWidget {
 
 class RewardSelectionCard extends StatelessWidget {
   final ProductModel product;
+  final List<ProductModel> allProducts;
 
-  const RewardSelectionCard({super.key, required this.product});
+  const RewardSelectionCard({
+    super.key,
+    required this.product,
+    required this.allProducts,
+  });
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final primaryColor = Theme.of(context).primaryColor;
+    final int stock = product.calculateEffectiveStock(allProducts);
 
     return GestureDetector(
-      onTap: () => _showQRGenerationDialog(context, product),
+      onTap: stock > 0 ? () => _showQRGenerationDialog(context, product, allProducts) : null,
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: stock > 0 ? Colors.white : Colors.grey.shade100,
           borderRadius: BorderRadius.circular(22),
-          boxShadow: const [BoxShadow(blurRadius: 12, color: Colors.black12)],
+          boxShadow: stock > 0 ? const [BoxShadow(blurRadius: 12, color: Colors.black12)] : null,
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(product.name, style: textTheme.titleMedium),
-                      const SizedBox(height: 4),
-                      Text(
-                        "${product.price.toStringAsFixed(0)} Points",
-                        style: textTheme.bodyMedium?.copyWith(
-                          color: primaryColor,
-                          fontWeight: FontWeight.bold,
+        child: Opacity(
+          opacity: stock > 0 ? 1.0 : 0.6,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(product.name, style: textTheme.titleMedium),
+                        const SizedBox(height: 4),
+                        Text(
+                          "${product.price.toStringAsFixed(0)} Points • $stock in stock",
+                          style: textTheme.bodyMedium?.copyWith(
+                            color: stock > 0 ? primaryColor : Colors.red,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: primaryColor.withOpacity(0.1),
-                    shape: BoxShape.circle,
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: stock > 0 ? primaryColor.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.qr_code, 
+                      color: stock > 0 ? primaryColor : Colors.grey
+                    ),
                   ),
-                  child: Icon(Icons.qr_code, color: primaryColor),
-                ),
-              ],
-            ),
-            if (product.description.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              Text(
-                product.description,
-                style: textTheme.bodySmall,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+                ],
               ),
-            ]
-          ],
+              if (product.description.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Text(
+                  product.description,
+                  style: textTheme.bodySmall,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ]
+            ],
+          ),
         ),
       ),
     );
   }
 
-  void _showQRGenerationDialog(BuildContext context, ProductModel product) {
+  void _showQRGenerationDialog(BuildContext context, ProductModel product, List<ProductModel> allProducts) {
     showDialog(
       context: context,
       builder: (context) {
-        return QRGenerationModal(product: product);
+        return QRGenerationModal(product: product, allProducts: allProducts);
       },
     );
   }
@@ -173,8 +188,13 @@ class RewardSelectionCard extends StatelessWidget {
 // ----------------------------------------------------------------------
 class QRGenerationModal extends StatefulWidget {
   final ProductModel product;
+  final List<ProductModel> allProducts;
 
-  const QRGenerationModal({super.key, required this.product});
+  const QRGenerationModal({
+    super.key,
+    required this.product,
+    required this.allProducts,
+  });
 
   @override
   State<QRGenerationModal> createState() => _QRGenerationModalState();
@@ -186,6 +206,12 @@ class _QRGenerationModalState extends State<QRGenerationModal> {
   String? generatedQrData;
   bool _isLoading = false; // Prevents double submission crashes
   bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // No need to initialize quantity here as it defaults to 1
+  }
 
   Future<void> _saveQRCode() async {
     setState(() => _isSaving = true);
@@ -300,6 +326,8 @@ class _QRGenerationModalState extends State<QRGenerationModal> {
   }
 
   Widget _buildConfigurationView(TextTheme textTheme, Color primaryColor, int totalPoints) {
+    final int maxStock = widget.product.calculateEffectiveStock(widget.allProducts);
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -307,6 +335,11 @@ class _QRGenerationModalState extends State<QRGenerationModal> {
           "Reward: ${widget.product.name}",
           style: textTheme.titleLarge,
           textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          "Available Stock: $maxStock",
+          style: textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
         ),
         const SizedBox(height: 20),
         Text("Quantity Redeemable:", style: textTheme.bodyLarge),
@@ -334,12 +367,14 @@ class _QRGenerationModalState extends State<QRGenerationModal> {
             const SizedBox(width: 20),
             IconButton(
               icon: const Icon(Icons.add_circle_outline),
-              color: !_isLoading ? primaryColor : Colors.grey,
+              color: quantity < maxStock && !_isLoading ? primaryColor : Colors.grey,
               iconSize: 32,
               onPressed: _isLoading
                   ? null
                   : () {
-                setState(() => quantity++);
+                if (quantity < maxStock) {
+                  setState(() => quantity++);
+                }
               },
             ),
           ],
