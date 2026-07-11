@@ -21,7 +21,7 @@ class _ProductImagePickerState extends State<ProductImagePicker> {
   File? _selectedFile;
 
   Future<void> _pickImage() async {
-    final result = await FilePicker.platform.pickFiles(type: FileType.image);
+    final result = await FilePicker.pickFiles(type: FileType.image);
     if (result != null && result.files.single.path != null) {
       final file = File(result.files.single.path!);
       setState(() => _selectedFile = file);

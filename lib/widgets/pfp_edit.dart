@@ -103,7 +103,7 @@ class _EditProfilePictureState extends ConsumerState<EditProfilePicture> {
   }
 
   Future<void> _pickAndUploadImage() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
+    FilePickerResult? result = await FilePicker.pickFiles(
       type: FileType.image,
     );
 
