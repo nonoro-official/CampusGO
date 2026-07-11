@@ -36,16 +36,16 @@ class OrderItemModel {
   final String name;
   final String? imageUrl;
   final int quantity;
-  final double price;
+  final double points;
 
-  double get total => price * quantity;
+  double get total => points * quantity;
 
   OrderItemModel({
     required this.productId,
     required this.name,
     this.imageUrl,
     required this.quantity,
-    required this.price,
+    required this.points,
   });
 
   factory OrderItemModel.fromMap(Map<String, dynamic> data) {
@@ -56,7 +56,7 @@ class OrderItemModel {
       quantity: (data['quantity'] ?? 1) is int
           ? data['quantity']
           : int.tryParse(data['quantity']?.toString() ?? '1') ?? 1,
-      price: (data['price'] ?? 0).toDouble(),
+      points: (data['points'] ?? 0).toDouble(),
     );
   }
 
@@ -66,7 +66,7 @@ class OrderItemModel {
       'name': name,
       'imageUrl': imageUrl,
       'quantity': quantity,
-      'price': price,
+      'points': points,
     };
   }
 }
@@ -83,7 +83,7 @@ class OrderModel {
 
   final DateTime timestamp;
   final OrderStatus orderStatus;
-  final double price; // total price (subtotal + fees)
+  final double points; // total points (subtotal + fees)
 
   /// Enriched line-items — populated client-side after fetching product names
   final List<OrderItemModel> items;
@@ -99,7 +99,7 @@ class OrderModel {
     required this.orders,
     required this.timestamp,
     required this.orderStatus,
-    required this.price,
+    required this.points,
     this.items = const [],
     this.orderNumber,
   });
@@ -144,7 +144,7 @@ class OrderModel {
       orders: ordersMap,
       timestamp: ts,
       orderStatus: OrderStatus.fromString(data['orderStatus'] ?? ''),
-      price: (data['price'] ?? 0).toDouble(),
+      points: (data['points'] ?? 0).toDouble(),
       items: items,
       orderNumber: data['orderNumber'],
     );
@@ -157,7 +157,7 @@ class OrderModel {
       'orders': orders,
       'timestamp': Timestamp.fromDate(timestamp),
       'orderStatus': orderStatus.name,
-      'price': price,
+      'points': points,
       if (orderNumber != null) 'orderNumber': orderNumber,
     };
   }
@@ -171,7 +171,7 @@ class OrderModel {
       orders: orders,
       timestamp: timestamp,
       orderStatus: orderStatus,
-      price: price,
+      points: points,
       items: items,
       orderNumber: orderNumber,
     );
@@ -186,7 +186,7 @@ class OrderModel {
       orders: orders,
       timestamp: timestamp,
       orderStatus: status,
-      price: price,
+      points: points,
       items: items,
       orderNumber: orderNumber,
     );

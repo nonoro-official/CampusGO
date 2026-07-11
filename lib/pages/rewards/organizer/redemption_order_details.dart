@@ -40,7 +40,7 @@ class OrderDetails extends ConsumerWidget {
         final bool isReady = status == OrderStatus.readyForPickup;
 
         // Grand Total from DB
-        final double total = enriched.price;
+        final double total = enriched.points;
         const double serviceFee = 10.0;
         // Subtotal is (Grand Total - Fee)
         final double subtotal = (total - serviceFee).clamp(0, double.infinity);
@@ -61,7 +61,7 @@ class OrderDetails extends ConsumerWidget {
               children: [
                 Expanded(
                   child: Text(
-                    'Total: ₱${total.toStringAsFixed(2)}',
+                    'Total: ${total.toStringAsFixed(2)} pts',
                     style: textTheme.titleMedium?.copyWith(color: primaryColor),
                   ),
                 ),
@@ -143,7 +143,7 @@ class OrderDetails extends ConsumerWidget {
                             ),
                             const SizedBox(height: 6),
                             Text(
-                              '₱${total.toStringAsFixed(2)}',
+                              '${total.toStringAsFixed(2)} pts',
                               style: textTheme.titleSmall?.copyWith(
                                 color: primaryColor,
                               ),
@@ -175,7 +175,7 @@ class OrderDetails extends ConsumerWidget {
 
                 const SizedBox(height: 10),
 
-                // ─ Price breakdown ───────────────────────────────────
+                // ─ Points breakdown ───────────────────────────────────
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -188,13 +188,13 @@ class OrderDetails extends ConsumerWidget {
                       _buildRow(
                         context,
                         'Subtotal',
-                        '₱${subtotal.toStringAsFixed(2)}',
+                        '${subtotal.toStringAsFixed(2)} pts',
                       ),
                       const SizedBox(height: 10),
                       _buildRow(
                         context,
                         'Service Fee',
-                        '₱${serviceFee.toStringAsFixed(2)}',
+                        '${serviceFee.toStringAsFixed(2)} pts',
                       ),
                       const SizedBox(height: 10),
                       _buildRow(context, 'Campus Pickup', 'Free'),
@@ -202,7 +202,7 @@ class OrderDetails extends ConsumerWidget {
                       _buildRow(
                         context,
                         'Total Payment',
-                        '₱${total.toStringAsFixed(2)}',
+                        '${total.toStringAsFixed(2)} pts',
                         isTotal: true,
                       ),
                     ],
@@ -273,7 +273,7 @@ class OrderDetails extends ConsumerWidget {
         child: _ConfirmModal(
           title: 'Complete Order',
           body:
-              'Confirm that the customer has paid ₱${total.toStringAsFixed(2)} and picked up the items?',
+              'Confirm that the customer has paid ${total.toStringAsFixed(2)} pts and picked up the items?',
           confirmLabel: 'Complete Order',
           onConfirm: () async {
             Navigator.pop(context); // close modal
@@ -451,7 +451,7 @@ class OrderItems extends StatelessWidget {
                 Text('Qty: ${item.quantity}', style: textTheme.bodySmall),
                 const SizedBox(height: 6),
                 Text(
-                  '₱${item.total.toStringAsFixed(2)}',
+                  '${item.total.toStringAsFixed(2)} pts',
                   style: textTheme.titleSmall?.copyWith(color: primaryColor),
                 ),
               ],

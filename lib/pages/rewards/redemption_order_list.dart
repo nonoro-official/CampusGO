@@ -196,7 +196,7 @@ class _OrderCard extends StatelessWidget {
                   Text('Qty: ${order.totalQty}', style: textTheme.bodySmall),
                   const SizedBox(height: 6),
                   Text(
-                    '₱${order.price.toStringAsFixed(2)}',
+                    '${order.points.toStringAsFixed(2)} pts',
                     style: textTheme.titleSmall?.copyWith(color: primaryColor),
                   ),
                 ],

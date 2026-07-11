@@ -5,16 +5,16 @@ class CartLineItem {
   final String name;
   final String? imageUrl;
   final int quantity;
-  final double unitPrice;
+  final double unitPoints;
 
-  double get total => unitPrice * quantity;
+  double get total => unitPoints * quantity;
 
   const CartLineItem({
     required this.productId,
     required this.name,
     this.imageUrl,
     required this.quantity,
-    required this.unitPrice,
+    required this.unitPoints,
   });
 }
 
@@ -28,8 +28,8 @@ class CartItemModel {
   ///Map of productId → quantity
   final Map<String, int> products;
 
-  ///Total price (sum of unit price × qty for every product)
-  final double price;
+  ///Total points (sum of unit points × qty for every product)
+  final double points;
 
   ///Enriched line-items — populated client-side after fetching product info
   final List<CartLineItem> lineItems;
@@ -41,7 +41,7 @@ class CartItemModel {
     required this.organizerId,
     required this.userId,
     required this.products,
-    required this.price,
+    required this.points,
     this.lineItems = const [],
   });
 
@@ -62,7 +62,7 @@ class CartItemModel {
       organizerId: data['organizerId'] ?? '',
       userId: data['userId'] ?? '',
       products: productsMap,
-      price: (data['price'] ?? 0).toDouble(),
+      points: (data['points'] ?? 0).toDouble(),
     );
   }
 
@@ -73,13 +73,13 @@ class CartItemModel {
       'organizerId': organizerId,
       'userId': userId,
       'products': products,
-      'price': price,
+      'points': points,
     };
   }
 
   CartItemModel copyWith({
     Map<String, int>? products,
-    double? price,
+    double? points,
     List<CartLineItem>? lineItems,
   }) {
     return CartItemModel(
@@ -87,7 +87,7 @@ class CartItemModel {
       organizerId: organizerId,
       userId: userId,
       products: products ?? this.products,
-      price: price ?? this.price,
+      points: points ?? this.points,
       lineItems: lineItems ?? this.lineItems,
     );
   }
@@ -98,7 +98,7 @@ class CartItemModel {
       organizerId: organizerId,
       userId: userId,
       products: products,
-      price: price,
+      points: points,
       lineItems: lineItems,
     );
   }

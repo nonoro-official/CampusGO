@@ -44,7 +44,7 @@ class AnalyticsGrid extends ConsumerWidget {
 
         final revenue = completedOrders.fold<double>(
           0.0,
-          (sum, o) => sum + o.price,
+          (sum, o) => sum + o.points,
         );
 
         final Map<String, int> productSales = {};
@@ -123,7 +123,7 @@ class AnalyticsGrid extends ConsumerWidget {
             final analytics = [
               {
                 'label': 'Revenue',
-                'value': '₱${revenue.toStringAsFixed(2)}',
+                'value': '${revenue.toStringAsFixed(2)} pts',
                 'icon': Icons.attach_money,
                 'isProduct': false,
               },

@@ -24,7 +24,7 @@ class _AddItemModal extends ConsumerStatefulWidget {
 class _AddItemModalState extends ConsumerState<_AddItemModal> {
   late final TextEditingController nameController;
   late final TextEditingController descriptionController;
-  late final TextEditingController priceController;
+  late final TextEditingController pointsController;
   late final TextEditingController stockController;
   late final TextEditingController skuController;
   late final TextEditingController categoryController;
@@ -39,7 +39,7 @@ class _AddItemModalState extends ConsumerState<_AddItemModal> {
     super.initState();
     nameController = TextEditingController();
     descriptionController = TextEditingController();
-    priceController = TextEditingController();
+    pointsController = TextEditingController();
     stockController = TextEditingController();
     skuController = TextEditingController(text: _generateAutoSku());
     categoryController = TextEditingController();
@@ -59,7 +59,7 @@ class _AddItemModalState extends ConsumerState<_AddItemModal> {
   void dispose() {
     nameController.dispose();
     descriptionController.dispose();
-    priceController.dispose();
+    pointsController.dispose();
     stockController.dispose();
     skuController.dispose();
     categoryController.dispose();
@@ -197,9 +197,9 @@ class _AddItemModalState extends ConsumerState<_AddItemModal> {
               children: [
                 Expanded(
                   child: TextField(
-                    controller: priceController,
+                    controller: pointsController,
                     decoration: const InputDecoration(
-                      labelText: 'Price (₱) *',
+                      labelText: 'Points *',
                       border: OutlineInputBorder(),
                     ),
                     keyboardType: const TextInputType.numberWithOptions(
@@ -337,7 +337,7 @@ class _AddItemModalState extends ConsumerState<_AddItemModal> {
   Future<void> _handleAddItem() async {
     final name = nameController.text.trim();
     final description = descriptionController.text.trim();
-    final priceStr = priceController.text.trim();
+    final pointsStr = pointsController.text.trim();
     final stock = int.tryParse(stockController.text) ?? 0;
     final sku = skuController.text.trim();
     final supplier = supplierController.text.trim();
@@ -345,7 +345,7 @@ class _AddItemModalState extends ConsumerState<_AddItemModal> {
     _addCategory();
 
     if (name.isEmpty ||
-        priceStr.isEmpty ||
+        pointsStr.isEmpty ||
         sku.isEmpty ||
         categories.isEmpty ||
         supplier.isEmpty) {
@@ -355,9 +355,9 @@ class _AddItemModalState extends ConsumerState<_AddItemModal> {
       return;
     }
 
-    final price = double.tryParse(priceStr) ?? 0.0;
-    if (price <= 0) {
-      _showError('Price must be greater than 0');
+    final points = double.tryParse(pointsStr) ?? 0.0;
+    if (points <= 0) {
+      _showError('Points must be greater than 0');
       return;
     }
 
@@ -381,7 +381,7 @@ class _AddItemModalState extends ConsumerState<_AddItemModal> {
         organizerId: user!.organizerId!,
         name: name,
         description: description,
-        price: price,
+        points: points,
         stock: stock,
         imageUrl: imageUrl,
         sku: sku,
@@ -474,7 +474,7 @@ class _EditItemModal extends ConsumerStatefulWidget {
 class _EditItemModalState extends ConsumerState<_EditItemModal> {
   late final TextEditingController nameController;
   late final TextEditingController descriptionController;
-  late final TextEditingController priceController;
+  late final TextEditingController pointsController;
   late final TextEditingController stockController;
   late final TextEditingController skuController;
   late final TextEditingController categoryController;
@@ -492,8 +492,8 @@ class _EditItemModalState extends ConsumerState<_EditItemModal> {
       text: widget.product.description,
     );
 
-    final basePrice = widget.product.originalPrice ?? widget.product.price;
-    priceController = TextEditingController(text: basePrice.toString());
+    final basePoints = widget.product.originalPoints ?? widget.product.points;
+    pointsController = TextEditingController(text: basePoints.toString());
     stockController = TextEditingController(
       text: widget.product.stock.toString()  ?? "0",
     );
@@ -508,7 +508,7 @@ class _EditItemModalState extends ConsumerState<_EditItemModal> {
   void dispose() {
     nameController.dispose();
     descriptionController.dispose();
-    priceController.dispose();
+    pointsController.dispose();
     stockController.dispose();
     skuController.dispose();
     categoryController.dispose();
@@ -603,7 +603,7 @@ class _EditItemModalState extends ConsumerState<_EditItemModal> {
 
   Future<void> _saveChanges() async {
     final name = nameController.text.trim();
-    final priceStr = priceController.text.trim();
+    final pointsStr = pointsController.text.trim();
     final stock = int.tryParse(stockController.text) ?? 0;
     final sku = skuController.text.trim();
     final supplier = supplierController.text.trim();
@@ -611,7 +611,7 @@ class _EditItemModalState extends ConsumerState<_EditItemModal> {
     _addCategory();
 
     if (name.isEmpty ||
-        priceStr.isEmpty ||
+        pointsStr.isEmpty ||
         sku.isEmpty ||
         categories.isEmpty ||
         supplier.isEmpty) {
@@ -619,9 +619,9 @@ class _EditItemModalState extends ConsumerState<_EditItemModal> {
       return;
     }
 
-    final basePrice = double.tryParse(priceStr);
-    if (basePrice == null || basePrice <= 0) {
-      _showError('Please enter a valid price');
+    final basePoints = double.tryParse(pointsStr);
+    if (basePoints == null || basePoints <= 0) {
+      _showError('Please enter valid points');
       return;
     }
 
@@ -635,13 +635,13 @@ class _EditItemModalState extends ConsumerState<_EditItemModal> {
         imageUrl = await productService.uploadProductImage(selectedImage!);
       }
 
-      double finalPrice = basePrice;
-      double? originalPrice;
+      double finalPoints = basePoints;
+      double? originalPoints;
       if (widget.product.type == ListingType.discount &&
           widget.product.discountPercentage != null) {
-        originalPrice = basePrice;
-        finalPrice =
-            basePrice * (1 - (widget.product.discountPercentage! / 100));
+        originalPoints = basePoints;
+        finalPoints =
+            basePoints * (1 - (widget.product.discountPercentage! / 100));
       }
 
       await productService.updateOrganizerProduct(
@@ -649,9 +649,9 @@ class _EditItemModalState extends ConsumerState<_EditItemModal> {
         OrganizerId: widget.product.organizerId,
         name: name,
         description: descriptionController.text.trim(),
-        price: finalPrice,
+        points: finalPoints,
         stock: stock,
-        originalPrice: originalPrice,
+        originalPoints: originalPoints,
         discountPercentage: widget.product.discountPercentage,
         imageUrl: imageUrl,
         sku: sku,
@@ -753,11 +753,11 @@ class _EditItemModalState extends ConsumerState<_EditItemModal> {
               children: [
                 Expanded(
                   child: TextField(
-                    controller: priceController,
+                    controller: pointsController,
                     decoration: InputDecoration(
                       labelText: isDiscounted
-                          ? 'Base Price (₱) *'
-                          : 'Price (₱) *',
+                          ? 'Base Points *'
+                          : 'Points *',
                       border: const OutlineInputBorder(),
                     ),
                     keyboardType: const TextInputType.numberWithOptions(

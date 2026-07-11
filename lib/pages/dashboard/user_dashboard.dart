@@ -209,7 +209,7 @@ class AnnouncementBar extends StatelessWidget {
       {"title": "Lemon Frenzy Buy 1 Take 1", "subtitle": "Today only 🥤"},
       {
         "title": "Free Delivery on Campus Orders",
-        "subtitle": "Min. ₱100 purchase",
+        "subtitle": "Min. 100 pts purchase",
       },
     ];
 

@@ -6,7 +6,7 @@ class ProductModel {
   final String name;
   final String description;
   final String? imageUrl;
-  final double price;
+  final double points;
   final String organizerId;
   final int stock; 
   final ListingType type;
@@ -14,7 +14,7 @@ class ProductModel {
   
   final List<String>? bundleItems; 
   final int? promoQuantity;
-  final double? originalPrice;
+  final double? originalPoints;
   final double? discountPercentage;
   final String? linkedProductId; 
 
@@ -27,14 +27,14 @@ class ProductModel {
     required this.name,
     required this.description,
     this.imageUrl,
-    required this.price,
+    required this.points,
     required this.organizerId,
     required this.stock,
     this.type = ListingType.regular,
     this.isAvailable = true,
     this.bundleItems,
     this.promoQuantity,
-    this.originalPrice,
+    this.originalPoints,
     this.discountPercentage,
     this.linkedProductId,
     required this.sku,
@@ -122,7 +122,7 @@ class ProductModel {
       name: data['name'] ?? '',
       description: data['description'] ?? '',
       imageUrl: data['imageUrl'],
-      price: (data['price'] ?? 0).toDouble(),
+      points: (data['points'] ?? 0).toDouble(),
       organizerId: data['organizerId'] ?? '',
       stock: (data['stock'] ?? 0) is int
           ? data['stock'] ?? 0
@@ -131,7 +131,7 @@ class ProductModel {
       isAvailable: data['isAvailable'] ?? true,
       bundleItems: data['bundleItems'] != null ? List<String>.from(data['bundleItems']) : null,
       promoQuantity: data['promoQuantity'],
-      originalPrice: data['originalPrice'] != null ? (data['originalPrice'] as num).toDouble() : null,
+      originalPoints: data['originalPoints'] != null ? (data['originalPoints'] as num).toDouble() : null,
       discountPercentage: data['discountPercentage'] != null ? (data['discountPercentage'] as num).toDouble() : null,
       linkedProductId: data['linkedProductId'],
       sku: data['sku'] ?? '',
@@ -145,14 +145,14 @@ class ProductModel {
       'name': name,
       'description': description,
       'imageUrl': imageUrl,
-      'price': price,
+      'points': points,
       'organizerId': organizerId,
       'stock': stock,
       'type': type.name,
       'isAvailable': isAvailable,
       'bundleItems': bundleItems,
       'promoQuantity': promoQuantity,
-      'originalPrice': originalPrice,
+      'originalPoints': originalPoints,
       'discountPercentage': discountPercentage,
       'linkedProductId': linkedProductId,
       'sku': sku,

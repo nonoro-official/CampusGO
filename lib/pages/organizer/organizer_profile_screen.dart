@@ -442,7 +442,7 @@ class OrganizerProfileScreen extends ConsumerWidget {
     final effectiveStock = product.calculateEffectiveStock(allProducts);
     final isOutOfStock = effectiveStock <= 0;
     final isLowStock = effectiveStock > 0 && effectiveStock <= 9;
-    final hasDiscount = product.originalPrice != null && product.originalPrice! > product.price;
+    final hasDiscount = product.originalPoints != null && product.originalPoints! > product.points;
 
     return GestureDetector(
       onTap: () {
@@ -525,7 +525,7 @@ class OrganizerProfileScreen extends ConsumerWidget {
                   Row(
                     children: [
                       Text(
-                        '₱${product.price.toStringAsFixed(2)}',
+                        '${product.points.toStringAsFixed(2)} pts',
                         style: textTheme.bodySmall?.copyWith(
                           color: hasDiscount ? Colors.red : Theme.of(context).primaryColor,
                           fontWeight: FontWeight.bold,

@@ -42,8 +42,8 @@ class _ListingModal extends ConsumerStatefulWidget {
 
 class _ListingModalState extends ConsumerState<_ListingModal> {
   late final TextEditingController nameController;
-  late final TextEditingController priceController;
-  late final TextEditingController salePriceController;
+  late final TextEditingController pointsController;
+  late final TextEditingController salePointsController;
   late final TextEditingController descriptionController;
   late final TextEditingController stockController;
   late final TextEditingController skuController;
@@ -68,14 +68,14 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
 
     nameController = TextEditingController(text: product?.name);
 
-    // If it's a discounted item, priceController stores the Original Price
-    final initialBasePrice = (product?.originalPrice != null)
-        ? product!.originalPrice
-        : (product?.price ?? 0.0);
+    // If it's a discounted item, pointsController stores the Original Points
+    final initialBasePoints = (product?.originalPoints != null)
+        ? product!.originalPoints
+        : (product?.points ?? 0.0);
 
-    priceController = TextEditingController(text: initialBasePrice.toString());
-    salePriceController = TextEditingController(
-      text: product?.price.toString() ?? "0.0",
+    pointsController = TextEditingController(text: initialBasePoints.toString());
+    salePointsController = TextEditingController(
+      text: product?.points.toString() ?? "0.0",
     );
     descriptionController = TextEditingController(text: product?.description);
     stockController = TextEditingController(
@@ -104,8 +104,8 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
   @override
   void dispose() {
     nameController.dispose();
-    priceController.dispose();
-    salePriceController.dispose();
+    pointsController.dispose();
+    salePointsController.dispose();
     descriptionController.dispose();
     stockController.dispose();
     skuController.dispose();
@@ -116,16 +116,16 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
     super.dispose();
   }
 
-  void _syncSalePrice() {
-    final p = double.tryParse(priceController.text) ?? 0.0;
+  void _syncSalePoints() {
+    final p = double.tryParse(pointsController.text) ?? 0.0;
     final d = double.tryParse(discountPercentController.text) ?? 0.0;
     final s = p * (1 - (d / 100));
-    salePriceController.text = s.toStringAsFixed(2);
+    salePointsController.text = s.toStringAsFixed(2);
   }
 
   void _syncDiscountPercent() {
-    final s = double.tryParse(salePriceController.text) ?? 0.0;
-    final p = double.tryParse(priceController.text) ?? 0.0;
+    final s = double.tryParse(salePointsController.text) ?? 0.0;
+    final p = double.tryParse(pointsController.text) ?? 0.0;
     if (p > 0) {
       final d = (1 - (s / p)) * 100;
       discountPercentController.text = d.toStringAsFixed(0);
@@ -265,10 +265,10 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
 
   Future<void> _handleSave() async {
     final name = nameController.text.trim();
-    final originalPriceStr = priceController.text.trim();
-    final originalPriceVal = double.tryParse(originalPriceStr) ?? 0.0;
-    final sellingPriceVal =
-        double.tryParse(salePriceController.text.trim()) ?? originalPriceVal;
+    final originalPointsStr = pointsController.text.trim();
+    final originalPointsVal = double.tryParse(originalPointsStr) ?? 0.0;
+    final sellingPointsVal =
+        double.tryParse(salePointsController.text.trim()) ?? originalPointsVal;
     final discountPct = double.tryParse(discountPercentController.text) ?? 0.0;
 
     final stock = int.tryParse(stockController.text) ?? 0;
@@ -279,7 +279,7 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
     _addManualCategory();
 
     if (name.isEmpty ||
-        originalPriceStr.isEmpty ||
+        originalPointsStr.isEmpty ||
         sku.isEmpty ||
         categories.isEmpty ||
         supplier.isEmpty) {
@@ -308,16 +308,16 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
           selectedType == ListingType.promo ||
           selectedType == ListingType.bundle;
 
-      double finalPrice = isDiscountable ? sellingPriceVal : originalPriceVal;
-      double? savedOriginalPrice;
+      double finalPoints = isDiscountable ? sellingPointsVal : originalPointsVal;
+      double? savedOriginalPoints;
       double? savedDiscountPercentage;
 
       if (isDiscountable) {
-        if (discountPct > 0 || sellingPriceVal < originalPriceVal) {
-          savedOriginalPrice = originalPriceVal;
+        if (discountPct > 0 || sellingPointsVal < originalPointsVal) {
+          savedOriginalPoints = originalPointsVal;
           savedDiscountPercentage = discountPct > 0
               ? discountPct
-              : ((1 - (sellingPriceVal / originalPriceVal)) * 100);
+              : ((1 - (sellingPointsVal / originalPointsVal)) * 100);
         }
       }
 
@@ -328,7 +328,7 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
           organizerId: widget.organizerId,
           name: name,
           description: description,
-          price: finalPrice,
+          points: finalPoints,
           stock: stock,
           type: selectedType,
           isAvailable: isAvailable,
@@ -337,7 +337,7 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
               ? selectedBundleItems
               : null,
           promoQuantity: promoQty,
-          originalPrice: savedOriginalPrice,
+          originalPoints: savedOriginalPoints,
           discountPercentage: savedDiscountPercentage,
           linkedProductId: selectedBaseProductId,
           sku: sku,
@@ -350,7 +350,7 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
           OrganizerId: widget.organizerId,
           name: name,
           description: description,
-          price: finalPrice,
+          points: finalPoints,
           stock: stock,
           type: selectedType,
           isAvailable: isAvailable,
@@ -359,7 +359,7 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
               ? selectedBundleItems
               : null,
           promoQuantity: promoQty,
-          originalPrice: savedOriginalPrice,
+          originalPoints: savedOriginalPoints,
           discountPercentage: savedDiscountPercentage,
           linkedProductId: selectedBaseProductId,
           sku: sku,
@@ -480,7 +480,7 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
                             : ListingType.regular;
                         if (!val) {
                           discountPercentController.text = "0";
-                          salePriceController.text = priceController.text;
+                          salePointsController.text = pointsController.text;
                         }
                       });
                     },
@@ -518,8 +518,8 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
                     selectedType = val;
                     if (widget.product == null) {
                       nameController.clear();
-                      priceController.clear();
-                      salePriceController.clear();
+                      pointsController.clear();
+                      salePointsController.clear();
                       descriptionController.clear();
                       skuController.text = _generateAutoSku();
                       categoryController.clear();
@@ -551,7 +551,7 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
                     keyboardType: TextInputType.number,
                     onChanged: (val) {
                       setState(() {
-                        _syncSalePrice();
+                        _syncSalePoints();
                       });
                     },
                   ),
@@ -559,9 +559,9 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
                 const SizedBox(width: 15),
                 Expanded(
                   child: TextField(
-                    controller: salePriceController,
+                    controller: salePointsController,
                     decoration: const InputDecoration(
-                      labelText: 'Sale Price (₱)',
+                      labelText: 'Sale Points',
                       border: OutlineInputBorder(),
                     ),
                     keyboardType: const TextInputType.numberWithOptions(
@@ -603,14 +603,14 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
                     if (selectedType == ListingType.promo) {
                       final qty =
                           int.tryParse(promoQuantityController.text) ?? 1;
-                      priceController.text =
-                          ((p.originalPrice ?? p.price) * qty).toString();
+                      pointsController.text =
+                          ((p.originalPoints ?? p.points) * qty).toString();
                     } else {
-                      priceController.text = (p.originalPrice ?? p.price)
+                      pointsController.text = (p.originalPoints ?? p.points)
                           .toString();
                     }
 
-                    _syncSalePrice();
+                    _syncSalePoints();
                     skuController.text = p.sku;
                     categories = List<String>.from(p.categories);
                     supplierController.text = p.supplier;
@@ -655,11 +655,11 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
                             (bp) => bp.name == itemName,
                           );
                           if (item != null) {
-                            total += (item.originalPrice ?? item.price);
+                            total += (item.originalPoints ?? item.points);
                           }
                         }
-                        priceController.text = total.toString();
-                        _syncSalePrice();
+                        pointsController.text = total.toString();
+                        _syncSalePoints();
                       }
                       _updateBundleSuppliers(baseProducts);
                       updateStockDisplay(baseProducts);
@@ -684,11 +684,11 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
             children: [
               Expanded(
                 child: TextField(
-                  controller: priceController,
+                  controller: pointsController,
                   decoration: InputDecoration(
                     labelText: isDiscountable
-                        ? 'Original Price (₱) *'
-                        : 'Price (₱) *',
+                        ? 'Original Points *'
+                        : 'Points *',
                   ),
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
@@ -696,7 +696,7 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
                   onChanged: (val) {
                     setState(() {
                       if (isDiscountable) {
-                        _syncSalePrice();
+                        _syncSalePoints();
                       }
                     });
                   },
@@ -825,9 +825,9 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
                     (p) => p.id == selectedBaseProductId,
                   );
                   if (base != null) {
-                    priceController.text =
-                        ((base.originalPrice ?? base.price) * qty).toString();
-                    _syncSalePrice();
+                    pointsController.text =
+                        ((base.originalPoints ?? base.points) * qty).toString();
+                    _syncSalePoints();
                   }
                   updateStockDisplay(baseProducts);
                 });

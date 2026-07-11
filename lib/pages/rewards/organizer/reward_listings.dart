@@ -304,7 +304,7 @@ class ListingCard extends ConsumerWidget {
                     children: [
                       Text(product.name, style: textTheme.titleMedium),
                       const SizedBox(height: 4),
-                      _buildPriceInfo(context),
+                      _buildPointsInfo(context),
                     ],
                   ),
                 ),
@@ -480,14 +480,14 @@ class ListingCard extends ConsumerWidget {
     }
   }
 
-  Widget _buildPriceInfo(BuildContext context) {
+  Widget _buildPointsInfo(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final primaryColor = Theme.of(context).primaryColor;
 
-    double? originalPrice = product.originalPrice;
+    double? originalPoints = product.originalPoints;
 
-    // Automatically calculate original price for bundles/promos if missing or not reflecting base items
-    if (originalPrice == null || originalPrice <= product.price) {
+    // Automatically calculate original points for bundles/promos if missing or not reflecting base items
+    if (originalPoints == null || originalPoints <= product.points) {
       if (product.type == ListingType.bundle && product.bundleItems != null) {
         double total = 0;
         for (var itemName in product.bundleItems!) {
@@ -498,9 +498,9 @@ class ListingCard extends ConsumerWidget {
                     (p.type == ListingType.discount &&
                         p.linkedProductId == null)),
           );
-          if (item != null) total += item.price;
+          if (item != null) total += item.points;
         }
-        if (total > product.price) originalPrice = total;
+        if (total > product.points) originalPoints = total;
       } else if (product.type == ListingType.promo &&
           product.promoQuantity != null) {
         final baseItem = allProducts.firstWhereOrNull(
@@ -513,22 +513,22 @@ class ListingCard extends ConsumerWidget {
                       p.linkedProductId == null)),
         );
         if (baseItem != null) {
-          double total = baseItem.price * product.promoQuantity!;
-          if (total > product.price) originalPrice = total;
+          double total = baseItem.points * product.promoQuantity!;
+          if (total > product.points) originalPoints = total;
         }
       }
     }
 
-    bool hasDiscount = originalPrice != null && originalPrice > product.price;
+    bool hasDiscount = originalPoints != null && originalPoints > product.points;
 
     if (hasDiscount) {
       double discountPercentage =
           product.discountPercentage ??
-          ((1 - (product.price / originalPrice)) * 100);
+          ((1 - (product.points / originalPoints)) * 100);
       return Row(
         children: [
           Text(
-            "₱${product.price.toStringAsFixed(2)}",
+            "${product.points.toStringAsFixed(2)} pts",
             style: textTheme.bodySmall?.copyWith(
               color: Colors.red,
               fontWeight: FontWeight.bold,
@@ -536,7 +536,7 @@ class ListingCard extends ConsumerWidget {
           ),
           const SizedBox(width: 8),
           Text(
-            "₱${originalPrice.toStringAsFixed(2)}",
+            "${originalPoints.toStringAsFixed(2)} pts",
             style: textTheme.bodySmall?.copyWith(
               decoration: TextDecoration.lineThrough,
               color: Colors.grey,
@@ -558,7 +558,7 @@ class ListingCard extends ConsumerWidget {
     }
 
     return Text(
-      "₱${product.price.toStringAsFixed(2)}",
+      "${product.points.toStringAsFixed(2)} pts",
       style: textTheme.bodySmall?.copyWith(
         color: primaryColor,
         fontWeight: FontWeight.bold,
@@ -573,14 +573,14 @@ class ListingCard extends ConsumerWidget {
         product.bundleItems != null &&
         product.bundleItems!.isNotEmpty) {
       return Text(
-        "${product.bundleItems!.join(' + ')} for ₱${product.price.toStringAsFixed(2)}",
+        "${product.bundleItems!.join(' + ')} for ${product.points.toStringAsFixed(2)} pts",
         style: textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
       );
     }
 
     if (product.type == ListingType.promo && product.promoQuantity != null) {
       return Text(
-        "${product.name} * ${product.promoQuantity} for ₱${product.price.toStringAsFixed(2)}",
+        "${product.name} * ${product.promoQuantity} for ${product.points.toStringAsFixed(2)} pts",
         style: textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
       );
     }

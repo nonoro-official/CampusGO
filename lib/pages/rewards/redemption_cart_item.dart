@@ -43,7 +43,7 @@ class CartItemScreen extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                "Total: ₱$total",
+                "Total: $total pts",
                 style: textTheme.titleMedium?.copyWith(color: primaryColor),
               ),
             ),
@@ -143,7 +143,7 @@ class CartItemScreen extends StatelessWidget {
                                 style: textTheme.titleSmall,
                               ),
                               Text(
-                                "₱$total",
+                                "$total pts",
                                 style: textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   color: primaryColor,
@@ -228,7 +228,7 @@ class CartItemScreen extends StatelessWidget {
                         Text(order["order_id"], style: textTheme.titleMedium),
                         const SizedBox(height: 6),
                         Text(
-                          "₱$total",
+                          "$total pts",
                           style: textTheme.titleSmall?.copyWith(
                             color: primaryColor,
                           ),
@@ -266,13 +266,13 @@ class CartItemScreen extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  _buildRow(context, "Subtotal", "₱$subtotal"),
+                  _buildRow(context, "Subtotal", "$subtotal pts"),
                   const SizedBox(height: 10),
-                  _buildRow(context, "Service Fee", "₱10"),
+                  _buildRow(context, "Service Fee", "10 pts"),
                   const SizedBox(height: 10),
                   _buildRow(context, "Campus Pickup", "Free"),
                   const Divider(height: 25),
-                  _buildRow(context, "Total Payment", "₱$total", isTotal: true),
+                  _buildRow(context, "Total Payment", "$total pts", isTotal: true),
                 ],
               ),
             ),
@@ -361,7 +361,7 @@ class OrderSummaryItems extends StatelessWidget {
                 Text("Qty: ${item["quantity"]}", style: textTheme.bodySmall),
                 const SizedBox(height: 6),
                 Text(
-                  "₱${item["total"]}",
+                  "${item["total"]} pts",
                   style: textTheme.titleSmall?.copyWith(color: primaryColor),
                 ),
               ],

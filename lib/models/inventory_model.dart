@@ -3,7 +3,7 @@ class InventoryModel {
   final String organizerId; // Links to OrganizerModel
   final String productId; // Links to ProductModel
   final String name; // Copy of product name for faster UI
-  final double price; // Organizer-specific price
+  final double points; // Organizer-specific points
   final int stock; // Organizer-specific stock
   final bool isAvailable;
 
@@ -12,7 +12,7 @@ class InventoryModel {
     required this.organizerId,
     required this.productId,
     required this.name,
-    required this.price,
+    required this.points,
     required this.stock,
     this.isAvailable = true,
   });
@@ -26,7 +26,7 @@ class InventoryModel {
       organizerId: data['organizerId'] ?? '',
       productId: data['productId'] ?? '',
       name: data['name'] ?? '',
-      price: (data['price'] ?? 0.0).toDouble(),
+      points: (data['points'] ?? 0.0).toDouble(),
       stock: (data['stock'] ?? 0).toInt(),
       isAvailable: data['isAvailable'] ?? true,
     );
@@ -37,7 +37,7 @@ class InventoryModel {
       'organizerId': organizerId,
       'productId': productId,
       'name': name,
-      'price': price,
+      'points': points,
       'stock': stock,
       'isAvailable': isAvailable,
     };

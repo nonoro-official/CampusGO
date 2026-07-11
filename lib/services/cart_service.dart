@@ -73,13 +73,13 @@ class CartService {
 
       // Create a new cart doc
       final products = {product.id: quantity};
-      final price = product.price * quantity;
+      final points = product.points * quantity;
 
       await _carts.add({
         'userId': userId,
         'organizerId': organizerId,
         'products': products,
-        'price': price,
+        'points': points,
       });
     } else {
       // Update existing cart
@@ -93,12 +93,12 @@ class CartService {
 
       updatedProducts[product.id] = newTotalQuantity;
 
-      // Recalculate total price
-      final newPrice = await _recalculatePrice(updatedProducts);
+      // Recalculate total points
+      final newPoints = await _recalculatePoints(updatedProducts);
 
       await _carts.doc(cart.id).update({
         'products': updatedProducts,
-        'price': newPrice,
+        'points': newPoints,
       });
     }
   }
@@ -136,11 +136,11 @@ class CartService {
       return;
     }
 
-    final newPrice = await _recalculatePrice(updated);
+    final newPoints = await _recalculatePoints(updated);
 
     await _carts.doc(cartId).update({
       'products': updated,
-      'price': newPrice,
+      'points': newPoints,
     });
   }
 
@@ -176,7 +176,7 @@ class CartService {
     await batch.commit();
   }
 
-  //Enrich a cart with product names / images / prices
+  //Enrich a cart with product names / images / points
 
   Future<CartItemModel> enrichCart(CartItemModel cart) async {
     final List<CartLineItem> lineItems = [];
@@ -193,7 +193,7 @@ class CartService {
           name: product.name,
           imageUrl: product.imageUrl,
           quantity: qty,
-          unitPrice: product.price,
+          unitPoints: product.points,
         ));
       }
     }
@@ -203,14 +203,14 @@ class CartService {
 
   //Helpers
 
-  /// Fetches current product prices and recalculates the total.
-  Future<double> _recalculatePrice(Map<String, int> products) async {
+  /// Fetches current product points and recalculates the total.
+  Future<double> _recalculatePoints(Map<String, int> products) async {
     double total = 0;
     for (final entry in products.entries) {
       final doc = await _db.collection('products').doc(entry.key).get();
       if (doc.exists) {
-        final price = (doc.data()!['price'] ?? 0).toDouble();
-        total += price * entry.value;
+        final points = (doc.data()!['points'] ?? 0).toDouble();
+        total += points * entry.value;
       }
     }
     return total;

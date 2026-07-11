@@ -116,13 +116,13 @@ class CartNotifier extends AsyncNotifier<void> {
       final orderService = OrderService();
       // Calculate total including 10 pesos service fee.
       // We explicitly pass the total with fee to ensure database consistency.
-      final totalWithFee = cart.price + 10.0;
+      final totalWithFee = cart.points + 10.0;
       
       await orderService.placeOrder(
         OrganizerId: cart.organizerId,
         userId: user.uid,
         orders: cart.products,
-        price: totalWithFee,
+        points: totalWithFee,
       );
 
       // Delete the cart after the order is placed
@@ -143,13 +143,13 @@ class CartNotifier extends AsyncNotifier<void> {
     state = await AsyncValue.guard(() async {
       final orderService = OrderService();
       // Calculate total including 10 pesos service fee.
-      final totalWithFee = (product.price * quantity) + 10.0;
+      final totalWithFee = (product.points * quantity) + 10.0;
       
       await orderService.placeOrder(
         OrganizerId: organizerId,
         userId: user.uid,
         orders: {product.id: quantity},
-        price: totalWithFee,
+        points: totalWithFee,
       );
     });
   }

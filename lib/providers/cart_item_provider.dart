@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 class CartItem {
   final String id;
   final String name;
-  final double price;
+  final double points;
   int quantity;
 
-  CartItem({required this.id, required this.name, required this.price, this.quantity = 1});
+  CartItem({required this.id, required this.name, required this.points, this.quantity = 1});
 }
 
 class CartProvider extends ChangeNotifier {
@@ -18,10 +18,10 @@ class CartProvider extends ChangeNotifier {
 
   Map<String, CartItem> get items => _items;
   int get totalItems => _items.values.fold(0, (sum, item) => sum + item.quantity);
-  double get subtotal => _items.values.fold(0, (sum, item) => sum + (item.price * item.quantity));
+  double get subtotal => _items.values.fold(0, (sum, item) => sum + (item.points * item.quantity));
   double get total => subtotal * (1 - (discountPercentage / 100));
 
-  void addItem(String organizerId, String id, String name, double price) {
+  void addItem(String organizerId, String id, String name, double points) {
     if (currentOrganizerId != null && currentOrganizerId != organizerId) {
       _items.clear();
       discountPercentage = 0.0;
@@ -33,7 +33,7 @@ class CartProvider extends ChangeNotifier {
     if (_items.containsKey(id)) {
       _items[id]!.quantity++;
     } else {
-      _items[id] = CartItem(id: id, name: name, price: price);
+      _items[id] = CartItem(id: id, name: name, points: points);
     }
     notifyListeners();
   }

@@ -135,7 +135,7 @@ class RewardSelectionCard extends StatelessWidget {
                         Text(product.name, style: textTheme.titleMedium),
                         const SizedBox(height: 4),
                         Text(
-                          "${product.price.toStringAsFixed(0)} Points • $stock in stock",
+                          "${product.points.toStringAsFixed(0)} Points • $stock in stock",
                           style: textTheme.bodyMedium?.copyWith(
                             color: stock > 0 ? primaryColor : Colors.red,
                             fontWeight: FontWeight.bold,
@@ -262,7 +262,7 @@ class _QRGenerationModalState extends State<QRGenerationModal> {
       _isLoading = true;
     });
 
-    final int totalPoints = (widget.product.price * quantity).toInt();
+    final int totalPoints = (widget.product.points * quantity).toInt();
 
     // Create a highly distinct identifier token combining Product ID + Current Epoch Timestamp
     final String uniqueId = "${widget.product.id}_${DateTime.now().millisecondsSinceEpoch}";
@@ -312,7 +312,7 @@ class _QRGenerationModalState extends State<QRGenerationModal> {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final primaryColor = Theme.of(context).primaryColor;
-    final totalPoints = (widget.product.price * quantity).toInt();
+    final totalPoints = (widget.product.points * quantity).toInt();
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),

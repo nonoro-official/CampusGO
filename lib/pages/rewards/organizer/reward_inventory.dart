@@ -305,7 +305,7 @@ class ItemCard extends ConsumerWidget {
                       Row(
                         children: [
                           Text(
-                            '₱${item.price.toStringAsFixed(2)}',
+                            '${item.points.toStringAsFixed(2)} pts',
                             style: textTheme.bodySmall?.copyWith(
                               color: Colors.red,
                               fontWeight: FontWeight.bold,
@@ -326,7 +326,7 @@ class ItemCard extends ConsumerWidget {
                       )
                     else
                       Text(
-                        '₱${item.price.toStringAsFixed(2)}',
+                        '${item.points.toStringAsFixed(2)} pts',
                         style: textTheme.bodySmall?.copyWith(
                           color: primaryColor,
                           fontWeight: FontWeight.bold,

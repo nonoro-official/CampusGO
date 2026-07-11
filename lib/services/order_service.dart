@@ -13,7 +13,7 @@ class OrderService {
     required String OrganizerId,
     required String userId,
     required Map<String, int> orders,
-    required double price,
+    required double points,
   }) async {
     final orderRef = _db.collection('orders').doc();
 
@@ -103,7 +103,7 @@ class OrderService {
         'organizerId': OrganizerId,
         'userId': userId,
         'orders': orders,
-        'price': price,
+        'points': points,
         'orderStatus': OrderStatus.processing.name,
         'timestamp': FieldValue.serverTimestamp(),
         'orderNumber': orderNumber,
@@ -278,7 +278,7 @@ class OrderService {
             name: product.name,
             imageUrl: product.imageUrl,
             quantity: qty,
-            price: product.price,
+            points: product.points,
           ),
         );
       }

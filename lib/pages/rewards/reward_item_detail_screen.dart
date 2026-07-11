@@ -179,16 +179,16 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                     Row(
                       children: [
                         Text(
-                          "₱${product.price.toStringAsFixed(2)}",
+                          "${product.points.toStringAsFixed(2)} pts",
                           style: textTheme.titleMedium?.copyWith(
                             color: primaryColor,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        if (product.originalPrice != null && product.originalPrice! > product.price) ...[
+                        if (product.originalPoints != null && product.originalPoints! > product.points) ...[
                           const SizedBox(width: 10),
                           Text(
-                            "₱${product.originalPrice!.toStringAsFixed(2)}",
+                            "${product.originalPoints!.toStringAsFixed(2)} pts",
                             style: textTheme.bodyMedium?.copyWith(
                               color: Colors.grey,
                               decoration: TextDecoration.lineThrough,
@@ -377,7 +377,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                   title: const Text('Buy Now'),
                                   content: Text(
                                     'Place order for ${product.name} x$quantity '
-                                    'totalling ₱${(product.price * quantity).toStringAsFixed(2)}?',
+                                    'totalling ${(product.points * quantity).toStringAsFixed(2)} pts?',
                                   ),
                                   actions: [
                                     TextButton(

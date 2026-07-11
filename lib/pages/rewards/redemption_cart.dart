@@ -74,7 +74,7 @@ class _CartCardState extends ConsumerState<_CartCard> {
         title: const Text('Confirm Order'),
         content: Text(
           'Place order for ${enriched.lineItems.length} item(s) '
-          'totalling ₱${enriched.price.toStringAsFixed(2)}?',
+          'totalling ${enriched.points.toStringAsFixed(2)} pts?',
         ),
         actions: [
           TextButton(
@@ -175,7 +175,7 @@ class _CartCardState extends ConsumerState<_CartCard> {
                   ),
                   const Spacer(),
                   Text(
-                    '₱${enriched.price.toStringAsFixed(2)}',
+                    '${enriched.points.toStringAsFixed(2)} pts',
                     style: textTheme.titleSmall?.copyWith(
                       color: primaryColor,
                       fontWeight: FontWeight.bold,
@@ -248,7 +248,7 @@ class _CartCardState extends ConsumerState<_CartCard> {
                             ),
                             const SizedBox(height: 6),
                             Text(
-                              '₱${item.total.toStringAsFixed(2)}',
+                              '${item.total.toStringAsFixed(2)} pts',
                               style: textTheme.titleSmall?.copyWith(
                                 color: primaryColor,
                               ),
@@ -360,7 +360,7 @@ class _CartCardState extends ConsumerState<_CartCard> {
                           const Icon(Icons.shopping_cart_checkout),
                           const SizedBox(width: 8),
                           Text(
-                            'Place Order  •  ₱${enriched.price.toStringAsFixed(2)}',
+                            'Place Order  •  ${enriched.points.toStringAsFixed(2)} pts',
                           ),
                         ],
                       ),
