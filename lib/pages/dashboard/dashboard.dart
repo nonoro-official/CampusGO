@@ -10,8 +10,9 @@ import '../rewards/rewards_shops_screen.dart';
 import '../map/campus_map_page.dart';
 import '../map/organizer_map_page.dart';
 import '../../services/auth_service.dart';
+import '../../providers/navigation_provider.dart';
 
-class DashboardScreen extends StatefulWidget {
+class DashboardScreen extends ConsumerStatefulWidget {
   final String accountType;
   final int? openTab;
   final bool? backToProcessing;
@@ -24,11 +25,10 @@ class DashboardScreen extends StatefulWidget {
   });
 
   @override
-  State<DashboardScreen> createState() => _DashboardScreenState();
+  ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingObserver {
-  late int selectedIndex;
+class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsBindingObserver {
   final AuthService _authService = AuthService();
   Timer? _heartbeatTimer;
 
@@ -39,11 +39,16 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     _authService.updateUserStatus(true);
     _startHeartbeat();
 
-    if (widget.backToProcessing == true) {
-      selectedIndex = 2;
-    } else {
-      selectedIndex = widget.openTab ?? 0;
-    }
+    // Use addPostFrameCallback to set the initial index in the provider
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.backToProcessing == true) {
+        ref.read(dashboardTabIndexProvider.notifier).setIndex(2);
+      } else if (widget.openTab != null) {
+        ref.read(dashboardTabIndexProvider.notifier).setIndex(widget.openTab!);
+      } else {
+        ref.read(dashboardTabIndexProvider.notifier).setIndex(0);
+      }
+    });
   }
 
   void _startHeartbeat() {
@@ -82,6 +87,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   @override
   Widget build(BuildContext context) {
     final isOrganizer = widget.accountType == 'Organizer';
+    final selectedIndex = ref.watch(dashboardTabIndexProvider);
 
     final screens = [
       HomeDashboardScreen(accountType: widget.accountType),
@@ -125,9 +131,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                 child: NavBar(
                   selectedIndex: selectedIndex,
                   onTap: (index) {
-                    setState(() {
-                      selectedIndex = index;
-                    });
+                    ref.read(dashboardTabIndexProvider.notifier).setIndex(index);
                   },
                 ),
               ),

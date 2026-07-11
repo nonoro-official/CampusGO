@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../widgets/welcome_card.dart';
+import '../../widgets/points_card.dart';
 import '../../widgets/recommended_row.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/organizer_provider.dart';
@@ -22,12 +23,15 @@ class HomeScreen extends ConsumerWidget {
     final roleName = user?.role.name.toLowerCase() ?? 'guest';
 
     return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(height: isOrganizer ? 80 : 20),
           const WelcomeCard(),
+          const SizedBox(height: 15),
+          const PointsCard(),
           const SizedBox(height: 25),
 
           Row(

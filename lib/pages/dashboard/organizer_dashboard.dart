@@ -6,6 +6,8 @@ import 'package:campusgo/providers/organizer_provider.dart';
 import '../../models/event_model.dart';
 import '../../services/event_service.dart';
 import '../../pages/events/event_list_screen.dart';
+import '../../widgets/welcome_card.dart';
+import '../../widgets/points_card.dart';
 import '../../widgets/reward_item_card.dart';
 import '../../widgets/analytics_grid.dart';
 import '../../widgets/organizer_actions_row.dart';
@@ -33,6 +35,10 @@ class OrganizerDashboard extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 80), // Space for toggle buttons
+              const WelcomeCard(),
+              const SizedBox(height: 15),
+              const PointsCard(),
+              const SizedBox(height: 25),
               const OrganizerShopCard(),
               const SizedBox(height: 25),
 

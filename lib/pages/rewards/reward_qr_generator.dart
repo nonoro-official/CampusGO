@@ -1,8 +1,14 @@
 import 'dart:convert';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart'; // Added for secure validation ledger
+import 'package:path_provider/path_provider.dart';
+import 'package:gal/gal.dart';
+import 'dart:io';
 import '../../../widgets/top_bar.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/product_provider.dart';
@@ -175,9 +181,54 @@ class QRGenerationModal extends StatefulWidget {
 }
 
 class _QRGenerationModalState extends State<QRGenerationModal> {
+  final GlobalKey _qrKey = GlobalKey();
   int quantity = 1;
   String? generatedQrData;
   bool _isLoading = false; // Prevents double submission crashes
+  bool _isSaving = false;
+
+  Future<void> _saveQRCode() async {
+    setState(() => _isSaving = true);
+    try {
+      // 1. Ensure we have gallery access
+      bool hasAccess = await Gal.hasAccess();
+      if (!hasAccess) {
+        hasAccess = await Gal.requestAccess();
+      }
+
+      if (!hasAccess) {
+        throw Exception("Gallery access denied.");
+      }
+
+      final RenderRepaintBoundary boundary = _qrKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+      final ui.Image image = await boundary.toImage(pixelRatio: 3.0);
+      final ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      
+      if (byteData != null) {
+        final Uint8List pngBytes = byteData.buffer.asUint8List();
+        
+        final tempDir = await getTemporaryDirectory();
+        final file = await File('${tempDir.path}/qr_${DateTime.now().millisecondsSinceEpoch}.png').create();
+        await file.writeAsBytes(pngBytes);
+
+        await Gal.putImage(file.path);
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("QR Code saved to Gallery!"), backgroundColor: Colors.green),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to save QR: $e"), backgroundColor: Colors.redAccent),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
 
   // Changed to async to safely push the transaction token to Firestore
   void _generateQR() async {
@@ -339,37 +390,57 @@ class _QRGenerationModalState extends State<QRGenerationModal> {
         const SizedBox(height: 20),
 
         // Render dynamic payload text parameters out to image format
-        Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.grey.shade300),
-          ),
-          child: QrImageView(
-            data: generatedQrData!,
-            version: QrVersions.auto,
-            size: 200.0,
-            eyeStyle: QrEyeStyle(
-              eyeShape: QrEyeShape.square,
-              color: primaryColor,
+        RepaintBoundary(
+          key: _qrKey,
+          child: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            child: QrImageView(
+              data: generatedQrData!,
+              version: QrVersions.auto,
+              size: 200.0,
+              eyeStyle: QrEyeStyle(
+                eyeShape: QrEyeShape.square,
+                color: primaryColor,
+              ),
             ),
           ),
         ),
         const SizedBox(height: 24),
 
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton(
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        Row(
+          children: [
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: _isSaving ? null : _saveQRCode,
+                icon: _isSaving 
+                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Icon(Icons.download),
+                label: const Text("Save Image"),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
             ),
-            onPressed: () {
-              Navigator.pop(context); // Close dialog
-            },
-            child: const Text("Done"),
-          ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                onPressed: () {
+                  Navigator.pop(context); // Close dialog
+                },
+                child: const Text("Done"),
+              ),
+            ),
+          ],
         ),
       ],
     );
