@@ -47,7 +47,7 @@ class OrganizerDashboard extends ConsumerWidget {
                         MaterialPageRoute(builder: (context) => const EventListScreen()),
                       );
                     },
-                    child: const Text("Join Events"),
+                    child: const Text("Browse Events"),
                   ),
                 ],
               ),

@@ -48,7 +48,7 @@ class _EditEventScreenState extends ConsumerState<EditEventScreen> {
       'date': _startDate,
       'endDate': _endDate,
       'location': _locationController.text,
-      'status': 'pending', // Resets to a pending for approval state when updated
+      'status': 'approved', // Automatically approved for testing
     });
 
     if (mounted) Navigator.pop(context);

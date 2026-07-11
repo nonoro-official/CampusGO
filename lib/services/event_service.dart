@@ -1,6 +1,9 @@
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path/path.dart' as p;
 import '../models/event_model.dart';
 
 class EventService {
@@ -44,12 +47,27 @@ class EventService {
     });
   }
 
-  Future<void> createEvent(EventModel event) async {
-    await _db.collection('events').add(event.toMap());
+  Future<String> createEvent(EventModel event) async {
+    final docRef = await _db.collection('events').add(event.toMap());
+    return docRef.id;
   }
 
   Future<void> updateEvent(String id, Map<String, dynamic> data) async {
     await _db.collection('events').doc(id).update(data);
+  }
+
+  Future<void> uploadEventImage(String eventId, File imageFile) async {
+    String extension = p.extension(imageFile.path);
+    final ref = FirebaseStorage.instance
+        .ref()
+        .child('event_images')
+        .child('$eventId$extension');
+
+    await ref.putFile(imageFile);
+    String downloadUrl = await ref.getDownloadURL();
+    await _db.collection('events').doc(eventId).update({
+      'imageUrl': downloadUrl,
+    });
   }
 
   Future<void> deleteEvent(String id) async {

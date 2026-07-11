@@ -18,6 +18,8 @@ import 'pages/rewards/organizer/reward_inventory.dart';
 import 'pages/messages/messages.dart';
 import 'pages/rewards/organizer/redemption_orders.dart';
 import 'pages/rewards/organizer/reward_listings.dart';
+import 'pages/events/add_event_screen.dart';
+import 'pages/events/event_list_screen.dart';
 import 'pages/organizer/organizer_profile_screen.dart';
 import 'pages/rewards/redemption_history.dart';
 import 'models/organizer_model.dart';
@@ -137,6 +139,8 @@ class MyApp extends StatelessWidget {
         '/menu': (context) => const MenuScreen(),
         '/messages': (context) => MessagesScreen(),
         '/shops': (context) => const ShopsScreen(),
+        '/add-event': (context) => const AddEventScreen(),
+        '/events': (context) => const EventListScreen(),
       },
     );
   }
