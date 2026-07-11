@@ -1,3 +1,4 @@
+import 'package:campusgo/pages/rewards/qr_scanner_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 // import 'package:cloud_firestore/cloud_firestore.dart';
@@ -85,6 +86,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     final screens = [
       HomeDashboardScreen(accountType: widget.accountType),
       const UserMapPage(searchQuery: '', activeFilter: 'All'),
+      const MockQRScannerPage(),
       const ShopsDashboardScreen(),
       HistoryScreen(
         accountType: widget.accountType,

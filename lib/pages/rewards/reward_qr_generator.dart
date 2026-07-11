@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:cloud_firestore/cloud_firestore.dart'; // Added for secure validation ledger
 import '../../../widgets/top_bar.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/product_provider.dart';
@@ -117,7 +118,6 @@ class RewardSelectionCard extends StatelessWidget {
                       Text(product.name, style: textTheme.titleMedium),
                       const SizedBox(height: 4),
                       Text(
-                        // Assuming product.price represents the points to give
                         "${product.price.toStringAsFixed(0)} Points",
                         style: textTheme.bodyMedium?.copyWith(
                           color: primaryColor,
@@ -177,31 +177,58 @@ class QRGenerationModal extends StatefulWidget {
 class _QRGenerationModalState extends State<QRGenerationModal> {
   int quantity = 1;
   String? generatedQrData;
+  bool _isLoading = false; // Prevents double submission crashes
 
-  void _generateQR() {
-    // Treat price as points per item
-    final int totalPoints = (widget.product.price * quantity).toInt();
-
-    // Generate a unique ID so each QR is "one-time use"
-    final String uniqueId = DateTime.now().millisecondsSinceEpoch.toString();
-
-    // Create the exact JSON format expected by Part 1's scanner
-    final Map<String, dynamic> qrPayload = {
-      "app": "CampusGO",
-      "type": "reward",
-      "points": totalPoints,
-      "qrId": uniqueId,
-    };
-
+  // Changed to async to safely push the transaction token to Firestore
+  void _generateQR() async {
     setState(() {
-      generatedQrData = jsonEncode(qrPayload);
+      _isLoading = true;
     });
 
-    /* SECURITY NOTE: To make this strictly one-time use securely,
-      you should save 'uniqueId' to Firebase here. When the user
-      scans it in Part 1, the app checks if the uniqueId exists in
-      Firebase, awards the points, and then deletes it.
-    */
+    final int totalPoints = (widget.product.price * quantity).toInt();
+
+    // Create a highly distinct identifier token combining Product ID + Current Epoch Timestamp
+    final String uniqueId = "${widget.product.id}_${DateTime.now().millisecondsSinceEpoch}";
+
+    try {
+      // 1. Log the token signature in the decentralized db cloud ledger
+      await FirebaseFirestore.instance.collection('rewards_ledger').doc(uniqueId).set({
+        'points': totalPoints,
+        'status': 'unused', // Key parameter checked by Part 1 scanner
+        'createdAt': FieldValue.serverTimestamp(),
+        'productId': widget.product.id,
+        'productName': widget.product.name,
+        'organizerId': widget.product.organizerId,
+        'quantity': quantity,
+      });
+
+      // 2. Map payload keys identical to the scanner validation parameters
+      final Map<String, dynamic> qrPayload = {
+        "app": "CampusGO",
+        "type": "reward",
+        "points": totalPoints,
+        "qrId": uniqueId,
+      };
+
+      if (mounted) {
+        setState(() {
+          generatedQrData = jsonEncode(qrPayload);
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Failed to secure validation token: $e"),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -234,15 +261,17 @@ class _QRGenerationModalState extends State<QRGenerationModal> {
         Text("Quantity Redeemable:", style: textTheme.bodyLarge),
         const SizedBox(height: 10),
 
-        // Quantity Selector
+        // Quantity Selector Buttons
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             IconButton(
               icon: const Icon(Icons.remove_circle_outline),
-              color: quantity > 1 ? primaryColor : Colors.grey,
+              color: quantity > 1 && !_isLoading ? primaryColor : Colors.grey,
               iconSize: 32,
-              onPressed: () {
+              onPressed: _isLoading
+                  ? null
+                  : () {
                 if (quantity > 1) setState(() => quantity--);
               },
             ),
@@ -254,9 +283,11 @@ class _QRGenerationModalState extends State<QRGenerationModal> {
             const SizedBox(width: 20),
             IconButton(
               icon: const Icon(Icons.add_circle_outline),
-              color: primaryColor,
+              color: !_isLoading ? primaryColor : Colors.grey,
               iconSize: 32,
-              onPressed: () {
+              onPressed: _isLoading
+                  ? null
+                  : () {
                 setState(() => quantity++);
               },
             ),
@@ -277,8 +308,14 @@ class _QRGenerationModalState extends State<QRGenerationModal> {
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
-            onPressed: _generateQR,
-            child: const Text("Generate QR Code"),
+            onPressed: _isLoading ? null : _generateQR,
+            child: _isLoading
+                ? const SizedBox(
+              height: 20,
+              width: 20,
+              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+            )
+                : const Text("Generate QR Code"),
           ),
         ),
       ],
@@ -301,7 +338,7 @@ class _QRGenerationModalState extends State<QRGenerationModal> {
         ),
         const SizedBox(height: 20),
 
-        // The generated QR Code
+        // Render dynamic payload text parameters out to image format
         Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(

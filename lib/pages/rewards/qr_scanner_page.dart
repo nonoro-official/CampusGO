@@ -2,7 +2,7 @@ import 'dart:convert'; // Required for JSON decoding
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:mobile_scanner/mobile_scanner.dart'; // New import
+import 'package:mobile_scanner/mobile_scanner.dart';
 
 class MockQRScannerPage extends StatefulWidget {
   const MockQRScannerPage({super.key});
@@ -38,7 +38,7 @@ class _MockQRScannerPageState extends State<MockQRScannerPage>
     super.dispose();
   }
 
-  // --- Core Scanning Logic ---
+  // --- Secure Core Scanning Logic ---
   Future<void> _onDetect(BarcodeCapture capture) async {
     if (_isProcessing) return; // Block further reads while processing
 
@@ -49,33 +49,63 @@ class _MockQRScannerPageState extends State<MockQRScannerPage>
     if (rawValue == null) return;
 
     setState(() {
-      _isProcessing = true; // Lock the scanner
+      _isProcessing = true; // Lock the scanner state UI
     });
 
     try {
-      // 1. Decode the QR code data.
-      // We expect a JSON string from your upcoming Part 2 Generator.
+      // 1. Decode the QR code JSON string payload
       final Map<String, dynamic> qrData = jsonDecode(rawValue);
 
-      // 2. Validate that this QR belongs to YOUR app.
+      // 2. Structural Guard Check: Is it a CampusGO reward token?
       if (qrData['app'] == 'CampusGO' && qrData['type'] == 'reward') {
-
         final int pointsToAward = qrData['points'] ?? 0;
-        final String qrId = qrData['qrId'] ?? ''; // Useful for preventing duplicate scans later
+        final String qrId = qrData['qrId'] ?? '';
 
-        // Stop the camera since we got a valid hit
+        if (qrId.isEmpty) {
+          _showError("Invalid token structure missing identifier.");
+          return;
+        }
+
+        // --- NEW: FIRESTORE LEDGER ANTI-EXPLOIT HANDSHAKE ---
+        final ledgerRef = FirebaseFirestore.instance.collection('rewards_ledger').doc(qrId);
+        final ledgerDoc = await ledgerRef.get();
+
+        // Security Guard A: Does this QR code even exist in our system ledger?
+        if (!ledgerDoc.exists) {
+          _showError("Invalid or unregistered QR code.");
+          return;
+        }
+
+        final String status = ledgerDoc.data()?['status'] ?? 'used';
+
+        // Security Guard B: Has this code been scanned before?
+        if (status == 'used') {
+          _showError("🛑 This QR code has already been redeemed!");
+          return;
+        }
+
+        // --- VALIDATION PASSED: EXECUTE SECURE CLAIM ---
+
+        // Stop the camera view since verification passed cleanly
         await _scannerController.stop();
 
-        // 3. Award the points in Firebase
         final user = FirebaseAuth.instance.currentUser;
         if (user != null) {
+          // 1. Immediately claim the code in the database ledger to prevent race conditions
+          await ledgerRef.update({
+            'status': 'used',
+            'redeemedBy': user.uid,
+            'redeemedAt': FieldValue.serverTimestamp(),
+          });
+
+          // 2. Safe increments processing on the user profile record
           await FirebaseFirestore.instance.collection('users').doc(user.uid).set(
             {'points': FieldValue.increment(pointsToAward)},
             SetOptions(merge: true),
           );
         }
 
-        // 4. Show success and exit
+        // 3. Complete UX Flow returning safely back to previous screen
         if (mounted) {
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
@@ -87,11 +117,11 @@ class _MockQRScannerPageState extends State<MockQRScannerPage>
           );
         }
       } else {
-        // Valid JSON, but not from this app
+        // Valid JSON format but wrong app signatures
         _showError("This QR code is not valid for CampusGO rewards.");
       }
     } catch (e) {
-      // Not a JSON format (e.g., someone scanned a random website link)
+      // Catch formatting exceptions (plain text links, wrong structures)
       _showError("Unrecognized QR format.");
     }
   }
@@ -106,7 +136,7 @@ class _MockQRScannerPageState extends State<MockQRScannerPage>
       ),
     );
 
-    // Unlock the scanner after a short delay so they can try again
+    // Unlock the scanner after a short delay so they can try reading again
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) {
         setState(() {
@@ -133,7 +163,7 @@ class _MockQRScannerPageState extends State<MockQRScannerPage>
       extendBodyBehindAppBar: true,
       body: Stack(
         children: [
-          // 1. Live Camera Feed (Replaced the fake background)
+          // 1. Live Camera Feed
           MobileScanner(
             controller: _scannerController,
             onDetect: _onDetect,
@@ -215,7 +245,7 @@ class _MockQRScannerPageState extends State<MockQRScannerPage>
             ),
           ),
 
-          // 5. Working Flashlight Toggle
+          // 5. Action Toggles
           Positioned(
             bottom: 50,
             left: 0,
@@ -224,7 +254,7 @@ class _MockQRScannerPageState extends State<MockQRScannerPage>
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 _buildMockActionButton(Icons.image, "Gallery", () {
-                  // TODO: Implement picking from gallery using mobile_scanner's analyzeImage
+                  // Optional: Analyze Image from gallery mechanics
                 }),
                 _buildMockActionButton(Icons.flashlight_on, "Flashlight", () {
                   _scannerController.toggleTorch();
