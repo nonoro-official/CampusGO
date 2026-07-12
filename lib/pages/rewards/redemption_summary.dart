@@ -309,10 +309,21 @@ class OrderSummary extends ConsumerWidget {
           confirmLabel: 'Mark Ready',
           onConfirm: () async {
             Navigator.pop(context);
-            await ref
-                .read(orderStatusNotifierProvider.notifier)
-                .updateStatus(order.id, OrderStatus.readyForPickup);
-            if (context.mounted) Navigator.pop(context);
+            try {
+              await ref
+                  .read(orderStatusNotifierProvider.notifier)
+                  .updateStatus(order.id, OrderStatus.readyForPickup);
+              if (context.mounted) Navigator.pop(context);
+            } catch (e) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text("Error updating order: $e"),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            }
           },
           onCancel: () => Navigator.pop(context),
         ),
@@ -328,10 +339,21 @@ class OrderSummary extends ConsumerWidget {
           confirmLabel: 'Confirm Payment',
           onConfirm: () async {
             Navigator.pop(context);
-            await ref
-                .read(orderStatusNotifierProvider.notifier)
-                .updateStatus(order.id, OrderStatus.completed);
-            if (context.mounted) Navigator.pop(context);
+            try {
+              await ref
+                  .read(orderStatusNotifierProvider.notifier)
+                  .updateStatus(order.id, OrderStatus.completed);
+              if (context.mounted) Navigator.pop(context);
+            } catch (e) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text("Error completing order: $e"),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            }
           },
           onCancel: () => Navigator.pop(context),
         ),
@@ -379,14 +401,25 @@ class OrderSummary extends ConsumerWidget {
         confirmLabel: 'Cancel Order',
         onConfirm: () async {
           Navigator.pop(context);
-          await ref
-              .read(orderStatusNotifierProvider.notifier)
-              .updateStatus(order.id, OrderStatus.cancelled);
-          if (context.mounted) {
-             Navigator.pop(context);
-             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Order cancelled")),
-             );
+          try {
+            await ref
+                .read(orderStatusNotifierProvider.notifier)
+                .updateStatus(order.id, OrderStatus.cancelled);
+            if (context.mounted) {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Order cancelled")),
+              );
+            }
+          } catch (e) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text("Error cancelling order: $e"),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
           }
         },
         onCancel: () => Navigator.pop(context),
@@ -407,10 +440,21 @@ class OrderSummary extends ConsumerWidget {
         confirmLabel: 'Yes, Cancel',
         onConfirm: () async {
           Navigator.pop(context);
-          await ref
-              .read(orderStatusNotifierProvider.notifier)
-              .updateStatus(order.id, OrderStatus.cancelled);
-          if (context.mounted) Navigator.pop(context);
+          try {
+            await ref
+                .read(orderStatusNotifierProvider.notifier)
+                .updateStatus(order.id, OrderStatus.cancelled);
+            if (context.mounted) Navigator.pop(context);
+          } catch (e) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text("Error cancelling order: $e"),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          }
         },
         onCancel: () => Navigator.pop(context),
       ),

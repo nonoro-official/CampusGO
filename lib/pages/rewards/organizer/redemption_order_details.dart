@@ -67,40 +67,66 @@ class OrderDetails extends ConsumerWidget {
                   ),
                 ),
                 // ─── Organizer view ───────────────────────────────────
-                if (accountType == 'Organizer' && status != OrderStatus.completed)
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 25,
-                        vertical: 12,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    onPressed: statusNotifier.isLoading
-                        ? null
-                        : () => _onOrganizerAction(
-                            context,
-                            ref,
-                            enriched,
-                            isProcessing,
-                            isReady,
-                            total,
+                if (accountType == 'Organizer' &&
+                    status != OrderStatus.completed &&
+                    status != OrderStatus.cancelled)
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
-                    child: statusNotifier.isLoading
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Text(
-                            isProcessing
-                                ? 'Mark Ready'
-                                : isReady
-                                ? 'Complete Order'
-                                : 'Confirm',
+                          onPressed: statusNotifier.isLoading
+                              ? null
+                              : () => _onOrganizerAction(
+                                    context,
+                                    ref,
+                                    enriched,
+                                    isProcessing,
+                                    isReady,
+                                    total,
+                                  ),
+                          child: statusNotifier.isLoading
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : Text(
+                                  isProcessing
+                                      ? 'Mark Ready'
+                                      : isReady
+                                          ? 'Complete Order'
+                                          : 'Confirm',
+                                ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: Colors.red),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 12,
                           ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: statusNotifier.isLoading
+                            ? null
+                            : () => _cancelOrder(context, ref, enriched),
+                        child: const Text(
+                          "Cancel",
+                          style: TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    ],
                   ),
               ],
             ),
@@ -258,11 +284,22 @@ class OrderDetails extends ConsumerWidget {
           confirmLabel: 'Mark Ready',
           onConfirm: () async {
             Navigator.pop(context); // close modal
-            await ref
-                .read(orderStatusNotifierProvider.notifier)
-                .updateStatus(enriched.id, OrderStatus.readyForPickup);
-            if (context.mounted) {
-              Navigator.pop(context); // back to order list
+            try {
+              await ref
+                  .read(orderStatusNotifierProvider.notifier)
+                  .updateStatus(enriched.id, OrderStatus.readyForPickup);
+              if (context.mounted) {
+                Navigator.pop(context); // back to order list
+              }
+            } catch (e) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text("Error updating order: $e"),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
             }
           },
           onCancel: () => Navigator.pop(context),
@@ -278,17 +315,68 @@ class OrderDetails extends ConsumerWidget {
           confirmLabel: 'Complete Order',
           onConfirm: () async {
             Navigator.pop(context); // close modal
-            await ref
-                .read(orderStatusNotifierProvider.notifier)
-                .updateStatus(enriched.id, OrderStatus.completed);
-            if (context.mounted) {
-              Navigator.pop(context); // back to order list
+            try {
+              await ref
+                  .read(orderStatusNotifierProvider.notifier)
+                  .updateStatus(enriched.id, OrderStatus.completed);
+              if (context.mounted) {
+                Navigator.pop(context); // back to order list
+              }
+            } catch (e) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text("Error completing order: $e"),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
             }
           },
           onCancel: () => Navigator.pop(context),
         ),
       );
     }
+  }
+
+  void _cancelOrder(
+    BuildContext context,
+    WidgetRef ref,
+    OrderModel order,
+  ) {
+    ModalContainer.popup(
+      context: context,
+      child: _ConfirmModal(
+        title: 'Cancel Order',
+        body:
+            'Are you sure you want to cancel this order? This cannot be undone.',
+        confirmLabel: 'Cancel Order',
+        onConfirm: () async {
+          Navigator.pop(context); // close modal
+          try {
+            await ref
+                .read(orderStatusNotifierProvider.notifier)
+                .updateStatus(order.id, OrderStatus.cancelled);
+            if (context.mounted) {
+              Navigator.pop(context); // back to order list
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Order cancelled")),
+              );
+            }
+          } catch (e) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text("Error cancelling order: $e"),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          }
+        },
+        onCancel: () => Navigator.pop(context),
+      ),
+    );
   }
 
   Widget _buildRow(

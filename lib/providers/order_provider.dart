@@ -52,9 +52,13 @@ class OrderStatusNotifier extends AsyncNotifier<void> {
 
   Future<void> updateStatus(String orderId, OrderStatus status) async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
+    try {
       await ref.read(orderServiceProvider).updateOrderStatus(orderId, status);
-    });
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    }
   }
 }
 

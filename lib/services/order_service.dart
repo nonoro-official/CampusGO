@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:collection/collection.dart';
 import '../models/redemption_order_model.dart';
 import '../models/reward_item_model.dart';
 import '../models/enums.dart';
@@ -158,11 +159,16 @@ class OrderService {
         .toList();
 
     await _db.runTransaction((transaction) async {
-      // Re-read order status inside transaction to prevent race conditions
+      // 1. PERFORM ALL READS FIRST
+      // Read Order
       final txOrderDoc = await transaction.get(_db.collection('orders').doc(orderId));
       if (!txOrderDoc.exists) return;
       final txOrderData = txOrderDoc.data() as Map<String, dynamic>;
       if (OrderStatus.fromString(txOrderData['orderStatus'] ?? '') == OrderStatus.cancelled) return;
+
+      // Read User
+      final userDocRef = _db.collection('users').doc(txOrderData['userId']);
+      final userSnap = await transaction.get(userDocRef);
 
       final Map<String, int> ordersMap = {};
       final rawOrders = txOrderData['orders'];
@@ -178,10 +184,13 @@ class OrderService {
         final rewardId = entry.key;
         final qtyOrdered = entry.value;
 
-        final reward = allRewards.firstWhere(
-          (p) => p.id == rewardId,
-          orElse: () => throw Exception('Reward $rewardId not found.'),
-        );
+        final reward = allRewards.firstWhereOrNull((p) => p.id == rewardId);
+
+        if (reward == null) {
+          // If the reward was deleted from inventory, we still allow cancellation
+          // but we can't restore its stock.
+          continue;
+        }
 
         if (reward.type == ListingType.promo && reward.linkedRewardId != null) {
           final factor = reward.promoQuantity ?? 1;
@@ -190,27 +199,28 @@ class OrderService {
           additions[reward.linkedRewardId!] = (additions[reward.linkedRewardId!] ?? 0) + qtyOrdered;
         } else if (reward.type == ListingType.bundle && reward.bundleItems != null) {
           for (final itemName in reward.bundleItems!) {
-            final component = allRewards.firstWhere(
+            final component = allRewards.firstWhereOrNull(
               (p) => p.name == itemName && (p.type == ListingType.regular || (p.type == ListingType.discount && p.linkedRewardId == null)),
-              orElse: () => throw Exception('Bundle component "$itemName" not found.'),
             );
-            additions[component.id] = (additions[component.id] ?? 0) + qtyOrdered;
+            if (component != null) {
+              additions[component.id] = (additions[component.id] ?? 0) + qtyOrdered;
+            }
           }
         } else {
           additions[reward.id] = (additions[reward.id] ?? 0) + qtyOrdered;
         }
       }
 
-      // 1. Perform Reads for stock updates
+      // Read Stocks
       final List<DocumentSnapshot> targetDocs = [];
       final List<String> targetIds = additions.keys.toList();
-      
       for (final id in targetIds) {
         final doc = await transaction.get(_db.collection('rewards').doc(id));
         targetDocs.add(doc);
       }
 
-      // 2. Perform Updates
+      // 2. PERFORM ALL WRITES
+      // Update Stocks
       for (int i = 0; i < targetDocs.length; i++) {
         final doc = targetDocs[i];
         if (!doc.exists) continue;
@@ -224,11 +234,10 @@ class OrderService {
         transaction.update(doc.reference, {'stock': currentStock + amountToAdd});
       }
 
-      // Finally, update order status and restore points
+      // Update Order Status
       transaction.update(txOrderDoc.reference, {'orderStatus': status.name});
 
-      final userDocRef = _db.collection('users').doc(txOrderData['userId']);
-      final userSnap = await transaction.get(userDocRef);
+      // Restore User Points
       if (userSnap.exists) {
         final userData = userSnap.data() as Map<String, dynamic>;
         final currentPoints = (userData['points'] as num?)?.toInt() ?? 0;
