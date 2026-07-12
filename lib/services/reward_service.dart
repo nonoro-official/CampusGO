@@ -5,53 +5,53 @@ import 'package:path/path.dart' as p;
 import '../models/reward_item_model.dart';
 import '../models/enums.dart';
 
-class ProductService {
+class RewardService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
   // Search the global catalog (e.g., for a organizer adding items)
-  Future<List<ProductModel>> searchGlobalProducts(String query) async {
+  Future<List<RewardModel>> searchGlobalRewards(String query) async {
     final snap = await _db
-        .collection('products')
+        .collection('rewards')
         .where('name', isGreaterThanOrEqualTo: query)
         .get();
 
     return snap.docs
-        .map((doc) => ProductModel.fromMap(doc.data(), doc.id))
+        .map((doc) => RewardModel.fromMap(doc.data(), doc.id))
         .toList();
   }
 
-  // Get all products for a specific organizer/Organizer
-  Stream<List<ProductModel>> getOrganizerProductsStream(String organizerId) {
+  // Get all rewards for a specific organizer/Organizer
+  Stream<List<RewardModel>> getOrganizerRewardsStream(String organizerId) {
     return _db
-        .collection('products')
+        .collection('rewards')
         .where('organizerId', isEqualTo: organizerId)
         .snapshots()
         .map((snap) => snap.docs
-            .map((doc) => ProductModel.fromMap(doc.data(), doc.id))
+            .map((doc) => RewardModel.fromMap(doc.data(), doc.id))
             .toList());
   }
 
-  // Create a new product for a organizer
-  Future<String> createOrganizerProduct({
+  // Create a new reward for a organizer
+  Future<String> createOrganizerReward({
     required String organizerId,
     required String name,
     required String description,
-    required double points,
+    required int points,
     String? imageUrl,
     ListingType type = ListingType.regular,
     int stock = 0,
     bool isAvailable = true,
     List<String>? bundleItems,
     int? promoQuantity,
-    double? originalPoints,
+    int? originalPoints,
     double? discountPercentage,
-    String? linkedProductId,
+    String? linkedRewardId,
     required String sku,
     required List<String> categories,
     required String supplier,
   }) async {
-    final ref = await _db.collection('products').add({
+    final ref = await _db.collection('rewards').add({
       'organizerId': organizerId,
       'name': name,
       'description': description,
@@ -64,7 +64,7 @@ class ProductService {
       'promoQuantity': promoQuantity,
       'originalPoints': originalPoints,
       'discountPercentage': discountPercentage,
-      'linkedProductId': linkedProductId,
+      'linkedRewardId': linkedRewardId,
       'sku': sku,
       'categories': categories,
       'supplier': supplier,
@@ -73,28 +73,28 @@ class ProductService {
     return ref.id;
   }
 
-  // Create a new "Master Product" (for unique items)
-  Future<String> createProduct(ProductModel product) async {
-    final ref = await _db.collection('products').add(product.toMap());
+  // Create a new "Master Reward" (for unique items)
+  Future<String> createReward(RewardModel reward) async {
+    final ref = await _db.collection('rewards').add(reward.toMap());
     return ref.id;
   }
 
-  // Update an existing product
-  Future<void> updateOrganizerProduct({
-    required String productId,
+  // Update an existing reward
+  Future<void> updateOrganizerReward({
+    required String rewardId,
     required String OrganizerId,
     required String name,
     String? description,
-    required double points,
+    required int points,
     String? imageUrl,
     ListingType? type,
     bool? isAvailable,
     List<String>? bundleItems,
     int? promoQuantity,
-    double? originalPoints,
-    double? discountPercentage,
     int? stock,
-    String? linkedProductId,
+    int? originalPoints,
+    double? discountPercentage,
+    String? linkedRewardId,
     required String sku,
     required List<String> categories,
     required String supplier,
@@ -117,30 +117,30 @@ class ProductService {
     if (bundleItems != null) updateData['bundleItems'] = bundleItems;
     if (promoQuantity != null) updateData['promoQuantity'] = promoQuantity;
     if (stock != null) updateData['stock'] = stock;
-    if (linkedProductId != null) updateData['linkedProductId'] = linkedProductId;
+    if (linkedRewardId != null) updateData['linkedRewardId'] = linkedRewardId;
 
-    await _db.collection('products').doc(productId).update(updateData);
+    await _db.collection('rewards').doc(rewardId).update(updateData);
   }
 
-  // Delete a product
-  Future<void> deleteOrganizerProduct(String productId) async {
-    await _db.collection('products').doc(productId).delete();
+  // Delete a reward
+  Future<void> deleteOrganizerReward(String rewardId) async {
+    await _db.collection('rewards').doc(rewardId).delete();
   }
 
   // Update stock
   Future<void> updateStock({
-    required String productId,
+    required String rewardId,
     required int newStock,
   }) async {
-    await _db.collection('products').doc(productId).update({
+    await _db.collection('rewards').doc(rewardId).update({
       'stock': newStock,
       'updatedAt': FieldValue.serverTimestamp(),
     });
   }
 
-  // Remove a category from all products of a Organizer
+  // Remove a category from all rewards of a Organizer
   Future<void> removeCategoryFromOrganizer(String organizerId, String category) async {
-    final query = _db.collection('products')
+    final query = _db.collection('rewards')
         .where('organizerId', isEqualTo: organizerId)
         .where('categories', arrayContains: category);
     
@@ -157,11 +157,11 @@ class ProductService {
     await batch.commit();
   }
 
-  // Upload product image to Firebase Storage
-  Future<String> uploadProductImage(File imageFile) async {
+  // Upload reward image to Firebase Storage
+  Future<String> uploadRewardImage(File imageFile) async {
     try {
       String fileName = DateTime.now().millisecondsSinceEpoch.toString() + p.extension(imageFile.path);
-      Reference ref = _storage.ref().child('product_images').child(fileName);
+      Reference ref = _storage.ref().child('reward_images').child(fileName);
       UploadTask uploadTask = ref.putFile(imageFile);
       TaskSnapshot snapshot = await uploadTask;
       return await snapshot.ref.getDownloadURL();

@@ -10,12 +10,12 @@ final orderServiceProvider = Provider<OrderService>((ref) => OrderService());
 
 // ─── Organizer: stream all orders for my Organizer ───────────────────────────────
 
-final OrganizerOrdersProvider = StreamProvider<List<OrderModel>>((ref) {
-  final Organizer = ref.watch(myOrganizerProvider).value;
-  if (Organizer == null) return Stream.value([]);
+final organizerOrdersProvider = StreamProvider<List<OrderModel>>((ref) {
+  final organizer = ref.watch(myOrganizerProvider).value;
+  if (organizer == null) return Stream.value([]);
 
   final service = ref.watch(orderServiceProvider);
-  return service.getOrdersByOrganizer(Organizer.id);
+  return service.getOrdersByOrganizer(organizer.id);
 });
 
 // ─── Customer: stream all orders placed by me ────────────────────────────────
@@ -36,7 +36,7 @@ final singleOrderProvider =
   return service.getOrderStream(orderId);
 });
 
-// ─── Enriched single order (with product details) ────────────────────────────
+// ─── Enriched single order (with reward details) ────────────────────────────
 
 final enrichedOrderProvider =
     FutureProvider.family<OrderModel, OrderModel>((ref, order) async {

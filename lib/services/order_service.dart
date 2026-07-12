@@ -8,12 +8,12 @@ class OrderService {
 
   // ─── Create ─────────────────────────────────────────────────────────────────
 
-  /// Place a new order and decrease product stock. [orders] is a map of productId → quantity.
+  /// Place a new order and decrease reward stock. [orders] is a map of rewardId → quantity.
   Future<String> placeOrder({
-    required String OrganizerId,
+    required String organizerId,
     required String userId,
     required Map<String, int> orders,
-    required double points,
+    required int points,
   }) async {
     final orderRef = _db.collection('orders').doc();
 
@@ -25,46 +25,62 @@ class OrderService {
         '${now.minute.toString().padLeft(2, '0')}'
         '${now.second.toString().padLeft(2, '0')}';
 
-    // 0. Resolve what to deduct by fetching the Organizer's current product map.
+    // 0. Resolve what to deduct by fetching the Organizer's current reward map.
     // This allows us to handle Promos, Discounts, and Bundles by mapping them to their base items.
-    final allProductsSnap = await _db.collection('products')
-        .where('organizerId', isEqualTo: OrganizerId)
+    final allRewardsSnap = await _db.collection('rewards')
+        .where('organizerId', isEqualTo: organizerId)
         .get();
-    final allProducts = allProductsSnap.docs
-        .map((doc) => ProductModel.fromMap(doc.data(), doc.id))
+    final allRewards = allRewardsSnap.docs
+        .map((doc) => RewardModel.fromMap(doc.data(), doc.id))
         .toList();
 
     await _db.runTransaction((transaction) async {
-      final Map<String, int> deductions = {}; // productId -> total quantity to subtract
+      // --- POINT CHECK & DEDUCTION ---
+      final userDocRef = _db.collection('users').doc(userId);
+      final userSnap = await transaction.get(userDocRef);
+      if (!userSnap.exists) throw Exception('User not found.');
+
+      final userData = userSnap.data() as Map<String, dynamic>;
+      final currentPoints = (userData['points'] ?? 0) is int
+          ? userData['points'] as int
+          : (userData['points'] as num?)?.toInt() ?? 0;
+
+      if (currentPoints < points) {
+        throw Exception(
+          'Insufficient points. You have $currentPoints pts, but this order requires $points pts.',
+        );
+      }
+
+      final Map<String, int> deductions = {}; // rewardId -> total quantity to subtract
 
       for (final entry in orders.entries) {
-        final productId = entry.key;
+        final rewardId = entry.key;
         final qtyOrdered = entry.value;
 
-        final product = allProducts.firstWhere(
-          (p) => p.id == productId,
-          orElse: () => throw Exception('Product $productId not found.'),
+        final reward = allRewards.firstWhere(
+          (p) => p.id == rewardId,
+          orElse: () => throw Exception('Reward $rewardId not found.'),
         );
 
-        if (product.type == ListingType.promo && product.linkedProductId != null) {
-          // Promo: deduct (qty * factor) from linked base product
-          final factor = product.promoQuantity ?? 1;
-          deductions[product.linkedProductId!] = (deductions[product.linkedProductId!] ?? 0) + (qtyOrdered * factor);
-        } else if (product.type == ListingType.discount && product.linkedProductId != null) {
-          // Linked Discount: deduct from base product
-          deductions[product.linkedProductId!] = (deductions[product.linkedProductId!] ?? 0) + qtyOrdered;
-        } else if (product.type == ListingType.bundle && product.bundleItems != null) {
+        if (reward.type == ListingType.promo && reward.linkedRewardId != null) {
+          // Promo: deduct (qty * factor) from linked base reward
+          final factor = reward.promoQuantity ?? 1;
+          deductions[reward.linkedRewardId!] = (deductions[reward.linkedRewardId!] ?? 0) + (qtyOrdered * factor);
+        } else if (reward.type == ListingType.discount && reward.linkedRewardId != null) {
+          // Linked Discount: deduct from base reward
+          deductions[reward.linkedRewardId!] = (deductions[reward.linkedRewardId!] ?? 0) + qtyOrdered;
+        } else if (reward.type == ListingType.bundle && reward.bundleItems != null) {
           // Bundle: deduct 1 of each component per bundle unit
-          for (final itemName in product.bundleItems!) {
-            final component = allProducts.firstWhere(
-              (p) => p.name == itemName && (p.type == ListingType.regular || (p.type == ListingType.discount && p.linkedProductId == null)),
+          for (final itemName in reward.bundleItems!) {
+            final component = allRewards.firstWhere(
+              (p) => p.name == itemName && (p.type == ListingType.regular || (p.type == ListingType.discount && p.linkedRewardId == null)),
               orElse: () => throw Exception('Bundle component "$itemName" not found.'),
             );
             deductions[component.id] = (deductions[component.id] ?? 0) + qtyOrdered;
           }
         } else {
           // Regular or non-linked: deduct from itself
-          deductions[product.id] = (deductions[product.id] ?? 0) + qtyOrdered;
+          deductions[reward.id] = (deductions[reward.id] ?? 0) + qtyOrdered;
         }
       }
 
@@ -73,7 +89,7 @@ class OrderService {
       final List<String> targetIds = deductions.keys.toList();
       
       for (final id in targetIds) {
-        final doc = await transaction.get(_db.collection('products').doc(id));
+        final doc = await transaction.get(_db.collection('rewards').doc(id));
         if (!doc.exists) throw Exception('Stock item $id not found.');
         targetDocs.add(doc);
       }
@@ -98,9 +114,9 @@ class OrderService {
         transaction.update(doc.reference, {'stock': currentStock - amountToDeduct});
       }
 
-      // Create the order document
+      // Finally, create the order document and deduct user points
       transaction.set(orderRef, {
-        'organizerId': OrganizerId,
+        'organizerId': organizerId,
         'userId': userId,
         'orders': orders,
         'points': points,
@@ -108,6 +124,8 @@ class OrderService {
         'timestamp': FieldValue.serverTimestamp(),
         'orderNumber': orderNumber,
       });
+
+      transaction.update(userDocRef, {'points': currentPoints - points});
     });
 
     return orderRef.id;
@@ -135,12 +153,12 @@ class OrderService {
 
     final String organizerId = orderData['organizerId'];
     
-    // Fetch all products for this Organizer to resolve what to restore
-    final allProductsSnap = await _db.collection('products')
+    // Fetch all rewards for this Organizer to resolve what to restore
+    final allRewardsSnap = await _db.collection('rewards')
         .where('organizerId', isEqualTo: organizerId)
         .get();
-    final allProducts = allProductsSnap.docs
-        .map((doc) => ProductModel.fromMap(doc.data(), doc.id))
+    final allRewards = allRewardsSnap.docs
+        .map((doc) => RewardModel.fromMap(doc.data(), doc.id))
         .toList();
 
     await _db.runTransaction((transaction) async {
@@ -161,29 +179,29 @@ class OrderService {
       final Map<String, int> additions = {};
 
       for (final entry in ordersMap.entries) {
-        final productId = entry.key;
+        final rewardId = entry.key;
         final qtyOrdered = entry.value;
 
-        final product = allProducts.firstWhere(
-          (p) => p.id == productId,
-          orElse: () => throw Exception('Product $productId not found.'),
+        final reward = allRewards.firstWhere(
+          (p) => p.id == rewardId,
+          orElse: () => throw Exception('Reward $rewardId not found.'),
         );
 
-        if (product.type == ListingType.promo && product.linkedProductId != null) {
-          final factor = product.promoQuantity ?? 1;
-          additions[product.linkedProductId!] = (additions[product.linkedProductId!] ?? 0) + (qtyOrdered * factor);
-        } else if (product.type == ListingType.discount && product.linkedProductId != null) {
-          additions[product.linkedProductId!] = (additions[product.linkedProductId!] ?? 0) + qtyOrdered;
-        } else if (product.type == ListingType.bundle && product.bundleItems != null) {
-          for (final itemName in product.bundleItems!) {
-            final component = allProducts.firstWhere(
-              (p) => p.name == itemName && (p.type == ListingType.regular || (p.type == ListingType.discount && p.linkedProductId == null)),
+        if (reward.type == ListingType.promo && reward.linkedRewardId != null) {
+          final factor = reward.promoQuantity ?? 1;
+          additions[reward.linkedRewardId!] = (additions[reward.linkedRewardId!] ?? 0) + (qtyOrdered * factor);
+        } else if (reward.type == ListingType.discount && reward.linkedRewardId != null) {
+          additions[reward.linkedRewardId!] = (additions[reward.linkedRewardId!] ?? 0) + qtyOrdered;
+        } else if (reward.type == ListingType.bundle && reward.bundleItems != null) {
+          for (final itemName in reward.bundleItems!) {
+            final component = allRewards.firstWhere(
+              (p) => p.name == itemName && (p.type == ListingType.regular || (p.type == ListingType.discount && p.linkedRewardId == null)),
               orElse: () => throw Exception('Bundle component "$itemName" not found.'),
             );
             additions[component.id] = (additions[component.id] ?? 0) + qtyOrdered;
           }
         } else {
-          additions[product.id] = (additions[product.id] ?? 0) + qtyOrdered;
+          additions[reward.id] = (additions[reward.id] ?? 0) + qtyOrdered;
         }
       }
 
@@ -192,7 +210,7 @@ class OrderService {
       final List<String> targetIds = additions.keys.toList();
       
       for (final id in targetIds) {
-        final doc = await transaction.get(_db.collection('products').doc(id));
+        final doc = await transaction.get(_db.collection('rewards').doc(id));
         targetDocs.add(doc);
       }
 
@@ -212,8 +230,21 @@ class OrderService {
         transaction.update(doc.reference, {'stock': currentStock + amountToAdd});
       }
 
-      // Finally, update order status
+      // Finally, update order status and restore points
       transaction.update(txOrderDoc.reference, {'orderStatus': status.name});
+
+      final userDocRef = _db.collection('users').doc(txOrderData['userId']);
+      final userSnap = await transaction.get(userDocRef);
+      if (userSnap.exists) {
+        final userData = userSnap.data() as Map<String, dynamic>;
+        final currentPoints = (userData['points'] ?? 0) is int
+            ? userData['points'] as int
+            : (userData['points'] as num?)?.toInt() ?? 0;
+        final orderPoints = (txOrderData['points'] ?? 0) is int
+            ? txOrderData['points'] as int
+            : (txOrderData['points'] as num?)?.toInt() ?? 0;
+        transaction.update(userDocRef, {'points': currentPoints + orderPoints});
+      }
     });
   }
 
@@ -260,25 +291,25 @@ class OrderService {
 
   // ─── Enrichment ──────────────────────────────────────────────────────────────
 
-  /// Fetches product details for every productId inside [order.orders] and
+  /// Fetches reward details for every rewardId inside [order.orders] and
   /// returns the order with an enriched [items] list.
   Future<OrderModel> enrichOrder(OrderModel order) async {
     final List<OrderItemModel> items = [];
 
     for (final entry in order.orders.entries) {
-      final productId = entry.key;
+      final rewardId = entry.key;
       final qty = entry.value;
 
-      final doc = await _db.collection('products').doc(productId).get();
+      final doc = await _db.collection('rewards').doc(rewardId).get();
       if (doc.exists) {
-        final product = ProductModel.fromMap(doc.data()!, doc.id);
+        final reward = RewardModel.fromMap(doc.data()!, doc.id);
         items.add(
           OrderItemModel(
-            productId: productId,
-            name: product.name,
-            imageUrl: product.imageUrl,
+            rewardId: rewardId,
+            name: reward.name,
+            imageUrl: reward.imageUrl,
             quantity: qty,
-            points: product.points,
+            points: reward.points,
           ),
         );
       }

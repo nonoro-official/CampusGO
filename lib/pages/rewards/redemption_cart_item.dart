@@ -197,7 +197,7 @@ class CartItemScreen extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            // Product Section
+            // Reward Section
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(

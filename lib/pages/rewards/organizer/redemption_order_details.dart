@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusgo/models/redemption_order_model.dart';
@@ -40,10 +41,10 @@ class OrderDetails extends ConsumerWidget {
         final bool isReady = status == OrderStatus.readyForPickup;
 
         // Grand Total from DB
-        final double total = enriched.points;
-        const double serviceFee = 10.0;
+        final int total = enriched.points;
+        const int serviceFee = kServiceFeePoints;
         // Subtotal is (Grand Total - Fee)
-        final double subtotal = (total - serviceFee).clamp(0, double.infinity);
+        final int subtotal = math.max(0, total - serviceFee);
         final int qty = enriched.totalQty;
 
         return Scaffold(
@@ -61,7 +62,7 @@ class OrderDetails extends ConsumerWidget {
               children: [
                 Expanded(
                   child: Text(
-                    'Total: ${total.toStringAsFixed(2)} pts',
+                    'Total: $total pts',
                     style: textTheme.titleMedium?.copyWith(color: primaryColor),
                   ),
                 ),
@@ -143,7 +144,7 @@ class OrderDetails extends ConsumerWidget {
                             ),
                             const SizedBox(height: 6),
                             Text(
-                              '${total.toStringAsFixed(2)} pts',
+                              '${total} pts',
                               style: textTheme.titleSmall?.copyWith(
                                 color: primaryColor,
                               ),
@@ -188,13 +189,13 @@ class OrderDetails extends ConsumerWidget {
                       _buildRow(
                         context,
                         'Subtotal',
-                        '${subtotal.toStringAsFixed(2)} pts',
+                        '${subtotal} pts',
                       ),
                       const SizedBox(height: 10),
                       _buildRow(
                         context,
                         'Service Fee',
-                        '${serviceFee.toStringAsFixed(2)} pts',
+                        '${serviceFee} pts',
                       ),
                       const SizedBox(height: 10),
                       _buildRow(context, 'Campus Pickup', 'Free'),
@@ -202,7 +203,7 @@ class OrderDetails extends ConsumerWidget {
                       _buildRow(
                         context,
                         'Total Payment',
-                        '${total.toStringAsFixed(2)} pts',
+                        '${total} pts',
                         isTotal: true,
                       ),
                     ],
@@ -245,7 +246,7 @@ class OrderDetails extends ConsumerWidget {
     OrderModel enriched,
     bool isProcessing,
     bool isReady,
-    double total,
+    int total,
   ) {
     if (isProcessing) {
       ModalContainer.popup(
@@ -273,7 +274,7 @@ class OrderDetails extends ConsumerWidget {
         child: _ConfirmModal(
           title: 'Complete Order',
           body:
-              'Confirm that the customer has paid ${total.toStringAsFixed(2)} pts and picked up the items?',
+              'Confirm that the customer has paid $total pts and picked up the items?',
           confirmLabel: 'Complete Order',
           onConfirm: () async {
             Navigator.pop(context); // close modal
@@ -451,7 +452,7 @@ class OrderItems extends StatelessWidget {
                 Text('Qty: ${item.quantity}', style: textTheme.bodySmall),
                 const SizedBox(height: 6),
                 Text(
-                  '${item.total.toStringAsFixed(2)} pts',
+                  '${item.total} pts',
                   style: textTheme.titleSmall?.copyWith(color: primaryColor),
                 ),
               ],

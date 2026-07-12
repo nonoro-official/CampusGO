@@ -4,40 +4,41 @@ import 'package:campusgo/widgets/top_bar.dart';
 import '../../models/reward_item_model.dart';
 import '../../models/enums.dart';
 import '../../providers/cart_provider.dart';
-import '../../providers/product_provider.dart';
+import '../../providers/reward_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../models/redemption_order_model.dart';
 
-class ProductDetailScreen extends ConsumerStatefulWidget {
-  final dynamic product;
+class RewardDetailScreen extends ConsumerStatefulWidget {
+  final dynamic reward;
 
-  const ProductDetailScreen({super.key, required this.product});
+  const RewardDetailScreen({super.key, required this.reward});
 
   @override
-  ConsumerState<ProductDetailScreen> createState() =>
-      _ProductDetailScreenState();
+  ConsumerState<RewardDetailScreen> createState() =>
+      _RewardDetailScreenState();
 }
 
-class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
+class _RewardDetailScreenState extends ConsumerState<RewardDetailScreen> {
   int quantity = 1;
 
   @override
   Widget build(BuildContext context) {
-    final initialProduct = widget.product as ProductModel;
+    final initialReward = widget.reward as RewardModel;
     
-    // Watch the product stream to get real-time stock updates
-    final productsAsync = ref.watch(organizerProductsProvider(initialProduct.organizerId));
+    // Watch the reward stream to get real-time stock updates
+    final rewardsAsync = ref.watch(organizerRewardsProvider(initialReward.organizerId));
     
-    return productsAsync.when(
-      loading: () => _buildScaffold(context, initialProduct),
-      error: (e, _) => _buildScaffold(context, initialProduct),
-      data: (products) {
-        final product = products.firstWhere(
-          (p) => p.id == initialProduct.id,
-          orElse: () => initialProduct,
+    return rewardsAsync.when(
+      loading: () => _buildScaffold(context, initialReward),
+      error: (e, _) => _buildScaffold(context, initialReward),
+      data: (rewards) {
+        final reward = rewards.firstWhere(
+          (p) => p.id == initialReward.id,
+          orElse: () => initialReward,
         );
         
         // Calculate effective stock if it's a promo, discount, or bundle
-        final effectiveStock = product.calculateEffectiveStock(products);
+        final effectiveStock = reward.calculateEffectiveStock(rewards);
         
         // Adjust quantity if it exceeds current stock
         if (quantity > effectiveStock && effectiveStock > 0) {
@@ -46,22 +47,26 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
           quantity = 0;
         }
 
-        return _buildScaffold(context, product, effectiveStock: effectiveStock);
+        return _buildScaffold(context, reward, effectiveStock: effectiveStock);
       },
     );
   }
 
-  Widget _buildScaffold(BuildContext context, ProductModel product, {int? effectiveStock}) {
+  Widget _buildScaffold(BuildContext context, RewardModel reward, {int? effectiveStock}) {
     final textTheme = Theme.of(context).textTheme;
     final primaryColor = Theme.of(context).primaryColor;
+    final user = ref.watch(currentUserProvider);
     
-    final displayStock = effectiveStock ?? product.stock;
+    final displayStock = effectiveStock ?? reward.stock;
     final isOutOfStock = displayStock <= 0;
     final isLowStock = displayStock > 0 && displayStock <= 9;
+    
+    final totalPoints = (reward.points * quantity) + kServiceFeePoints;
+    final hasEnoughPoints = user != null && user.points >= totalPoints;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
-      appBar: TopBar(title: "Product", dark: true, showBack: true),
+      appBar: TopBar(title: "Reward", dark: true, showBack: true),
       body: Column(
         children: [
           /// PRODUCT IMAGE
@@ -83,8 +88,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                   height: 260,
                   width: double.infinity,
                   color: Colors.grey.shade200,
-                  child: product.imageUrl != null
-                      ? Image.network(product.imageUrl!, fit: BoxFit.cover)
+                  child: reward.imageUrl != null
+                      ? Image.network(reward.imageUrl!, fit: BoxFit.cover)
                       : const Icon(Icons.image, size: 80, color: Colors.grey),
                 ),
               ),
@@ -124,7 +129,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Expanded(
-                          child: Text(product.name, style: textTheme.titleLarge),
+                          child: Text(reward.name, style: textTheme.titleLarge),
                         ),
                         if (isOutOfStock)
                           Container(
@@ -179,23 +184,23 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                     Row(
                       children: [
                         Text(
-                          "${product.points.toStringAsFixed(2)} pts",
+                          "${reward.points} pts",
                           style: textTheme.titleMedium?.copyWith(
                             color: primaryColor,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        if (product.originalPoints != null && product.originalPoints! > product.points) ...[
+                        if (reward.originalPoints != null && reward.originalPoints! > reward.points) ...[
                           const SizedBox(width: 10),
                           Text(
-                            "${product.originalPoints!.toStringAsFixed(2)} pts",
+                            "${reward.originalPoints} pts",
                             style: textTheme.bodyMedium?.copyWith(
                               color: Colors.grey,
                               decoration: TextDecoration.lineThrough,
                             ),
                           ),
                           const SizedBox(width: 8),
-                          if (product.discountPercentage != null)
+                          if (reward.discountPercentage != null)
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
@@ -203,7 +208,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
-                                "-${product.discountPercentage!.toStringAsFixed(0)}%",
+                                "-${reward.discountPercentage!.toStringAsFixed(0)}%",
                                 style: TextStyle(
                                   color: Colors.red.shade900,
                                   fontSize: 12,
@@ -215,12 +220,27 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                       ],
                     ),
 
-                    if (product.categories.isNotEmpty) ...[
+                    if (user != null) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        "Your Points: ${user.points} pts",
+                        style: textTheme.bodySmall?.copyWith(
+                          color: hasEnoughPoints ? Colors.green : Colors.red,
+                        ),
+                      ),
+                      if (!hasEnoughPoints)
+                        Text(
+                          "Need ${totalPoints - user.points} more pts (+$kServiceFeePoints pts fee)",
+                          style: textTheme.labelSmall?.copyWith(color: Colors.red),
+                        ),
+                    ],
+
+                    if (reward.categories.isNotEmpty) ...[
                       const SizedBox(height: 12),
                       Wrap(
                         spacing: 8,
                         runSpacing: 8,
-                        children: product.categories.map((cat) => Container(
+                        children: reward.categories.map((cat) => Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
                             color: Colors.grey.shade100,
@@ -240,8 +260,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                     Text("Description", style: textTheme.titleSmall),
                     const SizedBox(height: 6),
                     Text(
-                      product.description.isNotEmpty
-                          ? product.description
+                      reward.description.isNotEmpty
+                          ? reward.description
                           : "No description available.",
                       style: textTheme.bodyMedium,
                     ),
@@ -249,13 +269,13 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                     const SizedBox(height: 20),
 
                     /// ADDITIONAL INFO
-                    if (product.sku.isNotEmpty || product.supplier.isNotEmpty) ...[
-                      Text("Product Details", style: textTheme.titleSmall),
+                    if (reward.sku.isNotEmpty || reward.supplier.isNotEmpty) ...[
+                      Text("Reward Details", style: textTheme.titleSmall),
                       const SizedBox(height: 10),
-                      if (product.sku.isNotEmpty)
-                        _detailRow("SKU", product.sku),
-                      if (product.supplier.isNotEmpty)
-                        _detailRow("Supplier", product.supplier),
+                      if (reward.sku.isNotEmpty)
+                        _detailRow("SKU", reward.sku),
+                      if (reward.supplier.isNotEmpty)
+                        _detailRow("Supplier", reward.supplier),
                       const SizedBox(height: 20),
                     ],
 
@@ -331,8 +351,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                               await ref
                                   .read(cartNotifierProvider.notifier)
                                   .addToCart(
-                                    organizerId: product.organizerId,
-                                    product: product,
+                                    organizerId: reward.organizerId,
+                                    reward: reward,
                                     quantity: quantity,
                                   );
 
@@ -342,7 +362,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                 ).showSnackBar(
                                   SnackBar(
                                     content: Text(
-                                      '${product.name} x$quantity added to cart!',
+                                      '${reward.name} x$quantity added to cart!',
                                     ),
                                   ),
                                 );
@@ -367,7 +387,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: isOutOfStock
+                      onPressed: (isOutOfStock || !hasEnoughPoints)
                           ? null
                           : () async {
                               // Show confirmation dialog
@@ -376,8 +396,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                 builder: (ctx) => AlertDialog(
                                   title: const Text('Buy Now'),
                                   content: Text(
-                                    'Place order for ${product.name} x$quantity '
-                                    'totalling ${(product.points * quantity).toStringAsFixed(2)} pts?',
+                                    'Place order for ${reward.name} x$quantity '
+                                    'totalling $totalPoints pts (includes $kServiceFeePoints pts fee)?',
                                   ),
                                   actions: [
                                     TextButton(
@@ -398,8 +418,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                               
                               try {
                                 await ref.read(cartNotifierProvider.notifier).buyNow(
-                                  organizerId: product.organizerId,
-                                  product: product,
+                                  organizerId: reward.organizerId,
+                                  reward: reward,
                                   quantity: quantity,
                                 );
                                 

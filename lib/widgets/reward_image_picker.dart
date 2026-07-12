@@ -3,21 +3,21 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
-class ProductImagePicker extends StatefulWidget {
+class RewardImagePicker extends StatefulWidget {
   final String? initialImageUrl;
   final Function(File) onImagePicked;
 
-  const ProductImagePicker({
+  const RewardImagePicker({
     super.key,
     this.initialImageUrl,
     required this.onImagePicked,
   });
 
   @override
-  State<ProductImagePicker> createState() => _ProductImagePickerState();
+  State<RewardImagePicker> createState() => _RewardImagePickerState();
 }
 
-class _ProductImagePickerState extends State<ProductImagePicker> {
+class _RewardImagePickerState extends State<RewardImagePicker> {
   File? _selectedFile;
 
   Future<void> _pickImage() async {
@@ -65,7 +65,7 @@ class _ProductImagePickerState extends State<ProductImagePicker> {
         Icon(Icons.add_a_photo_outlined, size: 40, color: Colors.grey.shade400),
         const SizedBox(height: 8),
         Text(
-          "Add Product Photo",
+          "Add Reward Photo",
           style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
         ),
       ],

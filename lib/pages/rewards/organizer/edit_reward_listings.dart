@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../models/reward_item_model.dart';
 import '../../../models/enums.dart';
-import '../../../providers/product_provider.dart';
+import '../../../providers/reward_provider.dart';
 import '../../../widgets/modal.dart';
-import '../../../widgets/product_image_picker.dart';
+import '../../../widgets/reward_image_picker.dart';
 
 String _generateAutoSku() {
   final random = Random();
@@ -22,19 +22,19 @@ void showListingModal({
   required BuildContext context,
   required WidgetRef ref,
   required String organizerId,
-  ProductModel? product,
+  RewardModel? reward,
 }) {
   ModalContainer.show(
     context: context,
-    child: _ListingModal(organizerId: organizerId, product: product),
+    child: _ListingModal(organizerId: organizerId, reward: reward),
   );
 }
 
 class _ListingModal extends ConsumerStatefulWidget {
   final String organizerId;
-  final ProductModel? product;
+  final RewardModel? reward;
 
-  const _ListingModal({required this.organizerId, this.product});
+  const _ListingModal({required this.organizerId, this.reward});
 
   @override
   ConsumerState<_ListingModal> createState() => _ListingModalState();
@@ -54,7 +54,7 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
 
   late ListingType selectedType;
   late bool isAvailable;
-  String? selectedBaseProductId;
+  String? selectedBaseRewardId;
   late List<String> selectedBundleItems;
   File? selectedImage;
   bool isLoading = false;
@@ -64,41 +64,41 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
   @override
   void initState() {
     super.initState();
-    final product = widget.product;
+    final reward = widget.reward;
 
-    nameController = TextEditingController(text: product?.name);
+    nameController = TextEditingController(text: reward?.name);
 
     // If it's a discounted item, pointsController stores the Original Points
-    final initialBasePoints = (product?.originalPoints != null)
-        ? product!.originalPoints
-        : (product?.points ?? 0.0);
+    final initialBasePoints = (reward?.originalPoints != null)
+        ? reward!.originalPoints
+        : (reward?.points ?? 0.0);
 
     pointsController = TextEditingController(text: initialBasePoints.toString());
     salePointsController = TextEditingController(
-      text: product?.points.toString() ?? "0.0",
+      text: reward?.points.toString() ?? "0.0",
     );
-    descriptionController = TextEditingController(text: product?.description);
+    descriptionController = TextEditingController(text: reward?.description);
     stockController = TextEditingController(
-      text: product?.stock.toString() ?? "0",
+      text: reward?.stock.toString() ?? "0",
     );
     skuController = TextEditingController(
-      text: product?.sku ?? (product == null ? _generateAutoSku() : ''),
+      text: reward?.sku ?? (reward == null ? _generateAutoSku() : ''),
     );
     categoryController = TextEditingController();
-    supplierController = TextEditingController(text: product?.supplier);
+    supplierController = TextEditingController(text: reward?.supplier);
 
     promoQuantityController = TextEditingController(
-      text: product?.promoQuantity?.toString() ?? "1",
+      text: reward?.promoQuantity?.toString() ?? "1",
     );
     discountPercentController = TextEditingController(
-      text: product?.discountPercentage?.toString() ?? "0",
+      text: reward?.discountPercentage?.toString() ?? "0",
     );
 
-    selectedType = product?.type ?? ListingType.bundle;
-    isAvailable = product?.isAvailable ?? true;
-    selectedBaseProductId = product?.linkedProductId;
-    selectedBundleItems = product?.bundleItems ?? [];
-    categories = product != null ? List<String>.from(product.categories) : [];
+    selectedType = reward?.type ?? ListingType.bundle;
+    isAvailable = reward?.isAvailable ?? true;
+    selectedBaseRewardId = reward?.linkedRewardId;
+    selectedBundleItems = reward?.bundleItems ?? [];
+    categories = reward != null ? List<String>.from(reward.categories) : [];
   }
 
   @override
@@ -117,15 +117,15 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
   }
 
   void _syncSalePoints() {
-    final p = double.tryParse(pointsController.text) ?? 0.0;
+    final p = int.tryParse(pointsController.text) ?? 0;
     final d = double.tryParse(discountPercentController.text) ?? 0.0;
-    final s = p * (1 - (d / 100));
-    salePointsController.text = s.toStringAsFixed(2);
+    final s = (p * (1 - (d / 100))).round();
+    salePointsController.text = s.toString();
   }
 
   void _syncDiscountPercent() {
-    final s = double.tryParse(salePointsController.text) ?? 0.0;
-    final p = double.tryParse(pointsController.text) ?? 0.0;
+    final s = int.tryParse(salePointsController.text) ?? 0;
+    final p = int.tryParse(pointsController.text) ?? 0;
     if (p > 0) {
       final d = (1 - (s / p)) * 100;
       discountPercentController.text = d.toStringAsFixed(0);
@@ -164,7 +164,7 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
         title: const Text('Delete Category Suggestion'),
         content: Text(
           isExisting
-              ? 'This will remove "$cat" from ALL your products in the database. Continue?'
+              ? 'This will remove "$cat" from ALL your rewards in the database. Continue?'
               : 'Remove "$cat" from your temporary suggestions?',
         ),
         actions: [
@@ -185,7 +185,7 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
       if (isExisting) {
         try {
           await ref
-              .read(productServiceProvider)
+              .read(rewardServiceProvider)
               .removeCategoryFromOrganizer(widget.organizerId, cat);
           if (mounted) {
             setState(() {
@@ -193,7 +193,7 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
             });
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Category "$cat" removed from all products'),
+                content: Text('Category "$cat" removed from all rewards'),
               ),
             );
           }
@@ -213,10 +213,10 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
     }
   }
 
-  void _updateBundleSuppliers(List<ProductModel> baseProducts) {
+  void _updateBundleSuppliers(List<RewardModel> baseRewards) {
     final uniqueSuppliers = <String>{};
     for (var itemName in selectedBundleItems) {
-      final item = baseProducts.firstWhereOrNull((bp) => bp.name == itemName);
+      final item = baseRewards.firstWhereOrNull((bp) => bp.name == itemName);
       if (item != null && item.supplier.isNotEmpty) {
         uniqueSuppliers.add(item.supplier);
       }
@@ -224,19 +224,19 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
     supplierController.text = uniqueSuppliers.join(', ');
   }
 
-  void updateStockDisplay(List<ProductModel> baseProducts) {
+  void updateStockDisplay(List<RewardModel> baseRewards) {
     final bool isBaseItem =
-        widget.product != null &&
-        (widget.product!.type == ListingType.regular ||
-            (widget.product!.type == ListingType.discount &&
-                widget.product!.linkedProductId == null));
+        widget.reward != null &&
+        (widget.reward!.type == ListingType.regular ||
+            (widget.reward!.type == ListingType.discount &&
+                widget.reward!.linkedRewardId == null));
 
     if (isBaseItem || selectedType == ListingType.regular) return;
 
     if (selectedType == ListingType.promo ||
         selectedType == ListingType.discount) {
-      final base = baseProducts.firstWhereOrNull(
-        (p) => p.id == selectedBaseProductId,
+      final base = baseRewards.firstWhereOrNull(
+        (p) => p.id == selectedBaseRewardId,
       );
       if (base == null) {
         stockController.text = "0";
@@ -254,7 +254,7 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
       } else {
         int minStock = -1;
         for (var name in selectedBundleItems) {
-          final item = baseProducts.firstWhereOrNull((p) => p.name == name);
+          final item = baseRewards.firstWhereOrNull((p) => p.name == name);
           final s = item?.stock ?? 0;
           if (minStock == -1 || s < minStock) minStock = s;
         }
@@ -266,9 +266,9 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
   Future<void> _handleSave() async {
     final name = nameController.text.trim();
     final originalPointsStr = pointsController.text.trim();
-    final originalPointsVal = double.tryParse(originalPointsStr) ?? 0.0;
+    final originalPointsVal = int.tryParse(originalPointsStr) ?? 0;
     final sellingPointsVal =
-        double.tryParse(salePointsController.text.trim()) ?? originalPointsVal;
+        int.tryParse(salePointsController.text.trim()) ?? originalPointsVal;
     final discountPct = double.tryParse(discountPercentController.text) ?? 0.0;
 
     final stock = int.tryParse(stockController.text) ?? 0;
@@ -296,11 +296,11 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
     setState(() => isLoading = true);
 
     try {
-      final productService = ref.read(productServiceProvider);
-      String? imageUrl = widget.product?.imageUrl;
+      final rewardService = ref.read(rewardServiceProvider);
+      String? imageUrl = widget.reward?.imageUrl;
 
       if (selectedImage != null) {
-        imageUrl = await productService.uploadProductImage(selectedImage!);
+        imageUrl = await rewardService.uploadRewardImage(selectedImage!);
       }
 
       bool isDiscountable =
@@ -308,8 +308,8 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
           selectedType == ListingType.promo ||
           selectedType == ListingType.bundle;
 
-      double finalPoints = isDiscountable ? sellingPointsVal : originalPointsVal;
-      double? savedOriginalPoints;
+      int finalPoints = isDiscountable ? sellingPointsVal : originalPointsVal;
+      int? savedOriginalPoints;
       double? savedDiscountPercentage;
 
       if (isDiscountable) {
@@ -323,8 +323,8 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
 
       int? promoQty = int.tryParse(promoQuantityController.text);
 
-      if (widget.product == null) {
-        await productService.createOrganizerProduct(
+      if (widget.reward == null) {
+        await rewardService.createOrganizerReward(
           organizerId: widget.organizerId,
           name: name,
           description: description,
@@ -339,14 +339,14 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
           promoQuantity: promoQty,
           originalPoints: savedOriginalPoints,
           discountPercentage: savedDiscountPercentage,
-          linkedProductId: selectedBaseProductId,
+          linkedRewardId: selectedBaseRewardId,
           sku: sku,
           categories: categories,
           supplier: supplier,
         );
       } else {
-        await productService.updateOrganizerProduct(
-          productId: widget.product!.id,
+        await rewardService.updateOrganizerReward(
+          rewardId: widget.reward!.id,
           OrganizerId: widget.organizerId,
           name: name,
           description: description,
@@ -361,7 +361,7 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
           promoQuantity: promoQty,
           originalPoints: savedOriginalPoints,
           discountPercentage: savedDiscountPercentage,
-          linkedProductId: selectedBaseProductId,
+          linkedRewardId: selectedBaseRewardId,
           sku: sku,
           categories: categories,
           supplier: supplier,
@@ -385,33 +385,33 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
     final textTheme = Theme.of(context).textTheme;
     final primaryColor = Theme.of(context).primaryColor;
 
-    final productsAsync = ref.watch(organizerProductsProvider(widget.organizerId));
-    final allProducts = productsAsync.value ?? [];
+    final rewardsAsync = ref.watch(organizerRewardsProvider(widget.organizerId));
+    final allRewards = rewardsAsync.value ?? [];
 
-    final baseProducts = allProducts
+    final baseRewards = allRewards
         .where(
           (p) =>
               p.type == ListingType.regular ||
-              (p.type == ListingType.discount && p.linkedProductId == null),
+              (p.type == ListingType.discount && p.linkedRewardId == null),
         )
         .toList();
 
-    final currentBaseProduct = baseProducts.firstWhereOrNull(
-      (p) => p.id == selectedBaseProductId,
+    final currentBaseReward = baseRewards.firstWhereOrNull(
+      (p) => p.id == selectedBaseRewardId,
     );
 
     final bool isBaseItem =
-        widget.product != null &&
-        (widget.product!.type == ListingType.regular ||
-            (widget.product!.type == ListingType.discount &&
-                widget.product!.linkedProductId == null));
+        widget.reward != null &&
+        (widget.reward!.type == ListingType.regular ||
+            (widget.reward!.type == ListingType.discount &&
+                widget.reward!.linkedRewardId == null));
 
     bool isDiscountable =
         selectedType == ListingType.discount ||
         selectedType == ListingType.promo ||
         selectedType == ListingType.bundle;
 
-    final existingCategories = allProducts
+    final existingCategories = allRewards
         .expand((p) => p.categories)
         .toSet()
         .toList();
@@ -429,15 +429,15 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            widget.product == null
+            widget.reward == null
                 ? "New Special Listing"
                 : (isBaseItem ? "Manage Listing" : "Edit Listing"),
             style: textTheme.titleLarge,
           ),
           const SizedBox(height: 20),
 
-          ProductImagePicker(
-            initialImageUrl: widget.product?.imageUrl,
+          RewardImagePicker(
+            initialImageUrl: widget.reward?.imageUrl,
             onImagePicked: (file) => setState(() => selectedImage = file),
           ),
           const SizedBox(height: 20),
@@ -500,7 +500,7 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
               items: ListingType.values
                   .where((t) {
                     if (t == ListingType.regular) return false;
-                    if (widget.product == null && t == ListingType.discount) {
+                    if (widget.reward == null && t == ListingType.discount) {
                       return false;
                     }
                     return true;
@@ -516,7 +516,7 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
                 if (val != null) {
                   setState(() {
                     selectedType = val;
-                    if (widget.product == null) {
+                    if (widget.reward == null) {
                       nameController.clear();
                       pointsController.clear();
                       salePointsController.clear();
@@ -525,12 +525,12 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
                       categoryController.clear();
                       supplierController.clear();
                       selectedBundleItems = [];
-                      selectedBaseProductId = null;
+                      selectedBaseRewardId = null;
                       discountPercentController.text = "0";
                       categories = [];
                       localSuggestions = [];
                     }
-                    updateStockDisplay(baseProducts);
+                    updateStockDisplay(baseRewards);
                   });
                 }
               },
@@ -582,21 +582,21 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
           if (!isBaseItem &&
               (selectedType == ListingType.promo ||
                   (selectedType == ListingType.discount &&
-                      widget.product == null))) ...[
-            DropdownButtonFormField<ProductModel>(
-              initialValue: currentBaseProduct,
+                      widget.reward == null))) ...[
+            DropdownButtonFormField<RewardModel>(
+              initialValue: currentBaseReward,
               decoration: const InputDecoration(
-                labelText: 'Select Base Product',
+                labelText: 'Select Base Reward',
                 border: OutlineInputBorder(),
               ),
-              hint: const Text("Choose an existing product"),
-              items: baseProducts.map((p) {
+              hint: const Text("Choose an existing reward"),
+              items: baseRewards.map((p) {
                 return DropdownMenuItem(value: p, child: Text(p.name));
               }).toList(),
               onChanged: (p) {
                 if (p != null) {
                   setState(() {
-                    selectedBaseProductId = p.id;
+                    selectedBaseRewardId = p.id;
                     nameController.text = p.name;
                     descriptionController.text = p.description;
 
@@ -614,7 +614,7 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
                     skuController.text = p.sku;
                     categories = List<String>.from(p.categories);
                     supplierController.text = p.supplier;
-                    updateStockDisplay(baseProducts);
+                    updateStockDisplay(baseRewards);
                   });
                 }
               },
@@ -627,7 +627,7 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
             const SizedBox(height: 5),
             Wrap(
               spacing: 8,
-              children: baseProducts.map((p) {
+              children: baseRewards.map((p) {
                 final isSelected = selectedBundleItems.contains(p.name);
                 return FilterChip(
                   label: Text(p.name),
@@ -651,7 +651,7 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
 
                         double total = 0;
                         for (var itemName in selectedBundleItems) {
-                          final item = baseProducts.firstWhereOrNull(
+                          final item = baseRewards.firstWhereOrNull(
                             (bp) => bp.name == itemName,
                           );
                           if (item != null) {
@@ -661,8 +661,8 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
                         pointsController.text = total.toString();
                         _syncSalePoints();
                       }
-                      _updateBundleSuppliers(baseProducts);
-                      updateStockDisplay(baseProducts);
+                      _updateBundleSuppliers(baseRewards);
+                      updateStockDisplay(baseRewards);
                     });
                   },
                 );
@@ -821,15 +821,15 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
               onChanged: (val) {
                 setState(() {
                   final qty = int.tryParse(val) ?? 1;
-                  final base = baseProducts.firstWhereOrNull(
-                    (p) => p.id == selectedBaseProductId,
+                  final base = baseRewards.firstWhereOrNull(
+                    (p) => p.id == selectedBaseRewardId,
                   );
                   if (base != null) {
                     pointsController.text =
                         ((base.originalPoints ?? base.points) * qty).toString();
                     _syncSalePoints();
                   }
-                  updateStockDisplay(baseProducts);
+                  updateStockDisplay(baseRewards);
                 });
               },
             ),
@@ -857,7 +857,7 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : Text(
-                      widget.product == null
+                      widget.reward == null
                           ? 'Create Listing'
                           : 'Save Changes',
                     ),

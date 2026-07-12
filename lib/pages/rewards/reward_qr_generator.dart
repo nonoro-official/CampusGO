@@ -11,7 +11,7 @@ import 'package:gal/gal.dart';
 import 'dart:io';
 import '../../../widgets/top_bar.dart';
 import '../../../providers/auth_provider.dart';
-import '../../../providers/product_provider.dart';
+import '../../../providers/reward_provider.dart';
 import '../../../models/reward_item_model.dart';
 import '../../../models/enums.dart';
 
@@ -39,17 +39,17 @@ class QRGeneratorScreen extends ConsumerWidget {
               child: Align(
                 alignment: Alignment.center,
                 child: Text(
-                  "Select Product to Reward",
+                  "Select Reward to Reward",
                   style: textTheme.titleLarge,
                 ),
               ),
             ),
             const SizedBox(height: 10),
 
-            // Display the list of products/rewards
+            // Display the list of rewards/rewards
             if (user?.organizerId != null)
               Expanded(
-                child: RewardProductList(organizerId: user!.organizerId!),
+                child: RewardRewardList(organizerId: user!.organizerId!),
               )
             else
               const Expanded(
@@ -62,28 +62,28 @@ class QRGeneratorScreen extends ConsumerWidget {
   }
 }
 
-class RewardProductList extends ConsumerWidget {
+class RewardRewardList extends ConsumerWidget {
   final String organizerId;
 
-  const RewardProductList({super.key, required this.organizerId});
+  const RewardRewardList({super.key, required this.organizerId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final productsAsync = ref.watch(organizerProductsProvider(organizerId));
+    final rewardsAsync = ref.watch(organizerRewardsProvider(organizerId));
 
-    return productsAsync.when(
-      data: (products) {
-        if (products.isEmpty) {
-          return const Center(child: Text("No products found"));
+    return rewardsAsync.when(
+      data: (rewards) {
+        if (rewards.isEmpty) {
+          return const Center(child: Text("No rewards found"));
         }
 
         return ListView.builder(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-          itemCount: products.length,
+          itemCount: rewards.length,
           itemBuilder: (context, index) {
             return RewardSelectionCard(
-              product: products[index],
-              allProducts: products,
+              reward: rewards[index],
+              allRewards: rewards,
             );
           },
         );
@@ -95,23 +95,23 @@ class RewardProductList extends ConsumerWidget {
 }
 
 class RewardSelectionCard extends StatelessWidget {
-  final ProductModel product;
-  final List<ProductModel> allProducts;
+  final RewardModel reward;
+  final List<RewardModel> allRewards;
 
   const RewardSelectionCard({
     super.key,
-    required this.product,
-    required this.allProducts,
+    required this.reward,
+    required this.allRewards,
   });
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final primaryColor = Theme.of(context).primaryColor;
-    final int stock = product.calculateEffectiveStock(allProducts);
+    final int stock = reward.calculateEffectiveStock(allRewards);
 
     return GestureDetector(
-      onTap: stock > 0 ? () => _showQRGenerationDialog(context, product, allProducts) : null,
+      onTap: stock > 0 ? () => _showQRGenerationDialog(context, reward, allRewards) : null,
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
         padding: const EdgeInsets.all(18),
@@ -132,10 +132,10 @@ class RewardSelectionCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(product.name, style: textTheme.titleMedium),
+                        Text(reward.name, style: textTheme.titleMedium),
                         const SizedBox(height: 4),
                         Text(
-                          "${product.points.toStringAsFixed(0)} Points • $stock in stock",
+                          "${reward.points.toStringAsFixed(0)} Points • $stock in stock",
                           style: textTheme.bodyMedium?.copyWith(
                             color: stock > 0 ? primaryColor : Colors.red,
                             fontWeight: FontWeight.bold,
@@ -157,10 +157,10 @@ class RewardSelectionCard extends StatelessWidget {
                   ),
                 ],
               ),
-              if (product.description.isNotEmpty) ...[
+              if (reward.description.isNotEmpty) ...[
                 const SizedBox(height: 12),
                 Text(
-                  product.description,
+                  reward.description,
                   style: textTheme.bodySmall,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -173,11 +173,11 @@ class RewardSelectionCard extends StatelessWidget {
     );
   }
 
-  void _showQRGenerationDialog(BuildContext context, ProductModel product, List<ProductModel> allProducts) {
+  void _showQRGenerationDialog(BuildContext context, RewardModel reward, List<RewardModel> allRewards) {
     showDialog(
       context: context,
       builder: (context) {
-        return QRGenerationModal(product: product, allProducts: allProducts);
+        return QRGenerationModal(reward: reward, allRewards: allRewards);
       },
     );
   }
@@ -187,13 +187,13 @@ class RewardSelectionCard extends StatelessWidget {
 // State Modal for handling Quantity -> QR Generation
 // ----------------------------------------------------------------------
 class QRGenerationModal extends StatefulWidget {
-  final ProductModel product;
-  final List<ProductModel> allProducts;
+  final RewardModel reward;
+  final List<RewardModel> allRewards;
 
   const QRGenerationModal({
     super.key,
-    required this.product,
-    required this.allProducts,
+    required this.reward,
+    required this.allRewards,
   });
 
   @override
@@ -262,10 +262,10 @@ class _QRGenerationModalState extends State<QRGenerationModal> {
       _isLoading = true;
     });
 
-    final int totalPoints = (widget.product.points * quantity).toInt();
+    final int totalPoints = (widget.reward.points * quantity).toInt();
 
-    // Create a highly distinct identifier token combining Product ID + Current Epoch Timestamp
-    final String uniqueId = "${widget.product.id}_${DateTime.now().millisecondsSinceEpoch}";
+    // Create a highly distinct identifier token combining Reward ID + Current Epoch Timestamp
+    final String uniqueId = "${widget.reward.id}_${DateTime.now().millisecondsSinceEpoch}";
 
     try {
       // 1. Log the token signature in the decentralized db cloud ledger
@@ -273,9 +273,9 @@ class _QRGenerationModalState extends State<QRGenerationModal> {
         'points': totalPoints,
         'status': 'unused', // Key parameter checked by Part 1 scanner
         'createdAt': FieldValue.serverTimestamp(),
-        'productId': widget.product.id,
-        'productName': widget.product.name,
-        'organizerId': widget.product.organizerId,
+        'rewardId': widget.reward.id,
+        'rewardName': widget.reward.name,
+        'organizerId': widget.reward.organizerId,
         'quantity': quantity,
       });
 
@@ -312,7 +312,7 @@ class _QRGenerationModalState extends State<QRGenerationModal> {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final primaryColor = Theme.of(context).primaryColor;
-    final totalPoints = (widget.product.points * quantity).toInt();
+    final totalPoints = (widget.reward.points * quantity).toInt();
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -326,13 +326,13 @@ class _QRGenerationModalState extends State<QRGenerationModal> {
   }
 
   Widget _buildConfigurationView(TextTheme textTheme, Color primaryColor, int totalPoints) {
-    final int maxStock = widget.product.calculateEffectiveStock(widget.allProducts);
+    final int maxStock = widget.reward.calculateEffectiveStock(widget.allRewards);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          "Reward: ${widget.product.name}",
+          "Reward: ${widget.reward.name}",
           style: textTheme.titleLarge,
           textAlign: TextAlign.center,
         ),
@@ -418,7 +418,7 @@ class _QRGenerationModalState extends State<QRGenerationModal> {
         ),
         const SizedBox(height: 8),
         Text(
-          "$totalPoints Pts for $quantity x ${widget.product.name}",
+          "$totalPoints Pts for $quantity x ${widget.reward.name}",
           style: textTheme.bodyMedium?.copyWith(color: Colors.grey.shade700),
           textAlign: TextAlign.center,
         ),

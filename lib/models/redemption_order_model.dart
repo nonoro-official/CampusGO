@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+const int kServiceFeePoints = 10;
+
 // ─── Order Status ────────────────────────────────────────────────────────────
 
 enum OrderStatus {
@@ -32,16 +34,16 @@ enum OrderStatus {
 // ─── Order Item ──────────────────────────────────────────────────────────────
 
 class OrderItemModel {
-  final String productId;
+  final String rewardId;
   final String name;
   final String? imageUrl;
   final int quantity;
-  final double points;
+  final int points;
 
-  double get total => points * quantity;
+  int get total => points * quantity;
 
   OrderItemModel({
-    required this.productId,
+    required this.rewardId,
     required this.name,
     this.imageUrl,
     required this.quantity,
@@ -50,19 +52,21 @@ class OrderItemModel {
 
   factory OrderItemModel.fromMap(Map<String, dynamic> data) {
     return OrderItemModel(
-      productId: data['productId'] ?? '',
+      rewardId: data['rewardId'] ?? '',
       name: data['name'] ?? '',
       imageUrl: data['imageUrl'],
       quantity: (data['quantity'] ?? 1) is int
           ? data['quantity']
           : int.tryParse(data['quantity']?.toString() ?? '1') ?? 1,
-      points: (data['points'] ?? 0).toDouble(),
+      points: (data['points'] ?? 0) is int
+          ? data['points'] as int
+          : (data['points'] as num?)?.toInt() ?? 0,
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
-      'productId': productId,
+      'rewardId': rewardId,
       'name': name,
       'imageUrl': imageUrl,
       'quantity': quantity,
@@ -78,14 +82,14 @@ class OrderModel {
   final String organizerId;
   final String userId;
 
-  /// Map of productId → quantity  (the raw "orders" field from Firestore)
+  /// Map of rewardId → quantity  (the raw "orders" field from Firestore)
   final Map<String, int> orders;
 
   final DateTime timestamp;
   final OrderStatus orderStatus;
-  final double points; // total points (subtotal + fees)
+  final int points; // total points (subtotal + fees)
 
-  /// Enriched line-items — populated client-side after fetching product names
+  /// Enriched line-items — populated client-side after fetching reward names
   final List<OrderItemModel> items;
 
   final String? orderNumber; // human-friendly order number (optional)
@@ -105,7 +109,7 @@ class OrderModel {
   });
 
   factory OrderModel.fromMap(Map<String, dynamic> data, String id) {
-    // Parse the orders map (productId → quantity)
+    // Parse the orders map (rewardId → quantity)
     final rawOrders = data['orders'];
     final Map<String, int> ordersMap = {};
     if (rawOrders is Map) {
@@ -144,7 +148,9 @@ class OrderModel {
       orders: ordersMap,
       timestamp: ts,
       orderStatus: OrderStatus.fromString(data['orderStatus'] ?? ''),
-      points: (data['points'] ?? 0).toDouble(),
+      points: (data['points'] ?? 0) is int
+          ? data['points'] as int
+          : (data['points'] as num?)?.toInt() ?? 0,
       items: items,
       orderNumber: data['orderNumber'],
     );

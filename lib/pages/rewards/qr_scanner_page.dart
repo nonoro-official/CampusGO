@@ -103,8 +103,8 @@ class _MockQRScannerPageState extends ConsumerState<MockQRScannerPage>
           return;
         }
 
-        final String productName = ledgerDoc.data()?['productName'] ?? 'Reward Item';
-        final String? productId = ledgerDoc.data()?['productId'];
+        final String rewardName = ledgerDoc.data()?['rewardName'] ?? 'Reward Item';
+        final String? rewardId = ledgerDoc.data()?['rewardId'];
         final int quantity = ledgerDoc.data()?['quantity'] ?? 1;
 
         // --- VALIDATION PASSED: EXECUTE SECURE CLAIM ---
@@ -127,19 +127,19 @@ class _MockQRScannerPageState extends ConsumerState<MockQRScannerPage>
             SetOptions(merge: true),
           );
 
-          // 3. Decrement product stock via transaction
-          if (productId != null) {
+          // 3. Decrement reward stock via transaction
+          if (rewardId != null) {
             try {
               await FirebaseFirestore.instance.runTransaction((transaction) async {
-                final productRef = FirebaseFirestore.instance.collection('products').doc(productId);
-                final productDoc = await transaction.get(productRef);
+                final rewardRef = FirebaseFirestore.instance.collection('rewards').doc(rewardId);
+                final rewardDoc = await transaction.get(rewardRef);
 
-                if (productDoc.exists) {
-                  final data = productDoc.data()!;
-                  final String? linkedId = data['linkedProductId'];
+                if (rewardDoc.exists) {
+                  final data = rewardDoc.data()!;
+                  final String? linkedId = data['linkedRewardId'];
                   final String type = data['type'] ?? 'regular';
                   
-                  String targetId = productId;
+                  String targetId = rewardId;
                   int decrementAmount = quantity;
 
                   // Promo logic: 1 QR might represent a bundle of items (e.g., "Buy 1 Get 1")
@@ -147,17 +147,17 @@ class _MockQRScannerPageState extends ConsumerState<MockQRScannerPage>
                     decrementAmount = quantity * (data['promoQuantity'] as int);
                   }
 
-                  // Linked logic: Deduct from the source of truth (base product)
+                  // Linked logic: Deduct from the source of truth (base reward)
                   if (linkedId != null && linkedId.isNotEmpty) {
                      targetId = linkedId;
                   }
 
-                  final targetRef = FirebaseFirestore.instance.collection('products').doc(targetId);
+                  final targetRef = FirebaseFirestore.instance.collection('rewards').doc(targetId);
                   
                   // If target is different, we must get it too within the transaction
                   DocumentSnapshot? targetDoc;
-                  if (targetId == productId) {
-                    targetDoc = productDoc;
+                  if (targetId == rewardId) {
+                    targetDoc = rewardDoc;
                   } else {
                     targetDoc = await transaction.get(targetRef);
                   }
@@ -179,7 +179,7 @@ class _MockQRScannerPageState extends ConsumerState<MockQRScannerPage>
 
         // 4. Complete UX Flow
         if (mounted) {
-          _showSuccessDialog(productName, pointsToAward);
+          _showSuccessDialog(rewardName, pointsToAward);
         }
       } else {
         // Valid JSON format but wrong app signatures
@@ -211,7 +211,7 @@ class _MockQRScannerPageState extends ConsumerState<MockQRScannerPage>
     });
   }
 
-  void _showSuccessDialog(String productName, int points) {
+  void _showSuccessDialog(String rewardName, int points) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -234,7 +234,7 @@ class _MockQRScannerPageState extends ConsumerState<MockQRScannerPage>
             ),
             const SizedBox(height: 8),
             Text(
-              productName,
+              rewardName,
               textAlign: TextAlign.center,
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
             ),

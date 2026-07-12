@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../widgets/search.dart';
 import '../../widgets/top_bar.dart';
-import '../../widgets/product_image.dart';
+import '../../widgets/reward_image.dart';
 import '../../widgets/filter.dart';
 import '../../providers/organizer_provider.dart';
-import '../../providers/product_provider.dart';
+import '../../providers/reward_provider.dart';
 import '../../models/organizer_model.dart';
-import '../../utils/organizer_utils.dart';
+// import '../../utils/organizer_utils.dart';
 import '../organizer/organizer_profile_screen.dart';
 
 class ShopsScreen extends ConsumerStatefulWidget {
@@ -150,7 +150,7 @@ class OrganizerCard extends ConsumerWidget {
     final primaryColor = Theme.of(context).primaryColor;
     final textTheme = Theme.of(context).textTheme;
 
-    final productsAsync = ref.watch(organizerProductsProvider(organizer.id));
+    final rewardsAsync = ref.watch(organizerRewardsProvider(organizer.id));
     final hasImage =
         organizer.imageUrl != null && organizer.imageUrl!.isNotEmpty;
 
@@ -210,9 +210,9 @@ class OrganizerCard extends ConsumerWidget {
 
             const SizedBox(height: 15),
 
-            productsAsync.when(
-              data: (products) {
-                if (products.isEmpty) {
+            rewardsAsync.when(
+              data: (rewards) {
+                if (rewards.isEmpty) {
                   return Text(
                     organizer.description ??
                         "No description available.",
@@ -226,19 +226,19 @@ class OrganizerCard extends ConsumerWidget {
                   height: 90,
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
-                    itemCount: products.length,
+                    itemCount: rewards.length,
                     separatorBuilder: (_, __) =>
                         const SizedBox(width: 10),
                     itemBuilder: (context, index) {
-                      final product = products[index];
+                      final reward = rewards[index];
 
                       final effectiveStock =
-                          product.calculateEffectiveStock(products);
+                          reward.calculateEffectiveStock(rewards);
 
                       return Stack(
                         children: [
-                          ProductImage(
-                            imageUrl: product.imageUrl,
+                          RewardImage(
+                            imageUrl: reward.imageUrl,
                             width: 90,
                             height: 90,
                             borderRadius: 12,

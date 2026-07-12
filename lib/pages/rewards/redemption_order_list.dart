@@ -196,7 +196,7 @@ class _OrderCard extends StatelessWidget {
                   Text('Qty: ${order.totalQty}', style: textTheme.bodySmall),
                   const SizedBox(height: 6),
                   Text(
-                    '${order.points.toStringAsFixed(2)} pts',
+                    '${order.points} pts',
                     style: textTheme.titleSmall?.copyWith(color: primaryColor),
                   ),
                 ],

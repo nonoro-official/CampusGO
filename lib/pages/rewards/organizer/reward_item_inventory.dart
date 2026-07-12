@@ -3,9 +3,9 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../widgets/modal.dart';
-import '../../../widgets/product_image_picker.dart';
+import '../../../widgets/reward_image_picker.dart';
 import '../../../providers/auth_provider.dart';
-import '../../../providers/product_provider.dart';
+import '../../../providers/reward_provider.dart';
 import '../../../services/reward_service.dart';
 import '../../../models/reward_item_model.dart';
 import '../../../models/enums.dart';
@@ -103,7 +103,7 @@ class _AddItemModalState extends ConsumerState<_AddItemModal> {
         title: const Text('Delete Category Suggestion'),
         content: Text(
           isExisting
-              ? 'This will remove "$cat" from ALL your products. Continue?'
+              ? 'This will remove "$cat" from ALL your rewards. Continue?'
               : 'Remove "$cat" from your temporary suggestions?',
         ),
         actions: [
@@ -124,7 +124,7 @@ class _AddItemModalState extends ConsumerState<_AddItemModal> {
       if (isExisting) {
         try {
           await ref
-              .read(productServiceProvider)
+              .read(rewardServiceProvider)
               .removeCategoryFromOrganizer(organizerId, cat);
           if (mounted) {
             setState(() {
@@ -132,7 +132,7 @@ class _AddItemModalState extends ConsumerState<_AddItemModal> {
             });
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Category "$cat" removed from all products'),
+                content: Text('Category "$cat" removed from all rewards'),
               ),
             );
           }
@@ -180,7 +180,7 @@ class _AddItemModalState extends ConsumerState<_AddItemModal> {
               ),
             ),
             const SizedBox(height: 20),
-            ProductImagePicker(
+            RewardImagePicker(
               onImagePicked: (file) => setState(() => selectedImage = file),
             ),
             const SizedBox(height: 20),
@@ -355,7 +355,7 @@ class _AddItemModalState extends ConsumerState<_AddItemModal> {
       return;
     }
 
-    final points = double.tryParse(pointsStr) ?? 0.0;
+    final points = int.tryParse(pointsStr) ?? 0;
     if (points <= 0) {
       _showError('Points must be greater than 0');
       return;
@@ -370,14 +370,14 @@ class _AddItemModalState extends ConsumerState<_AddItemModal> {
         return;
       }
 
-      final productService = ref.read(productServiceProvider);
+      final rewardService = ref.read(rewardServiceProvider);
       String? imageUrl;
 
       if (selectedImage != null) {
-        imageUrl = await productService.uploadProductImage(selectedImage!);
+        imageUrl = await rewardService.uploadRewardImage(selectedImage!);
       }
 
-      await productService.createOrganizerProduct(
+      await rewardService.createOrganizerReward(
         organizerId: user!.organizerId!,
         name: name,
         description: description,
@@ -410,23 +410,23 @@ class _AddItemModalState extends ConsumerState<_AddItemModal> {
   }
 }
 
-void editItemInventory(BuildContext context, ProductModel product) {
+void editItemInventory(BuildContext context, RewardModel reward) {
   ModalContainer.show(
     context: context,
-    child: _EditItemModal(product: product),
+    child: _EditItemModal(reward: reward),
   );
 }
 
 Future<void> deleteItemInventory(
   BuildContext context,
-  ProductModel product,
+  RewardModel reward,
 ) async {
   final confirmed = await showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('Delete Product'),
+      title: const Text('Delete Reward'),
       content: Text(
-        'Are you sure you want to delete "${product.name}"? This action cannot be undone.',
+        'Are you sure you want to delete "${reward.name}"? This action cannot be undone.',
       ),
       actions: [
         TextButton(
@@ -444,8 +444,8 @@ Future<void> deleteItemInventory(
 
   if (confirmed == true) {
     try {
-      final productService = ProductService();
-      await productService.deleteOrganizerProduct(product.id);
+      final rewardService = RewardService();
+      await rewardService.deleteOrganizerReward(reward.id);
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -456,16 +456,16 @@ Future<void> deleteItemInventory(
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Error deleting product: $e')));
+        ).showSnackBar(SnackBar(content: Text('Error deleting reward: $e')));
       }
     }
   }
 }
 
 class _EditItemModal extends ConsumerStatefulWidget {
-  final ProductModel product;
+  final RewardModel reward;
 
-  const _EditItemModal({required this.product});
+  const _EditItemModal({required this.reward});
 
   @override
   ConsumerState<_EditItemModal> createState() => _EditItemModalState();
@@ -487,21 +487,21 @@ class _EditItemModalState extends ConsumerState<_EditItemModal> {
   @override
   void initState() {
     super.initState();
-    nameController = TextEditingController(text: widget.product.name);
+    nameController = TextEditingController(text: widget.reward.name);
     descriptionController = TextEditingController(
-      text: widget.product.description,
+      text: widget.reward.description,
     );
 
-    final basePoints = widget.product.originalPoints ?? widget.product.points;
+    final basePoints = widget.reward.originalPoints ?? widget.reward.points;
     pointsController = TextEditingController(text: basePoints.toString());
     stockController = TextEditingController(
-      text: widget.product.stock.toString()  ?? "0",
+      text: widget.reward.stock.toString()  ?? "0",
     );
 
-    skuController = TextEditingController(text: widget.product.sku);
+    skuController = TextEditingController(text: widget.reward.sku);
     categoryController = TextEditingController();
-    supplierController = TextEditingController(text: widget.product.supplier);
-    categories = List<String>.from(widget.product.categories);
+    supplierController = TextEditingController(text: widget.reward.supplier);
+    categories = List<String>.from(widget.reward.categories);
   }
 
   @override
@@ -552,7 +552,7 @@ class _EditItemModalState extends ConsumerState<_EditItemModal> {
         title: const Text('Delete Category Suggestion'),
         content: Text(
           isExisting
-              ? 'This will remove "$cat" from ALL your products in the database. Continue?'
+              ? 'This will remove "$cat" from ALL your rewards in the database. Continue?'
               : 'Remove "$cat" from your temporary suggestions?',
         ),
         actions: [
@@ -573,7 +573,7 @@ class _EditItemModalState extends ConsumerState<_EditItemModal> {
       if (isExisting) {
         try {
           await ref
-              .read(productServiceProvider)
+              .read(rewardServiceProvider)
               .removeCategoryFromOrganizer(organizerId, cat);
           if (mounted) {
             setState(() {
@@ -581,7 +581,7 @@ class _EditItemModalState extends ConsumerState<_EditItemModal> {
             });
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Category "$cat" removed from all products'),
+                content: Text('Category "$cat" removed from all rewards'),
               ),
             );
           }
@@ -619,7 +619,7 @@ class _EditItemModalState extends ConsumerState<_EditItemModal> {
       return;
     }
 
-    final basePoints = double.tryParse(pointsStr);
+    final basePoints = int.tryParse(pointsStr);
     if (basePoints == null || basePoints <= 0) {
       _showError('Please enter valid points');
       return;
@@ -628,31 +628,31 @@ class _EditItemModalState extends ConsumerState<_EditItemModal> {
     setState(() => isLoading = true);
 
     try {
-      final productService = ref.read(productServiceProvider);
+      final rewardService = ref.read(rewardServiceProvider);
 
-      String? imageUrl = widget.product.imageUrl;
+      String? imageUrl = widget.reward.imageUrl;
       if (selectedImage != null) {
-        imageUrl = await productService.uploadProductImage(selectedImage!);
+        imageUrl = await rewardService.uploadRewardImage(selectedImage!);
       }
 
-      double finalPoints = basePoints;
-      double? originalPoints;
-      if (widget.product.type == ListingType.discount &&
-          widget.product.discountPercentage != null) {
+      int finalPoints = basePoints;
+      int? originalPoints;
+      if (widget.reward.type == ListingType.discount &&
+          widget.reward.discountPercentage != null) {
         originalPoints = basePoints;
         finalPoints =
-            basePoints * (1 - (widget.product.discountPercentage! / 100));
+            (basePoints * (1 - (widget.reward.discountPercentage! / 100))).round();
       }
 
-      await productService.updateOrganizerProduct(
-        productId: widget.product.id,
-        OrganizerId: widget.product.organizerId,
+      await rewardService.updateOrganizerReward(
+        rewardId: widget.reward.id,
+        OrganizerId: widget.reward.organizerId,
         name: name,
         description: descriptionController.text.trim(),
         points: finalPoints,
         stock: stock,
         originalPoints: originalPoints,
-        discountPercentage: widget.product.discountPercentage,
+        discountPercentage: widget.reward.discountPercentage,
         imageUrl: imageUrl,
         sku: sku,
         categories: categories,
@@ -662,11 +662,11 @@ class _EditItemModalState extends ConsumerState<_EditItemModal> {
       if (mounted) {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Product updated successfully')),
+          const SnackBar(content: Text('Reward updated successfully')),
         );
       }
     } catch (e) {
-      _showError('Error updating product: $e');
+      _showError('Error updating reward: $e');
     } finally {
       if (mounted) setState(() => isLoading = false);
     }
@@ -681,8 +681,8 @@ class _EditItemModalState extends ConsumerState<_EditItemModal> {
 
   @override
   Widget build(BuildContext context) {
-    final isDiscounted = widget.product.type == ListingType.discount;
-    final organizerId = widget.product.organizerId;
+    final isDiscounted = widget.reward.type == ListingType.discount;
+    final organizerId = widget.reward.organizerId;
     final existingCategoriesAsync = ref.watch(
       organizerCategoriesProvider(organizerId),
     );
@@ -707,8 +707,8 @@ class _EditItemModalState extends ConsumerState<_EditItemModal> {
               ),
             ),
             const SizedBox(height: 20),
-            ProductImagePicker(
-              initialImageUrl: widget.product.imageUrl,
+            RewardImagePicker(
+              initialImageUrl: widget.reward.imageUrl,
               onImagePicked: (file) => setState(() => selectedImage = file),
             ),
             const SizedBox(height: 20),
@@ -729,7 +729,7 @@ class _EditItemModalState extends ConsumerState<_EditItemModal> {
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        "This item is currently discounted (${widget.product.discountPercentage?.toStringAsFixed(0)}%). You can manage the discount in the Listings tab.",
+                        "This item is currently discounted (${widget.reward.discountPercentage?.toStringAsFixed(0)}%). You can manage the discount in the Listings tab.",
                         style: TextStyle(
                           color: Colors.red.shade900,
                           fontSize: 12,

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusgo/models/redemption_order_model.dart';
 import 'package:campusgo/providers/order_provider.dart';
-import 'package:campusgo/providers/product_provider.dart';
+import 'package:campusgo/providers/reward_provider.dart';
 
 class AnalyticsGrid extends ConsumerWidget {
   final String organizerId;
@@ -15,8 +15,8 @@ class AnalyticsGrid extends ConsumerWidget {
     final textTheme = theme.textTheme;
     final primaryColor = theme.primaryColor;
 
-    final ordersAsync = ref.watch(OrganizerOrdersProvider);
-    final productsAsync = ref.watch(organizerProductsProvider(organizerId));
+    final ordersAsync = ref.watch(organizerOrdersProvider);
+    final rewardsAsync = ref.watch(organizerRewardsProvider(organizerId));
 
     return ordersAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -42,17 +42,17 @@ class AnalyticsGrid extends ConsumerWidget {
               o.orderStatus == OrderStatus.readyForPickup,
         );
 
-        final revenue = completedOrders.fold<double>(
-          0.0,
+        final revenue = completedOrders.fold<int>(
+          0,
           (sum, o) => sum + o.points,
         );
 
-        final Map<String, int> productSales = {};
+        final Map<String, int> rewardSales = {};
 
         for (final order in completedOrders) {
-          order.orders.forEach((productId, qty) {
-            productSales.update(
-              productId,
+          order.orders.forEach((rewardId, qty) {
+            rewardSales.update(
+              rewardId,
               (value) => value + qty,
               ifAbsent: () => qty,
             );
@@ -62,31 +62,31 @@ class AnalyticsGrid extends ConsumerWidget {
         String? mostPopularId;
         String? leastPopularId;
 
-        if (productSales.isNotEmpty) {
-          final most = productSales.entries.reduce(
+        if (rewardSales.isNotEmpty) {
+          final most = rewardSales.entries.reduce(
             (a, b) => a.value > b.value ? a : b,
           );
 
           mostPopularId = most.key;
         }
 
-        return productsAsync.when(
+        return rewardsAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text('Error loading products')),
-          data: (products) {
-            final activeListings = products.where((product) {
-              final stock = product.calculateEffectiveStock(products);
+          error: (e, _) => Center(child: Text('Error loading rewards')),
+          data: (rewards) {
+            final activeListings = rewards.where((reward) {
+              final stock = reward.calculateEffectiveStock(rewards);
               return stock > 0;
             }).length;
 
-            final unsoldProducts = products
-                .where((p) => !productSales.containsKey(p.id))
+            final unsoldRewards = rewards
+                .where((p) => !rewardSales.containsKey(p.id))
                 .toList();
 
-            if (unsoldProducts.length == 1) {
-              leastPopularId = unsoldProducts.first.id;
-            } else if (unsoldProducts.isEmpty && productSales.isNotEmpty) {
-              final least = productSales.entries.reduce(
+            if (unsoldRewards.length == 1) {
+              leastPopularId = unsoldRewards.first.id;
+            } else if (unsoldRewards.isEmpty && rewardSales.isNotEmpty) {
+              final least = rewardSales.entries.reduce(
                 (a, b) => a.value < b.value ? a : b,
               );
               leastPopularId = least.key;
@@ -96,14 +96,14 @@ class AnalyticsGrid extends ConsumerWidget {
 
             String mostPopularName = mostPopularId == null
                 ? "No data"
-                : "Unknown Product";
+                : "Unknown Reward";
 
             String leastPopularName = leastPopularId == null
                 ? "No data"
-                : "Unknown Product";
+                : "Unknown Reward";
 
             if (mostPopularId != null) {
-              final match = products
+              final match = rewards
                   .where((p) => p.id == mostPopularId)
                   .toList();
               if (match.isNotEmpty) {
@@ -112,7 +112,7 @@ class AnalyticsGrid extends ConsumerWidget {
             }
 
             if (leastPopularId != null) {
-              final match = products
+              final match = rewards
                   .where((p) => p.id == leastPopularId)
                   .toList();
               if (match.isNotEmpty) {
@@ -123,43 +123,43 @@ class AnalyticsGrid extends ConsumerWidget {
             final analytics = [
               {
                 'label': 'Revenue',
-                'value': '${revenue.toStringAsFixed(2)} pts',
+                'value': '$revenue pts',
                 'icon': Icons.attach_money,
-                'isProduct': false,
+                'isReward': false,
               },
               {
                 'label': 'Total Sales',
                 'value': completedOrders.length.toString(),
                 'icon': Icons.trending_up,
-                'isProduct': false,
+                'isReward': false,
               },
               {
                 'label': 'Pending Orders',
                 'value': pendingOrders.length.toString(),
                 'icon': Icons.shopping_cart,
-                'isProduct': false,
+                'isReward': false,
               },
               {
                 'label': 'Active Listings',
                 'value': activeListings.toString(),
                 'icon': Icons.inventory_2_outlined,
-                'isProduct': false,
+                'isReward': false,
               },
               {
                 'label': 'Most Popular',
                 'value': mostPopularName,
                 'count': mostPopularId != null
-                    ? productSales[mostPopularId] ?? 0
+                    ? rewardSales[mostPopularId] ?? 0
                     : 0,
-                'isProduct': true,
+                'isReward': true,
               },
               {
                 'label': 'Least Popular',
                 'value': leastPopularName,
                 'count': leastPopularId != null
-                    ? productSales[leastPopularId] ?? 0
+                    ? rewardSales[leastPopularId] ?? 0
                     : 0,
-                'isProduct': true,
+                'isReward': true,
               },
             ];
 
@@ -175,7 +175,7 @@ class AnalyticsGrid extends ConsumerWidget {
               ),
               itemBuilder: (context, index) {
                 final item = analytics[index];
-                final bool isProduct = item['isProduct'] as bool;
+                final bool isReward = item['isReward'] as bool;
 
                 return Container(
                   padding: const EdgeInsets.all(16),
@@ -187,7 +187,7 @@ class AnalyticsGrid extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (isProduct) ...[
+                      if (isReward) ...[
                         Text(
                           '${item['count']} Sold',
                           style: textTheme.bodyMedium?.copyWith(

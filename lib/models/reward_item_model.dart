@@ -1,12 +1,12 @@
 import 'enums.dart';
 import 'package:collection/collection.dart';
 
-class ProductModel {
+class RewardModel {
   final String id;
   final String name;
   final String description;
   final String? imageUrl;
-  final double points;
+  final int points;
   final String organizerId;
   final int stock; 
   final ListingType type;
@@ -14,15 +14,15 @@ class ProductModel {
   
   final List<String>? bundleItems; 
   final int? promoQuantity;
-  final double? originalPoints;
+  final int? originalPoints;
   final double? discountPercentage;
-  final String? linkedProductId; 
+  final String? linkedRewardId; 
 
   final String sku;
   final List<String> categories;
   final String supplier;
 
-  ProductModel({
+  RewardModel({
     required this.id,
     required this.name,
     required this.description,
@@ -36,7 +36,7 @@ class ProductModel {
     this.promoQuantity,
     this.originalPoints,
     this.discountPercentage,
-    this.linkedProductId,
+    this.linkedRewardId,
     required this.sku,
     required this.categories,
     required this.supplier,
@@ -45,31 +45,31 @@ class ProductModel {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is ProductModel && runtimeType == other.runtimeType && id == other.id;
+      other is RewardModel && runtimeType == other.runtimeType && id == other.id;
 
   @override
   int get hashCode => id.hashCode;
 
-  /// Finds the "base" product that holds the physical stock for this listing.
-  ProductModel? findBaseProduct(List<ProductModel> allProducts) {
-    // A regular product is its own base.
+  /// Finds the "base" reward that holds the physical stock for this listing.
+  RewardModel? findBaseReward(List<RewardModel> allRewards) {
+    // A regular reward is its own base.
     if (type == ListingType.regular) return this;
 
     // 1. Try to find by explicit ID link
-    if (linkedProductId != null && linkedProductId!.isNotEmpty) {
-      final base = allProducts.firstWhereOrNull((p) => p.id == linkedProductId);
+    if (linkedRewardId != null && linkedRewardId!.isNotEmpty) {
+      final base = allRewards.firstWhereOrNull((p) => p.id == linkedRewardId);
       if (base != null) return base;
     }
 
     // 2. Try to find by Name (looking for a 'regular' listing that isn't itself)
-    return allProducts.firstWhereOrNull(
+    return allRewards.firstWhereOrNull(
       (p) => p.id != id && 
              p.name == name && 
-             (p.type == ListingType.regular || (p.type == ListingType.discount && p.linkedProductId == null)),
+             (p.type == ListingType.regular || (p.type == ListingType.discount && p.linkedRewardId == null)),
     );
   }
 
-  int calculateEffectiveStock(List<ProductModel> allProducts) {
+  int calculateEffectiveStock(List<RewardModel> allRewards) {
     if (!isAvailable) return 0;
     
     // 1. Bundle Logic: Stock is the minimum stock of its components.
@@ -77,8 +77,8 @@ class ProductModel {
       int minStock = -1;
       for (var itemName in bundleItems!) {
         // Look for the component (must be a regular item or unlinked discount)
-        final item = allProducts.firstWhereOrNull(
-          (p) => p.name == itemName && (p.type == ListingType.regular || (p.type == ListingType.discount && p.linkedProductId == null)),
+        final item = allRewards.firstWhereOrNull(
+          (p) => p.name == itemName && (p.type == ListingType.regular || (p.type == ListingType.discount && p.linkedRewardId == null)),
         );
         
         if (item == null || !item.isAvailable) return 0; 
@@ -91,7 +91,7 @@ class ProductModel {
     }
 
     // 2. Promo/Discount/Linked Logic
-    final baseItem = findBaseProduct(allProducts);
+    final baseItem = findBaseReward(allRewards);
     
     // If no base item is found (other than itself), return its own stock.
     if (baseItem == null || baseItem.id == id) {
@@ -109,7 +109,7 @@ class ProductModel {
     return baseItem.stock;
   }
 
-  factory ProductModel.fromMap(Map<String, dynamic> data, String id) {
+  factory RewardModel.fromMap(Map<String, dynamic> data, String id) {
     List<String> categories = [];
     if (data['categories'] != null) {
       categories = List<String>.from(data['categories']);
@@ -117,12 +117,14 @@ class ProductModel {
       categories = [data['category']];
     }
 
-    return ProductModel(
+    return RewardModel(
       id: id,
       name: data['name'] ?? '',
       description: data['description'] ?? '',
       imageUrl: data['imageUrl'],
-      points: (data['points'] ?? 0).toDouble(),
+      points: (data['points'] ?? 0) is int
+          ? data['points'] as int
+          : (data['points'] as num?)?.toInt() ?? 0,
       organizerId: data['organizerId'] ?? '',
       stock: (data['stock'] ?? 0) is int
           ? data['stock'] ?? 0
@@ -131,9 +133,9 @@ class ProductModel {
       isAvailable: data['isAvailable'] ?? true,
       bundleItems: data['bundleItems'] != null ? List<String>.from(data['bundleItems']) : null,
       promoQuantity: data['promoQuantity'],
-      originalPoints: data['originalPoints'] != null ? (data['originalPoints'] as num).toDouble() : null,
+      originalPoints: data['originalPoints'] != null ? (data['originalPoints'] as num).toInt() : null,
       discountPercentage: data['discountPercentage'] != null ? (data['discountPercentage'] as num).toDouble() : null,
-      linkedProductId: data['linkedProductId'],
+      linkedRewardId: data['linkedRewardId'],
       sku: data['sku'] ?? '',
       categories: categories,
       supplier: data['supplier'] ?? '',
@@ -154,7 +156,7 @@ class ProductModel {
       'promoQuantity': promoQuantity,
       'originalPoints': originalPoints,
       'discountPercentage': discountPercentage,
-      'linkedProductId': linkedProductId,
+      'linkedRewardId': linkedRewardId,
       'sku': sku,
       'categories': categories,
       'supplier': supplier,

@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/event_model.dart';
 import '../../services/event_service.dart';
 import '../../../providers/auth_provider.dart';
-import '../../widgets/product_image_picker.dart';
+import '../../widgets/reward_image_picker.dart';
 
 class AddEventScreen extends ConsumerStatefulWidget {
   const AddEventScreen({super.key});
@@ -96,7 +96,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
             child: ListView(
               padding: const EdgeInsets.all(24),
               children: [
-                ProductImagePicker(
+                RewardImagePicker(
                   onImagePicked: (file) => setState(() => _selectedImage = file),
                 ),
                 const SizedBox(height: 24),

@@ -90,16 +90,16 @@ enum ActiveStatus {
   String get toName => name[0].toUpperCase() + name.substring(1);
 }
 
-// Product Type
-enum ProductType {
+// Reward Type
+enum RewardType {
   walkIn,
   reservation;
 
   // Convert String from Firestore to Enum
-  static ProductType fromString(String productType) {
-    return ProductType.values.firstWhere(
-      (e) => e.name == productType.toLowerCase(),
-      orElse: () => ProductType.walkIn, // Fallback
+  static RewardType fromString(String rewardType) {
+    return RewardType.values.firstWhere(
+      (e) => e.name == rewardType.toLowerCase(),
+      orElse: () => RewardType.walkIn, // Fallback
     );
   }
 

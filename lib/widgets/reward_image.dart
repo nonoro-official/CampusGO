@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
-class ProductImage extends StatelessWidget {
+class RewardImage extends StatelessWidget {
   final String? imageUrl;
   final double? width;
   final double? height;
@@ -9,7 +9,7 @@ class ProductImage extends StatelessWidget {
   final BoxFit fit;
   final bool isAvailable;
 
-  const ProductImage({
+  const RewardImage({
     super.key,
     this.imageUrl,
     this.width,

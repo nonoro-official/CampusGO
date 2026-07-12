@@ -26,7 +26,7 @@ class _ReportOrganizerSheetState extends ConsumerState<ReportOrganizerSheet> {
   final reasons = [
     "Fake Organizer",
     "Scam / Fraud",
-    "Inappropriate Products",
+    "Inappropriate Rewards",
     "Harassment",
     "Other",
   ];

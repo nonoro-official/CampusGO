@@ -13,6 +13,7 @@ class UserModel {
   final String? organizerId;
   final String? imageUrl;
   final bool isOnline;
+  final int points;
 
   UserModel({
     required this.uid,
@@ -26,6 +27,7 @@ class UserModel {
     this.organizerId,
     this.imageUrl,
     this.isOnline = false,
+    this.points = 0,
   });
 
   // Convert Firestore Document to Model
@@ -44,6 +46,9 @@ class UserModel {
       organizerId: data['organizerId'],
       imageUrl: data['imageUrl'],
       isOnline: data['isOnline'] ?? false,
+      points: (data['points'] ?? 0) is int
+          ? data['points'] as int
+          : (data['points'] as num?)?.toInt() ?? 0,
     );
   }
 
@@ -60,6 +65,7 @@ class UserModel {
       'organizerId': organizerId,
       'imageUrl': imageUrl,
       'isOnline': isOnline,
+      'points': points,
     };
   }
 }

@@ -24,7 +24,7 @@ class _OrderListState extends ConsumerState<OrderList> {
     final textTheme = theme.textTheme;
     final primaryColor = theme.primaryColor;
 
-    final ordersAsync = ref.watch(OrganizerOrdersProvider);
+    final ordersAsync = ref.watch(organizerOrdersProvider);
 
     return Scaffold(
       appBar: TopBar(title: 'Incoming Orders', showBack: true),
@@ -159,7 +159,7 @@ class _OrderListState extends ConsumerState<OrderList> {
                                     ),
                                     const SizedBox(height: 6),
                                     Text(
-                                      '${order.points.toStringAsFixed(2)} pts',
+                                      '${order.points} pts',
                                       style: textTheme.titleSmall?.copyWith(
                                         color: primaryColor,
                                       ),

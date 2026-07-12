@@ -199,7 +199,7 @@ class AuthService {
   }
 
   Future<void> deleteAccount({required String password}) async {
-    // deletes organizer and products
+    // deletes organizer and rewards
     final user = _auth.currentUser;
 
     if (user == null || user.email == null) {
@@ -260,13 +260,13 @@ class AuthService {
         throw Exception("Organizer not found");
       }
 
-      final productsQuery = await _db
-          .collection('products')
+      final rewardsQuery = await _db
+          .collection('rewards')
           .where('organizerId', isEqualTo: organizerId)
           .get();
 
-      for (var productDoc in productsQuery.docs) {
-        await productDoc.reference.delete();
+      for (var rewardDoc in rewardsQuery.docs) {
+        await rewardDoc.reference.delete();
       }
 
       await docRef.delete();
