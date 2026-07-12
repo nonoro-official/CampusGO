@@ -35,15 +35,15 @@ class EventService {
         });
   }
 
-  Future<void> joinEvent(String eventId, String OrganizerId) async {
+  Future<void> joinEvent(String eventId, String organizerId) async {
     await _db.collection('events').doc(eventId).update({
-      'attendingOrganizerIds': FieldValue.arrayUnion([OrganizerId])
+      'attendingOrganizerIds': FieldValue.arrayUnion([organizerId])
     });
   }
 
-  Future<void> leaveEvent(String eventId, String OrganizerId) async {
+  Future<void> leaveEvent(String eventId, String organizerId) async {
     await _db.collection('events').doc(eventId).update({
-      'attendingOrganizerIds': FieldValue.arrayRemove([OrganizerId])
+      'attendingOrganizerIds': FieldValue.arrayRemove([organizerId])
     });
   }
 

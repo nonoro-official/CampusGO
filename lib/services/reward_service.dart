@@ -82,7 +82,7 @@ class RewardService {
   // Update an existing reward
   Future<void> updateOrganizerReward({
     required String rewardId,
-    required String OrganizerId,
+    required String organizerId,
     required String name,
     String? description,
     required int points,
@@ -138,7 +138,7 @@ class RewardService {
     });
   }
 
-  // Remove a category from all rewards of a Organizer
+  // Remove a category from all rewards of a organizer
   Future<void> removeCategoryFromOrganizer(String organizerId, String category) async {
     // We fetch all rewards for this organizer and filter in-memory to avoid requiring a composite index
     final query = _db.collection('rewards')
