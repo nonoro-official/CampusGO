@@ -347,7 +347,7 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
       } else {
         await rewardService.updateOrganizerReward(
           rewardId: widget.reward!.id,
-          OrganizerId: widget.organizerId,
+          organizerId: widget.organizerId,
           name: name,
           description: description,
           points: finalPoints,

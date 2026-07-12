@@ -49,7 +49,7 @@ class OrganizerShopCard extends ConsumerWidget {
       data: (organizer) {
         if (organizer == null) return const SizedBox.shrink();
 
-        final reviewsAsync = ref.watch(OrganizerReviewsProvider(organizer.id));
+        final reviewsAsync = ref.watch(organizerReviewsProvider(organizer.id));
         final hasImage =
             organizer.imageUrl != null && organizer.imageUrl!.isNotEmpty;
 

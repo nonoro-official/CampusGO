@@ -155,7 +155,7 @@ class _CartCardState extends ConsumerState<_CartCard> {
                   Consumer(
                     builder: (context, ref, child) {
                       final organizerAsync = ref.watch(
-                        OrganizerProvider(enriched.organizerId),
+                        organizerProvider(enriched.organizerId),
                       );
                       return organizerAsync.when(
                         data: (b) => Text(

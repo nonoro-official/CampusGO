@@ -646,7 +646,7 @@ class _EditItemModalState extends ConsumerState<_EditItemModal> {
 
       await rewardService.updateOrganizerReward(
         rewardId: widget.reward.id,
-        OrganizerId: widget.reward.organizerId,
+        organizerId: widget.reward.organizerId,
         name: name,
         description: descriptionController.text.trim(),
         points: finalPoints,

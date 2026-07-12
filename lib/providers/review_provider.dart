@@ -6,8 +6,8 @@ final reviewServiceProvider = Provider((ref) {
   return ReviewService();
 });
 
-final OrganizerReviewsProvider =
-    StreamProvider.family<List<ReviewModel>, String>((ref, OrganizerId) {
+final organizerReviewsProvider =
+    StreamProvider.family<List<ReviewModel>, String>((ref, organizerId) {
   final service = ref.watch(reviewServiceProvider);
-  return service.getReviews(OrganizerId);
+  return service.getReviews(organizerId);
 });

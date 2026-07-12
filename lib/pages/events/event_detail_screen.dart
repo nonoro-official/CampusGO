@@ -23,7 +23,7 @@ class EventDetailScreen extends ConsumerWidget {
     final isOrganizer = user?.role.name.toLowerCase() == 'organizer';
     final organizerId = user?.organizerId;
     final eventService = ref.watch(eventServiceProvider);
-    final organizerService = ref.watch(OrganizerServiceProvider);
+    final organizerService = ref.watch(organizerServiceProvider);
 
     return eventAsync.when(
       loading: () => Scaffold(

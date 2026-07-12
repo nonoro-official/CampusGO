@@ -122,7 +122,7 @@ class OrganizerProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Watch the live organizer data if we have it, otherwise fallback to the passed organizer object
-    final organizerStream = ref.watch(OrganizerProvider(organizer.id));
+    final organizerStream = ref.watch(organizerProvider(organizer.id));
     final currentOrganizer = organizerStream.value ?? organizer;
 
     final primaryColor = Theme.of(context).primaryColor;
@@ -130,7 +130,7 @@ class OrganizerProfileScreen extends ConsumerWidget {
     final currentUser = ref.watch(currentUserProvider);
     final isOwnerViewing = currentUser?.uid == currentOrganizer.ownerId;
 
-    final reviewsAsync = ref.watch(OrganizerReviewsProvider(currentOrganizer.id));
+    final reviewsAsync = ref.watch(organizerReviewsProvider(currentOrganizer.id));
     final hasImage = currentOrganizer.imageUrl != null && currentOrganizer.imageUrl!.isNotEmpty;
 
     return Scaffold(

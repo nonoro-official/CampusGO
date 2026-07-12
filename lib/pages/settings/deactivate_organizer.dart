@@ -6,20 +6,20 @@ import '../../../widgets/modal.dart';
 
 void closeOrganizer(BuildContext context, WidgetRef ref) {
   final passwordController = TextEditingController();
-  final OrganizerAsync = ref.watch(myOrganizerProvider);
+  final organizerAsync = ref.watch(myOrganizerProvider);
 
   ModalContainer.show(
     context: context,
     child: StatefulBuilder(
       builder: (context, setModalState) {
 
-        return OrganizerAsync.when(
+        return organizerAsync.when(
           loading: () =>
               const Scaffold(body: Center(child: CircularProgressIndicator())),
           error: (err, stack) =>
               Scaffold(body: Center(child: Text("Error: $err"))),
-          data: (Organizer) {
-            if (Organizer == null) {
+          data: (organizer) {
+            if (organizer == null) {
               return const Center(child: Text("No Organizer found"));
             }
 
@@ -46,7 +46,7 @@ void closeOrganizer(BuildContext context, WidgetRef ref) {
                         .read(authServiceProvider)
                         .deleteOrganizer(
                           password: password,
-                          organizerId: Organizer.id,
+                          organizerId: organizer.id,
                         );
 
                     if (context.mounted) {

@@ -25,19 +25,19 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final user = ref.watch(currentUserProvider);
-    final OrganizerAsync = ref.watch(myOrganizerProvider);
+    final organizerAsync = ref.watch(myOrganizerProvider);
 
-    return OrganizerAsync.when(
+    return organizerAsync.when(
       loading: () =>
           const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (err, stack) => Scaffold(body: Center(child: Text("Error: $err"))),
-      data: (Organizer) {
-        if (Organizer == null) return const SizedBox.shrink();
+      data: (organizer) {
+        if (organizer == null) return const SizedBox.shrink();
 
         return Scaffold(
           backgroundColor: const Color(0xFFF5F5F5),
           appBar: TopBar(
-            title: Organizer.organizerName,
+            title: organizer.organizerName,
             showBack: true,
             center: true,
             rightIcon: Icons.add,

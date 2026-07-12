@@ -8,18 +8,18 @@ import '../../../providers/organizer_provider.dart';
 
 void editOrganizerProfile(
   BuildContext context,
-  OrganizerModel Organizer,
+  OrganizerModel organizer,
   WidgetRef ref,
 ) {
-  final nameController = TextEditingController(text: Organizer.organizerName);
-  final emailController = TextEditingController(text: Organizer.contactEmail);
-  final contactController = TextEditingController(text: Organizer.contactNumber);
+  final nameController = TextEditingController(text: organizer.organizerName);
+  final emailController = TextEditingController(text: organizer.contactEmail);
+  final contactController = TextEditingController(text: organizer.contactNumber);
   final descriptionController = TextEditingController(
-    text: Organizer.description ?? '',
+    text: organizer.description ?? '',
   );
 
   // copy existing FAQs
-  List<FAQModel> editedFaqs = List.from(Organizer.faqs);
+  List<FAQModel> editedFaqs = List.from(organizer.faqs);
 
   ModalContainer.show(
     context: context,
@@ -59,8 +59,8 @@ void editOrganizerProfile(
 
 
             await ref
-                .read(OrganizerServiceProvider)
-                .updateOrganizerData(organizerId: Organizer.id, data: data);
+                .read(organizerServiceProvider)
+                .updateOrganizerData(organizerId: organizer.id, data: data);
 
             if (context.mounted) {
               Navigator.pop(context);
