@@ -15,22 +15,22 @@ class EventService {
     final startOfMonth = DateTime(year, month, 1);
     final endOfMonth = DateTime(year, month + 1, 0, 23, 59, 59);
 
-    // We want events that either start or end within this month, 
-    // or are ongoing during this month.
-    // For simplicity, let's fetch events that start before the end of the month
-    // and end after the start of the month.
+    // We fetch all events and filter in-memory to avoid index requirements
+    // during development. In production with thousands of events, 
+    // a composite index on 'date' would be preferred.
     return _db
         .collection('events')
-        .where('date', isLessThanOrEqualTo: Timestamp.fromDate(endOfMonth))
         .snapshots()
         .map((snapshot) {
           final allEvents = snapshot.docs
               .map((doc) => EventModel.fromMap(doc.data(), doc.id))
               .toList();
           
-          // Filter in memory for the second condition since Firestore allows only one range filter on different fields
           return allEvents.where((event) {
-            return event.endDate.isAfter(startOfMonth) || event.endDate.isAtSameMomentAs(startOfMonth);
+            // Event starts before the end of the month AND ends after the start of the month
+            final startsBeforeEnd = event.date.isBefore(endOfMonth) || event.date.isAtSameMomentAs(endOfMonth);
+            final endsAfterStart = event.endDate.isAfter(startOfMonth) || event.endDate.isAtSameMomentAs(startOfMonth);
+            return startsBeforeEnd && endsAfterStart;
           }).toList();
         });
   }

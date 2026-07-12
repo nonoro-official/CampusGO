@@ -130,7 +130,7 @@ class RewardModel {
       type: ListingType.fromString(data['type'] ?? 'regular'),
       isAvailable: data['isAvailable'] ?? true,
       bundleItems: data['bundleItems'] != null ? List<String>.from(data['bundleItems']) : null,
-      promoQuantity: data['promoQuantity'],
+      promoQuantity: (data['promoQuantity'] as num?)?.toInt(),
       originalPoints: data['originalPoints'] != null ? (data['originalPoints'] as num).toInt() : null,
       discountPercentage: data['discountPercentage'] != null ? (data['discountPercentage'] as num).toDouble() : null,
       linkedRewardId: data['linkedRewardId'],

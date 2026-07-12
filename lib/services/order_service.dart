@@ -245,12 +245,16 @@ class OrderService {
     return _db
         .collection('orders')
         .where('organizerId', isEqualTo: organizerId)
-        .orderBy('timestamp', descending: true)
         .snapshots()
         .map(
-          (snap) => snap.docs
-          .map((doc) => OrderModel.fromMap(doc.data(), doc.id))
-          .toList(),
+          (snap) {
+            final orders = snap.docs
+                .map((doc) => OrderModel.fromMap(doc.data(), doc.id))
+                .toList();
+            // Sort in memory to avoid requiring a composite index
+            orders.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+            return orders;
+          },
     );
   }
 
@@ -259,12 +263,16 @@ class OrderService {
     return _db
         .collection('orders')
         .where('userId', isEqualTo: userId)
-        .orderBy('timestamp', descending: true)
         .snapshots()
         .map(
-          (snap) => snap.docs
-          .map((doc) => OrderModel.fromMap(doc.data(), doc.id))
-          .toList(),
+          (snap) {
+            final orders = snap.docs
+                .map((doc) => OrderModel.fromMap(doc.data(), doc.id))
+                .toList();
+            // Sort in memory to avoid requiring a composite index
+            orders.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+            return orders;
+          },
     );
   }
 

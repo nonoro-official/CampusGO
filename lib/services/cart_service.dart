@@ -56,10 +56,21 @@ class CartService {
     required int quantity,
   }) async {
     // 1. Fetch latest stock to ensure we don't exceed it
-    final rewardDoc = await _db.collection('rewards').doc(reward.id).get();
-    if (!rewardDoc.exists) throw Exception('Reward not found');
+    // We fetch all rewards for this organizer to accurately calculate effective stock (bundles/promos)
+    final allRewardsSnap = await _db.collection('rewards')
+        .where('organizerId', isEqualTo: organizerId)
+        .get();
     
-    final latestStock = (rewardDoc.data()!['stock'] as num?)?.toInt() ?? 0;
+    final allRewards = allRewardsSnap.docs
+        .map((doc) => RewardModel.fromMap(doc.data(), doc.id))
+        .toList();
+
+    final latestReward = allRewards.firstWhere(
+      (p) => p.id == reward.id,
+      orElse: () => throw Exception('Reward not found'),
+    );
+    
+    final latestStock = latestReward.calculateEffectiveStock(allRewards);
 
     // Look for an existing cart for this user + Organizer
     var cart = await findCart(userId, organizerId);
@@ -117,7 +128,17 @@ class CartService {
       // Check stock before updating
       final rewardDoc = await _db.collection('rewards').doc(rewardId).get();
       if (rewardDoc.exists) {
-        final stock = (rewardDoc.data()!['stock'] as num?)?.toInt() ?? 0;
+        final organizerId = rewardDoc.data()!['organizerId'];
+        final allRewardsSnap = await _db.collection('rewards')
+            .where('organizerId', isEqualTo: organizerId)
+            .get();
+        
+        final allRewards = allRewardsSnap.docs
+            .map((doc) => RewardModel.fromMap(doc.data(), doc.id))
+            .toList();
+
+        final latestReward = allRewards.firstWhere((p) => p.id == rewardId);
+        final stock = latestReward.calculateEffectiveStock(allRewards);
         
         if (newQuantity > stock) {
           throw Exception('Only $stock items left in stock.');

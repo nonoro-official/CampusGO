@@ -140,15 +140,20 @@ class RewardService {
 
   // Remove a category from all rewards of a Organizer
   Future<void> removeCategoryFromOrganizer(String organizerId, String category) async {
+    // We fetch all rewards for this organizer and filter in-memory to avoid requiring a composite index
     final query = _db.collection('rewards')
-        .where('organizerId', isEqualTo: organizerId)
-        .where('categories', arrayContains: category);
+        .where('organizerId', isEqualTo: organizerId);
     
     final snap = await query.get();
-    if (snap.docs.isEmpty) return;
+    final docsToRemoveCategory = snap.docs.where((doc) {
+      final List<dynamic> cats = doc.data()['categories'] ?? [];
+      return cats.contains(category);
+    }).toList();
+
+    if (docsToRemoveCategory.isEmpty) return;
 
     final batch = _db.batch();
-    for (var doc in snap.docs) {
+    for (var doc in docsToRemoveCategory) {
       batch.update(doc.reference, {
         'categories': FieldValue.arrayRemove([category])
       });

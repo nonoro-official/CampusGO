@@ -29,7 +29,9 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
     final primaryColor = theme.primaryColor;
 
     // Use the correct provider based on account type
-    final ordersAsync = ref.watch(myOrdersProvider);
+    final ordersAsync = widget.accountType == 'Organizer'
+        ? ref.watch(organizerOrdersProvider)
+        : ref.watch(myOrdersProvider);
 
     return ordersAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),

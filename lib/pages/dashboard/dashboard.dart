@@ -42,7 +42,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
     // Use addPostFrameCallback to set the initial index in the provider
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (widget.backToProcessing == true) {
-        ref.read(dashboardTabIndexProvider.notifier).setIndex(2);
+        ref.read(dashboardTabIndexProvider.notifier).setIndex(4);
       } else if (widget.openTab != null) {
         ref.read(dashboardTabIndexProvider.notifier).setIndex(widget.openTab!);
       } else {
