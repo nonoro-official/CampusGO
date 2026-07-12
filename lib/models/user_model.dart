@@ -46,9 +46,7 @@ class UserModel {
       organizerId: data['organizerId'],
       imageUrl: data['imageUrl'],
       isOnline: data['isOnline'] ?? false,
-      points: (data['points'] ?? 0) is int
-          ? data['points'] as int
-          : (data['points'] as num?)?.toInt() ?? 0,
+      points: (data['points'] as num?)?.toInt() ?? 0,
     );
   }
 

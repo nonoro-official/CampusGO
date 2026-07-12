@@ -59,9 +59,7 @@ class CartService {
     final rewardDoc = await _db.collection('rewards').doc(reward.id).get();
     if (!rewardDoc.exists) throw Exception('Reward not found');
     
-    final latestStock = (rewardDoc.data()!['stock'] ?? 0) is int
-        ? rewardDoc.data()!['stock']
-        : int.tryParse(rewardDoc.data()!['stock']?.toString() ?? '0') ?? 0;
+    final latestStock = (rewardDoc.data()!['stock'] as num?)?.toInt() ?? 0;
 
     // Look for an existing cart for this user + Organizer
     var cart = await findCart(userId, organizerId);
@@ -119,9 +117,7 @@ class CartService {
       // Check stock before updating
       final rewardDoc = await _db.collection('rewards').doc(rewardId).get();
       if (rewardDoc.exists) {
-        final stock = (rewardDoc.data()!['stock'] ?? 0) is int
-            ? rewardDoc.data()!['stock']
-            : int.tryParse(rewardDoc.data()!['stock']?.toString() ?? '0') ?? 0;
+        final stock = (rewardDoc.data()!['stock'] as num?)?.toInt() ?? 0;
         
         if (newQuantity > stock) {
           throw Exception('Only $stock items left in stock.');
@@ -209,9 +205,7 @@ class CartService {
     for (final entry in rewards.entries) {
       final doc = await _db.collection('rewards').doc(entry.key).get();
       if (doc.exists) {
-        final points = (doc.data()!['points'] ?? 0) is int
-            ? doc.data()!['points'] as int
-            : (doc.data()!['points'] as num?)?.toInt() ?? 0;
+        final points = (doc.data()!['points'] as num?)?.toInt() ?? 0;
         total += points * entry.value;
       }
     }

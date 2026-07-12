@@ -35,11 +35,11 @@ class OrganizerDashboard extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 80), // Space for toggle buttons
-              const WelcomeCard(),
-              const SizedBox(height: 15),
-              const PointsCard(),
-              const SizedBox(height: 25),
+              // const WelcomeCard(),
+              // const SizedBox(height: 15),
               const OrganizerShopCard(),
+              const SizedBox(height: 10),
+              const PointsCard(),
               const SizedBox(height: 25),
 
               Row(

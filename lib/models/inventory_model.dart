@@ -26,12 +26,8 @@ class InventoryModel {
       organizerId: data['organizerId'] ?? '',
       rewardId: data['rewardId'] ?? '',
       name: data['name'] ?? '',
-      points: (data['points'] ?? 0) is int
-          ? data['points'] as int
-          : (data['points'] as num?)?.toInt() ?? 0,
-      stock: (data['stock'] ?? 0) is int
-          ? data['stock'] as int
-          : (data['stock'] as num?)?.toInt() ?? 0,
+      points: (data['points'] as num?)?.toInt() ?? 0,
+      stock: (data['stock'] as num?)?.toInt() ?? 0,
       isAvailable: data['isAvailable'] ?? true,
     );
   }

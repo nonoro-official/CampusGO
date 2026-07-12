@@ -122,9 +122,7 @@ class RewardModel {
       name: data['name'] ?? '',
       description: data['description'] ?? '',
       imageUrl: data['imageUrl'],
-      points: (data['points'] ?? 0) is int
-          ? data['points'] as int
-          : (data['points'] as num?)?.toInt() ?? 0,
+      points: (data['points'] as num?)?.toInt() ?? 0,
       organizerId: data['organizerId'] ?? '',
       stock: (data['stock'] ?? 0) is int
           ? data['stock'] ?? 0

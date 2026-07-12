@@ -62,9 +62,7 @@ class CartItemModel {
       organizerId: data['organizerId'] ?? '',
       userId: data['userId'] ?? '',
       rewards: rewardsMap,
-      points: (data['points'] ?? 0) is int
-          ? data['points'] as int
-          : (data['points'] as num?)?.toInt() ?? 0,
+      points: (data['points'] as num?)?.toInt() ?? 0,
     );
   }
 

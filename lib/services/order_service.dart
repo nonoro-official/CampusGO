@@ -41,9 +41,7 @@ class OrderService {
       if (!userSnap.exists) throw Exception('User not found.');
 
       final userData = userSnap.data() as Map<String, dynamic>;
-      final currentPoints = (userData['points'] ?? 0) is int
-          ? userData['points'] as int
-          : (userData['points'] as num?)?.toInt() ?? 0;
+      final currentPoints = (userData['points'] as num?)?.toInt() ?? 0;
 
       if (currentPoints < points) {
         throw Exception(
@@ -101,9 +99,7 @@ class OrderService {
         final amountToDeduct = deductions[id]!;
         
         final Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-        final currentStock = (data['stock'] ?? 0) is int
-            ? data['stock'] as int
-            : int.tryParse(data['stock']?.toString() ?? '0') ?? 0;
+        final currentStock = (data['stock'] as num?)?.toInt() ?? 0;
 
         if (currentStock < amountToDeduct) {
           throw Exception(
@@ -223,9 +219,7 @@ class OrderService {
         final amountToAdd = additions[id]!;
         
         final Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-        final currentStock = (data['stock'] ?? 0) is int
-            ? data['stock'] as int
-            : int.tryParse(data['stock']?.toString() ?? '0') ?? 0;
+        final currentStock = (data['stock'] as num?)?.toInt() ?? 0;
 
         transaction.update(doc.reference, {'stock': currentStock + amountToAdd});
       }
@@ -237,12 +231,8 @@ class OrderService {
       final userSnap = await transaction.get(userDocRef);
       if (userSnap.exists) {
         final userData = userSnap.data() as Map<String, dynamic>;
-        final currentPoints = (userData['points'] ?? 0) is int
-            ? userData['points'] as int
-            : (userData['points'] as num?)?.toInt() ?? 0;
-        final orderPoints = (txOrderData['points'] ?? 0) is int
-            ? txOrderData['points'] as int
-            : (txOrderData['points'] as num?)?.toInt() ?? 0;
+        final currentPoints = (userData['points'] as num?)?.toInt() ?? 0;
+        final orderPoints = (txOrderData['points'] as num?)?.toInt() ?? 0;
         transaction.update(userDocRef, {'points': currentPoints + orderPoints});
       }
     });

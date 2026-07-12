@@ -58,9 +58,7 @@ class OrderItemModel {
       quantity: (data['quantity'] ?? 1) is int
           ? data['quantity']
           : int.tryParse(data['quantity']?.toString() ?? '1') ?? 1,
-      points: (data['points'] ?? 0) is int
-          ? data['points'] as int
-          : (data['points'] as num?)?.toInt() ?? 0,
+      points: (data['points'] as num?)?.toInt() ?? 0,
     );
   }
 
@@ -148,9 +146,7 @@ class OrderModel {
       orders: ordersMap,
       timestamp: ts,
       orderStatus: OrderStatus.fromString(data['orderStatus'] ?? ''),
-      points: (data['points'] ?? 0) is int
-          ? data['points'] as int
-          : (data['points'] as num?)?.toInt() ?? 0,
+      points: (data['points'] as num?)?.toInt() ?? 0,
       items: items,
       orderNumber: data['orderNumber'],
     );

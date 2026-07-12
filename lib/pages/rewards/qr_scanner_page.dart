@@ -144,7 +144,7 @@ class _MockQRScannerPageState extends ConsumerState<MockQRScannerPage>
 
                   // Promo logic: 1 QR might represent a bundle of items (e.g., "Buy 1 Get 1")
                   if (type == 'promo' && data['promoQuantity'] != null) {
-                    decrementAmount = quantity * (data['promoQuantity'] as int);
+                    decrementAmount = quantity * (data['promoQuantity'] as num).toInt();
                   }
 
                   // Linked logic: Deduct from the source of truth (base reward)
@@ -163,7 +163,7 @@ class _MockQRScannerPageState extends ConsumerState<MockQRScannerPage>
                   }
 
                   if (targetDoc.exists) {
-                    final int currentStock = (targetDoc.data() as Map<String, dynamic>)['stock'] ?? 0;
+                    final int currentStock = ((targetDoc.data() as Map<String, dynamic>)['stock'] as num?)?.toInt() ?? 0;
                     transaction.update(targetRef, {
                       'stock': currentStock - decrementAmount,
                       'updatedAt': FieldValue.serverTimestamp(),
