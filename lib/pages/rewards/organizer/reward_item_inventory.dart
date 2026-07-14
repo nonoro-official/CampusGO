@@ -48,9 +48,8 @@ class _AddItemModalState extends ConsumerState<_AddItemModal> {
 
   String _generateAutoSku() {
     final random = Random();
-    final timestamp = DateTime.now().millisecondsSinceEpoch
-        .toString()
-        .substring(8);
+    final timestamp =
+        DateTime.now().millisecondsSinceEpoch.toString().substring(8);
     final randomStr = List.generate(3, (index) => random.nextInt(10)).join();
     return "SKU-$timestamp$randomStr";
   }
@@ -164,7 +163,8 @@ class _AddItemModalState extends ConsumerState<_AddItemModal> {
     final allDisplayCategories = {
       ...existingCategories,
       ...localSuggestions,
-    }.toList()..sort();
+    }.toList()
+      ..sort();
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
@@ -251,9 +251,9 @@ class _AddItemModalState extends ConsumerState<_AddItemModal> {
                 child: Text(
                   "Select Categories * (Long press to delete suggestion):",
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey,
-                    fontSize: 10,
-                  ),
+                        color: Colors.grey,
+                        fontSize: 10,
+                      ),
                 ),
               ),
               const SizedBox(height: 8),
@@ -273,16 +273,33 @@ class _AddItemModalState extends ConsumerState<_AddItemModal> {
                           cat,
                           style: TextStyle(
                             fontSize: 11,
-                            color: isSelected ? Colors.white : Colors.black87,
+                            color: isSelected
+                                ? Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Theme.of(context).colorScheme.onPrimary
+                                    : Colors.white
+                                : Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Theme.of(context).colorScheme.onSurface
+                                    : Colors.black87,
                           ),
                         ),
                         selected: isSelected,
                         onSelected: (_) => _toggleCategory(cat),
                         selectedColor: Theme.of(context).primaryColor,
-                        checkmarkColor: Colors.white,
+                        checkmarkColor:
+                            Theme.of(context).brightness == Brightness.dark
+                                ? Theme.of(context).colorScheme.onPrimary
+                                : Colors.white,
                         showCheckmark: true,
                         labelStyle: TextStyle(
-                          color: isSelected ? Colors.white : Colors.black87,
+                          color: isSelected
+                              ? Theme.of(context).brightness == Brightness.dark
+                                  ? Theme.of(context).colorScheme.onPrimary
+                                  : Colors.white
+                              : Theme.of(context).brightness == Brightness.dark
+                                  ? Theme.of(context).colorScheme.onSurface
+                                  : Colors.black87,
                         ),
                         padding: EdgeInsets.zero,
                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -495,7 +512,7 @@ class _EditItemModalState extends ConsumerState<_EditItemModal> {
     final basePoints = widget.reward.originalPoints ?? widget.reward.points;
     pointsController = TextEditingController(text: basePoints.toString());
     stockController = TextEditingController(
-      text: widget.reward.stock.toString()  ?? "0",
+      text: widget.reward.stock.toString() ?? "0",
     );
 
     skuController = TextEditingController(text: widget.reward.sku);
@@ -641,7 +658,8 @@ class _EditItemModalState extends ConsumerState<_EditItemModal> {
           widget.reward.discountPercentage != null) {
         originalPoints = basePoints;
         finalPoints =
-            (basePoints * (1 - (widget.reward.discountPercentage! / 100))).round();
+            (basePoints * (1 - (widget.reward.discountPercentage! / 100)))
+                .round();
       }
 
       await rewardService.updateOrganizerReward(
@@ -691,7 +709,8 @@ class _EditItemModalState extends ConsumerState<_EditItemModal> {
     final allDisplayCategories = {
       ...existingCategories,
       ...localSuggestions,
-    }.toList()..sort();
+    }.toList()
+      ..sort();
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
@@ -712,7 +731,6 @@ class _EditItemModalState extends ConsumerState<_EditItemModal> {
               onImagePicked: (file) => setState(() => selectedImage = file),
             ),
             const SizedBox(height: 20),
-
             if (isDiscounted)
               Container(
                 width: double.infinity,
@@ -739,7 +757,6 @@ class _EditItemModalState extends ConsumerState<_EditItemModal> {
                   ],
                 ),
               ),
-
             TextField(
               controller: nameController,
               decoration: const InputDecoration(
@@ -755,9 +772,7 @@ class _EditItemModalState extends ConsumerState<_EditItemModal> {
                   child: TextField(
                     controller: pointsController,
                     decoration: InputDecoration(
-                      labelText: isDiscounted
-                          ? 'Base Points *'
-                          : 'Points *',
+                      labelText: isDiscounted ? 'Base Points *' : 'Points *',
                       border: const OutlineInputBorder(),
                     ),
                     keyboardType: const TextInputType.numberWithOptions(
@@ -809,9 +824,9 @@ class _EditItemModalState extends ConsumerState<_EditItemModal> {
                 child: Text(
                   "Select Categories (Long press to delete suggestion):",
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey,
-                    fontSize: 10,
-                  ),
+                        color: Colors.grey,
+                        fontSize: 10,
+                      ),
                 ),
               ),
               const SizedBox(height: 8),
@@ -831,16 +846,33 @@ class _EditItemModalState extends ConsumerState<_EditItemModal> {
                           cat,
                           style: TextStyle(
                             fontSize: 11,
-                            color: isSelected ? Colors.white : Colors.black87,
+                            color: isSelected
+                                ? Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Theme.of(context).colorScheme.onPrimary
+                                    : Colors.white
+                                : Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Theme.of(context).colorScheme.onSurface
+                                    : Colors.black87,
                           ),
                         ),
                         selected: isSelected,
                         onSelected: (_) => _toggleCategory(cat),
                         selectedColor: Theme.of(context).primaryColor,
-                        checkmarkColor: Colors.white,
+                        checkmarkColor:
+                            Theme.of(context).brightness == Brightness.dark
+                                ? Theme.of(context).colorScheme.onPrimary
+                                : Colors.white,
                         showCheckmark: true,
                         labelStyle: TextStyle(
-                          color: isSelected ? Colors.white : Colors.black87,
+                          color: isSelected
+                              ? Theme.of(context).brightness == Brightness.dark
+                                  ? Theme.of(context).colorScheme.onPrimary
+                                  : Colors.white
+                              : Theme.of(context).brightness == Brightness.dark
+                                  ? Theme.of(context).colorScheme.onSurface
+                                  : Colors.black87,
                         ),
                         padding: EdgeInsets.zero,
                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,

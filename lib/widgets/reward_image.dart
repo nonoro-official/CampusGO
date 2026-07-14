@@ -21,13 +21,23 @@ class RewardImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
     return Container(
       width: width,
       height: height,
       decoration: BoxDecoration(
-        color: Colors.grey.shade100,
+        color: theme.brightness == Brightness.dark
+            ? colors.surfaceContainerHighest
+            : Colors.grey.shade100,
         borderRadius: BorderRadius.circular(borderRadius),
-        border: Border.all(color: Colors.grey.shade200, width: 1),
+        border: Border.all(
+          color: theme.brightness == Brightness.dark
+              ? colors.outlineVariant
+              : Colors.grey.shade200,
+          width: 1,
+        ),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(borderRadius),
@@ -36,19 +46,38 @@ class RewardImage extends StatelessWidget {
           children: [
             ColorFiltered(
               colorFilter: isAvailable
-                  ? const ColorFilter.mode(Colors.transparent, BlendMode.multiply)
+                  ? const ColorFilter.mode(
+                      Colors.transparent, BlendMode.multiply)
                   : const ColorFilter.matrix([
-                      0.2126, 0.7152, 0.0722, 0, 0,
-                      0.2126, 0.7152, 0.0722, 0, 0,
-                      0.2126, 0.7152, 0.0722, 0, 0,
-                      0,      0,      0,      1, 0,
+                      0.2126,
+                      0.7152,
+                      0.0722,
+                      0,
+                      0,
+                      0.2126,
+                      0.7152,
+                      0.0722,
+                      0,
+                      0,
+                      0.2126,
+                      0.7152,
+                      0.0722,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      1,
+                      0,
                     ]),
               child: (imageUrl != null && imageUrl!.isNotEmpty)
                   ? CachedNetworkImage(
                       imageUrl: imageUrl!,
                       fit: fit,
                       placeholder: (context, url) => Container(
-                        color: Colors.grey.shade100,
+                        color: theme.brightness == Brightness.dark
+                            ? colors.surfaceContainerHighest
+                            : Colors.grey.shade100,
                         child: const Center(
                           child: SizedBox(
                             width: 20,
@@ -57,9 +86,10 @@ class RewardImage extends StatelessWidget {
                           ),
                         ),
                       ),
-                      errorWidget: (context, url, error) => _buildPlaceholder(),
+                      errorWidget: (context, url, error) =>
+                          _buildPlaceholder(context),
                     )
-                  : _buildPlaceholder(),
+                  : _buildPlaceholder(context),
             ),
             if (!isAvailable)
               Container(
@@ -82,7 +112,9 @@ class RewardImage extends StatelessWidget {
     );
   }
 
-  Widget _buildPlaceholder() {
+  Widget _buildPlaceholder(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -90,13 +122,13 @@ class RewardImage extends StatelessWidget {
           Icon(
             Icons.shopping_bag_outlined,
             size: (height != null && height! < 100) ? 24 : 40,
-            color: Colors.grey.shade400,
+            color: colors.onSurfaceVariant,
           ),
           if (height == null || height! >= 100) ...[
             const SizedBox(height: 8),
             Text(
               "No Image",
-              style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+              style: TextStyle(color: colors.onSurfaceVariant, fontSize: 12),
             ),
           ],
         ],

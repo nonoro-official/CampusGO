@@ -1,6 +1,8 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 
+import '../../themes/theme.dart';
+
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -41,19 +43,25 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Align(
-              alignment: const Alignment(0, 0),
-              child: Image.asset('assets/images/campusgo_logo.png', width: 235),
-            ),
-            const SizedBox(height: 10),
-            Text('Buy and Sell', style: textTheme.bodyMedium),
-            const SizedBox(height: 40),
-          ],
+    return AnnotatedRegion(
+      value: AppTheme.systemOverlayStyle(Theme.of(context).brightness),
+      child: Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Align(
+                alignment: const Alignment(0, 0),
+                child: Image.asset(
+                  'assets/images/campusgo_logo.png',
+                  width: 235,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text('Buy and Sell', style: textTheme.bodyMedium),
+              const SizedBox(height: 40),
+            ],
+          ),
         ),
       ),
     );

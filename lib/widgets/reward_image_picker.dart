@@ -31,42 +31,61 @@ class _RewardImagePickerState extends State<RewardImagePicker> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
     return GestureDetector(
       onTap: _pickImage,
       child: Container(
         height: 180,
         width: double.infinity,
         decoration: BoxDecoration(
-          color: Colors.grey.shade100,
+          color: theme.brightness == Brightness.dark
+              ? colors.surfaceContainerHighest
+              : Colors.grey.shade100,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey.shade300, width: 1),
+          border: Border.all(
+            color: theme.brightness == Brightness.dark
+                ? colors.outlineVariant
+                : Colors.grey.shade300,
+            width: 1,
+          ),
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(16),
           child: _selectedFile != null
               ? Image.file(_selectedFile!, fit: BoxFit.cover)
-              : (widget.initialImageUrl != null && widget.initialImageUrl!.isNotEmpty)
+              : (widget.initialImageUrl != null &&
+                      widget.initialImageUrl!.isNotEmpty)
                   ? CachedNetworkImage(
                       imageUrl: widget.initialImageUrl!,
                       fit: BoxFit.cover,
-                      placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
-                      errorWidget: (context, url, error) => _buildPlaceholder(),
+                      placeholder: (context, url) =>
+                          const Center(child: CircularProgressIndicator()),
+                      errorWidget: (context, url, error) =>
+                          _buildPlaceholder(context),
                     )
-                  : _buildPlaceholder(),
+                  : _buildPlaceholder(context),
         ),
       ),
     );
   }
 
-  Widget _buildPlaceholder() {
+  Widget _buildPlaceholder(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(Icons.add_a_photo_outlined, size: 40, color: Colors.grey.shade400),
+        Icon(
+          Icons.add_a_photo_outlined,
+          size: 40,
+          color: colors.onSurfaceVariant,
+        ),
         const SizedBox(height: 8),
         Text(
           "Add Reward Photo",
-          style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
+          style: TextStyle(color: colors.onSurfaceVariant, fontSize: 13),
         ),
       ],
     );

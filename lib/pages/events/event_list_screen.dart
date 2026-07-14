@@ -36,7 +36,12 @@ class _EventListScreenState extends ConsumerState<EventListScreen> {
           ? FloatingActionButton(
               onPressed: () => Navigator.pushNamed(context, '/add-event'),
               backgroundColor: Theme.of(context).primaryColor,
-              child: const Icon(Icons.add, color: Colors.white),
+              child: Icon(
+                Icons.add,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Theme.of(context).colorScheme.onPrimary
+                    : Colors.white,
+              ),
             )
           : null,
       body: Column(
@@ -65,9 +70,9 @@ class _EventListScreenState extends ConsumerState<EventListScreen> {
                 if (snapshot.hasError) {
                   return Center(child: Text("Error: ${snapshot.error}"));
                 }
-                
+
                 var events = snapshot.data ?? [];
-                
+
                 if (_filter == 'Upcoming') {
                   events = events.where((e) => !e.isEnded).toList();
                   events.sort((a, b) => a.date.compareTo(b.date));
@@ -85,53 +90,64 @@ class _EventListScreenState extends ConsumerState<EventListScreen> {
                   itemCount: events.length,
                   itemBuilder: (context, index) {
                     final event = events[index];
-                    final isMultiDay = event.endDate.isAfter(event.date) && 
-                                       (event.endDate.day != event.date.day || event.endDate.month != event.date.month);
+                    final isMultiDay = event.endDate.isAfter(event.date) &&
+                        (event.endDate.day != event.date.day ||
+                            event.endDate.month != event.date.month);
 
                     return Card(
                       margin: const EdgeInsets.only(bottom: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
                       child: ListTile(
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
                         leading: Container(
                           width: 60,
                           height: 60,
                           decoration: BoxDecoration(
-                            color: event.isEnded 
-                                ? Colors.grey.withValues(alpha: 0.1) 
-                                : Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                            color: event.isEnded
+                                ? Colors.grey.withValues(alpha: 0.1)
+                                : Theme.of(context)
+                                    .primaryColor
+                                    .withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Center(
                             child: Text(
-                              isMultiDay 
+                              isMultiDay
                                   ? "${DateFormat('dd').format(event.date)}-${DateFormat('dd').format(event.endDate)}\n${DateFormat('MMM').format(event.date)}"
                                   : DateFormat('dd\nMMM').format(event.date),
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                color: event.isEnded ? Colors.grey : Theme.of(context).primaryColor,
+                                color: event.isEnded
+                                    ? Colors.grey
+                                    : Theme.of(context).primaryColor,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 12,
                               ),
                             ),
                           ),
                         ),
-                        title: Text(
-                          event.name, 
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: event.isEnded ? Colors.grey : Colors.black,
-                          )
-                        ),
+                        title: Text(event.name,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: event.isEnded
+                                  ? Colors.grey
+                                  : Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? Theme.of(context).colorScheme.onSurface
+                                      : Colors.black,
+                            )),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(event.location),
                             if (event.isEnded)
-                              const Text(
-                                "Concluded", 
-                                style: TextStyle(color: Colors.red, fontSize: 11, fontWeight: FontWeight.bold)
-                              ),
+                              const Text("Concluded",
+                                  style: TextStyle(
+                                      color: Colors.red,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold)),
                           ],
                         ),
                         trailing: const Icon(Icons.chevron_right),
@@ -139,7 +155,8 @@ class _EventListScreenState extends ConsumerState<EventListScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => EventDetailScreen(event: event),
+                              builder: (context) =>
+                                  EventDetailScreen(event: event),
                             ),
                           );
                         },

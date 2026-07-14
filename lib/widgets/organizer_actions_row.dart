@@ -5,8 +5,9 @@ class OrganizerActionsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primaryColor = Theme.of(context).primaryColor;
-    final textTheme = Theme.of(context).textTheme;
+    final theme = Theme.of(context);
+    final primaryColor = theme.colorScheme.primary;
+    final textTheme = theme.textTheme;
 
     final actions = [
       {'icon': Icons.add_box, 'label': 'Add Rewards', 'route': '/inventory'},
@@ -44,7 +45,7 @@ class OrganizerActionsRow extends StatelessWidget {
               child: Container(
                 height: 100,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: theme.cardColor,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: const [
                     BoxShadow(
@@ -54,7 +55,6 @@ class OrganizerActionsRow extends StatelessWidget {
                     ),
                   ],
                 ),
-
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [

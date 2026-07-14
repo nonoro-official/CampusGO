@@ -14,8 +14,7 @@ class RewardDetailScreen extends ConsumerStatefulWidget {
   const RewardDetailScreen({super.key, required this.reward});
 
   @override
-  ConsumerState<RewardDetailScreen> createState() =>
-      _RewardDetailScreenState();
+  ConsumerState<RewardDetailScreen> createState() => _RewardDetailScreenState();
 }
 
 class _RewardDetailScreenState extends ConsumerState<RewardDetailScreen> {
@@ -24,10 +23,11 @@ class _RewardDetailScreenState extends ConsumerState<RewardDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final initialReward = widget.reward as RewardModel;
-    
+
     // Watch the reward stream to get real-time stock updates
-    final rewardsAsync = ref.watch(organizerRewardsProvider(initialReward.organizerId));
-    
+    final rewardsAsync =
+        ref.watch(organizerRewardsProvider(initialReward.organizerId));
+
     return rewardsAsync.when(
       loading: () => _buildScaffold(context, initialReward),
       error: (e, _) => _buildScaffold(context, initialReward),
@@ -36,10 +36,10 @@ class _RewardDetailScreenState extends ConsumerState<RewardDetailScreen> {
           (p) => p.id == initialReward.id,
           orElse: () => initialReward,
         );
-        
+
         // Calculate effective stock if it's a promo, discount, or bundle
         final effectiveStock = reward.calculateEffectiveStock(rewards);
-        
+
         // Adjust quantity if it exceeds current stock
         if (quantity > effectiveStock && effectiveStock > 0) {
           quantity = effectiveStock;
@@ -52,20 +52,23 @@ class _RewardDetailScreenState extends ConsumerState<RewardDetailScreen> {
     );
   }
 
-  Widget _buildScaffold(BuildContext context, RewardModel reward, {int? effectiveStock}) {
+  Widget _buildScaffold(BuildContext context, RewardModel reward,
+      {int? effectiveStock}) {
     final textTheme = Theme.of(context).textTheme;
     final primaryColor = Theme.of(context).primaryColor;
     final user = ref.watch(currentUserProvider);
-    
+
     final displayStock = effectiveStock ?? reward.stock;
     final isOutOfStock = displayStock <= 0;
     final isLowStock = displayStock > 0 && displayStock <= 9;
-    
+
     final totalPoints = (reward.points * quantity) + kServiceFeePoints;
     final hasEnoughPoints = user != null && user.points >= totalPoints;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: Theme.of(context).brightness == Brightness.dark
+          ? Theme.of(context).scaffoldBackgroundColor
+          : const Color(0xFFF5F5F5),
       appBar: TopBar(title: "Reward", dark: true, showBack: true),
       body: Column(
         children: [
@@ -75,10 +78,26 @@ class _RewardDetailScreenState extends ConsumerState<RewardDetailScreen> {
               ColorFiltered(
                 colorFilter: isOutOfStock
                     ? const ColorFilter.matrix([
-                        0.2126, 0.7152, 0.0722, 0, 0,
-                        0.2126, 0.7152, 0.0722, 0, 0,
-                        0.2126, 0.7152, 0.0722, 0, 0,
-                        0, 0, 0, 1, 0,
+                        0.2126,
+                        0.7152,
+                        0.0722,
+                        0,
+                        0,
+                        0.2126,
+                        0.7152,
+                        0.0722,
+                        0,
+                        0,
+                        0.2126,
+                        0.7152,
+                        0.0722,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
                       ])
                     : const ColorFilter.mode(
                         Colors.transparent,
@@ -87,7 +106,9 @@ class _RewardDetailScreenState extends ConsumerState<RewardDetailScreen> {
                 child: Container(
                   height: 260,
                   width: double.infinity,
-                  color: Colors.grey.shade200,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Theme.of(context).colorScheme.surfaceContainerHighest
+                      : Colors.grey.shade200,
                   child: reward.imageUrl != null
                       ? Image.network(reward.imageUrl!, fit: BoxFit.cover)
                       : const Icon(Icons.image, size: 80, color: Colors.grey),
@@ -116,9 +137,11 @@ class _RewardDetailScreenState extends ConsumerState<RewardDetailScreen> {
           Expanded(
             child: Container(
               padding: const EdgeInsets.all(20),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+              decoration: BoxDecoration(
+                color: Theme.of(context).cardColor,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(28),
+                ),
               ),
               child: SingleChildScrollView(
                 child: Column(
@@ -190,7 +213,8 @@ class _RewardDetailScreenState extends ConsumerState<RewardDetailScreen> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        if (reward.originalPoints != null && reward.originalPoints! > reward.points) ...[
+                        if (reward.originalPoints != null &&
+                            reward.originalPoints! > reward.points) ...[
                           const SizedBox(width: 10),
                           Text(
                             "${reward.originalPoints} pts",
@@ -202,7 +226,8 @@ class _RewardDetailScreenState extends ConsumerState<RewardDetailScreen> {
                           const SizedBox(width: 8),
                           if (reward.discountPercentage != null)
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
                                 color: Colors.red.shade100,
                                 borderRadius: BorderRadius.circular(4),
@@ -231,7 +256,8 @@ class _RewardDetailScreenState extends ConsumerState<RewardDetailScreen> {
                       if (!hasEnoughPoints)
                         Text(
                           "Need ${totalPoints - user.points} more pts (+$kServiceFeePoints pts fee)",
-                          style: textTheme.labelSmall?.copyWith(color: Colors.red),
+                          style:
+                              textTheme.labelSmall?.copyWith(color: Colors.red),
                         ),
                     ],
 
@@ -240,17 +266,26 @@ class _RewardDetailScreenState extends ConsumerState<RewardDetailScreen> {
                       Wrap(
                         spacing: 8,
                         runSpacing: 8,
-                        children: reward.categories.map((cat) => Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade100,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            cat,
-                            style: textTheme.bodySmall?.copyWith(color: Colors.grey.shade700),
-                          ),
-                        )).toList(),
+                        children: reward.categories
+                            .map((cat) => Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? Theme.of(context)
+                                            .colorScheme
+                                            .surfaceContainerHigh
+                                        : Colors.grey.shade100,
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Text(
+                                    cat,
+                                    style: textTheme.bodySmall
+                                        ?.copyWith(color: Colors.grey.shade700),
+                                  ),
+                                ))
+                            .toList(),
                       ),
                     ],
 
@@ -269,11 +304,11 @@ class _RewardDetailScreenState extends ConsumerState<RewardDetailScreen> {
                     const SizedBox(height: 20),
 
                     /// ADDITIONAL INFO
-                    if (reward.sku.isNotEmpty || reward.supplier.isNotEmpty) ...[
+                    if (reward.sku.isNotEmpty ||
+                        reward.supplier.isNotEmpty) ...[
                       Text("Reward Details", style: textTheme.titleSmall),
                       const SizedBox(height: 10),
-                      if (reward.sku.isNotEmpty)
-                        _detailRow("SKU", reward.sku),
+                      if (reward.sku.isNotEmpty) _detailRow("SKU", reward.sku),
                       if (reward.supplier.isNotEmpty)
                         _detailRow("Supplier", reward.supplier),
                       const SizedBox(height: 20),
@@ -370,10 +405,13 @@ class _RewardDetailScreenState extends ConsumerState<RewardDetailScreen> {
                               }
                             },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: isOutOfStock
-                            ? Colors.grey
-                            : primaryColor,
-                        foregroundColor: Colors.white,
+                        backgroundColor:
+                            isOutOfStock ? Colors.grey : primaryColor,
+                        foregroundColor: isOutOfStock
+                            ? Colors.white
+                            : Theme.of(context).brightness == Brightness.dark
+                                ? Theme.of(context).colorScheme.onPrimary
+                                : Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),
                         ),
@@ -415,18 +453,22 @@ class _RewardDetailScreenState extends ConsumerState<RewardDetailScreen> {
                               );
 
                               if (confirmed != true) return;
-                              
+
                               try {
-                                await ref.read(cartNotifierProvider.notifier).buyNow(
-                                  organizerId: reward.organizerId,
-                                  reward: reward,
-                                  quantity: quantity,
-                                );
-                                
+                                await ref
+                                    .read(cartNotifierProvider.notifier)
+                                    .buyNow(
+                                      organizerId: reward.organizerId,
+                                      reward: reward,
+                                      quantity: quantity,
+                                    );
+
                                 if (context.mounted) {
                                   final user = ref.read(currentUserProvider);
-                                  final route = user?.role != Role.customer ? '/Organizer-dashboard' : '/dashboard';
-                                  
+                                  final route = user?.role != Role.customer
+                                      ? '/Organizer-dashboard'
+                                      : '/dashboard';
+
                                   Navigator.pushNamedAndRemoveUntil(
                                     context,
                                     route,
@@ -443,9 +485,8 @@ class _RewardDetailScreenState extends ConsumerState<RewardDetailScreen> {
                               }
                             },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: isOutOfStock
-                            ? Colors.grey
-                            : Colors.black,
+                        backgroundColor:
+                            isOutOfStock ? Colors.grey : Colors.black,
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),

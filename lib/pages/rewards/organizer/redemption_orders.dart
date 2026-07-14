@@ -73,14 +73,15 @@ class _OrderListState extends ConsumerState<OrderList> {
                       matchesFilter = true;
                     } else if (currentFilter == "Completed") {
                       // Include both Completed and Cancelled in the "Completed" section as requested
-                      matchesFilter = status == OrderStatus.completed || status == OrderStatus.cancelled;
+                      matchesFilter = status == OrderStatus.completed ||
+                          status == OrderStatus.cancelled;
                     } else {
                       matchesFilter = status.toName == currentFilter;
                     }
 
                     final matchesSearch = order.id.toLowerCase().contains(
-                      searchQuery.toLowerCase(),
-                    );
+                          searchQuery.toLowerCase(),
+                        );
 
                     return matchesFilter && matchesSearch;
                   }).toList();
@@ -125,9 +126,16 @@ class _OrderListState extends ConsumerState<OrderList> {
                           margin: const EdgeInsets.only(bottom: 15),
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: Theme.of(context).cardColor,
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: Colors.grey.shade200),
+                            border: Border.all(
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Theme.of(
+                                      context,
+                                    ).colorScheme.outlineVariant
+                                  : Colors.grey.shade200,
+                            ),
                           ),
                           child: Row(
                             children: [

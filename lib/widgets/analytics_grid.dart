@@ -13,7 +13,8 @@ class AnalyticsGrid extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
-    final primaryColor = theme.primaryColor;
+    final colors = theme.colorScheme;
+    final primaryColor = colors.primary;
 
     final ordersAsync = ref.watch(organizerOrdersProvider);
     final rewardsAsync = ref.watch(organizerRewardsProvider(organizerId));
@@ -79,9 +80,8 @@ class AnalyticsGrid extends ConsumerWidget {
               return stock > 0;
             }).length;
 
-            final unsoldRewards = rewards
-                .where((p) => !rewardSales.containsKey(p.id))
-                .toList();
+            final unsoldRewards =
+                rewards.where((p) => !rewardSales.containsKey(p.id)).toList();
 
             if (unsoldRewards.length == 1) {
               leastPopularId = unsoldRewards.first.id;
@@ -94,27 +94,23 @@ class AnalyticsGrid extends ConsumerWidget {
               leastPopularId = null;
             }
 
-            String mostPopularName = mostPopularId == null
-                ? "No data"
-                : "Unknown Reward";
+            String mostPopularName =
+                mostPopularId == null ? "No data" : "Unknown Reward";
 
-            String leastPopularName = leastPopularId == null
-                ? "No data"
-                : "Unknown Reward";
+            String leastPopularName =
+                leastPopularId == null ? "No data" : "Unknown Reward";
 
             if (mostPopularId != null) {
-              final match = rewards
-                  .where((p) => p.id == mostPopularId)
-                  .toList();
+              final match =
+                  rewards.where((p) => p.id == mostPopularId).toList();
               if (match.isNotEmpty) {
                 mostPopularName = match.first.name;
               }
             }
 
             if (leastPopularId != null) {
-              final match = rewards
-                  .where((p) => p.id == leastPopularId)
-                  .toList();
+              final match =
+                  rewards.where((p) => p.id == leastPopularId).toList();
               if (match.isNotEmpty) {
                 leastPopularName = match.first.name;
               }
@@ -148,9 +144,8 @@ class AnalyticsGrid extends ConsumerWidget {
               {
                 'label': 'Most Popular',
                 'value': mostPopularName,
-                'count': mostPopularId != null
-                    ? rewardSales[mostPopularId] ?? 0
-                    : 0,
+                'count':
+                    mostPopularId != null ? rewardSales[mostPopularId] ?? 0 : 0,
                 'isReward': true,
               },
               {
@@ -180,9 +175,13 @@ class AnalyticsGrid extends ConsumerWidget {
                 return Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: theme.cardColor,
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Colors.grey.shade200),
+                    border: Border.all(
+                      color: theme.brightness == Brightness.dark
+                          ? colors.outlineVariant
+                          : Colors.grey.shade200,
+                    ),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -191,7 +190,7 @@ class AnalyticsGrid extends ConsumerWidget {
                         Text(
                           '${item['count']} Sold',
                           style: textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).primaryColor,
+                            color: primaryColor,
                           ),
                         ),
                       ] else ...[

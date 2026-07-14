@@ -35,7 +35,9 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
         if (organizer == null) return const SizedBox.shrink();
 
         return Scaffold(
-          backgroundColor: const Color(0xFFF5F5F5),
+          backgroundColor: Theme.of(context).brightness == Brightness.dark
+              ? Theme.of(context).scaffoldBackgroundColor
+              : const Color(0xFFF5F5F5),
           appBar: TopBar(
             title: organizer.organizerName,
             showBack: true,
@@ -155,25 +157,21 @@ class InventoryList extends ConsumerWidget {
 
     return rewardsAsync.when(
       data: (rewards) {
-        final filtered = rewards
-            .where((p) {
-              // Base filter logic: Show Regular OR base Discount items (unlinked)
-              return p.type == ListingType.regular ||
-                  (p.type == ListingType.discount && p.linkedRewardId == null);
-            })
-            .where((p) {
-              // Search filter
-              final query = searchQuery.toLowerCase();
-              return p.name.toLowerCase().contains(query) ||
-                  p.description.toLowerCase().contains(query) ||
-                  p.categories.any((c) => c.toLowerCase().contains(query));
-            })
-            .where((p) {
-              // Category filter
-              return selectedCategory == "All" ||
-                  p.categories.contains(selectedCategory);
-            })
-            .toList();
+        final filtered = rewards.where((p) {
+          // Base filter logic: Show Regular OR base Discount items (unlinked)
+          return p.type == ListingType.regular ||
+              (p.type == ListingType.discount && p.linkedRewardId == null);
+        }).where((p) {
+          // Search filter
+          final query = searchQuery.toLowerCase();
+          return p.name.toLowerCase().contains(query) ||
+              p.description.toLowerCase().contains(query) ||
+              p.categories.any((c) => c.toLowerCase().contains(query));
+        }).where((p) {
+          // Category filter
+          return selectedCategory == "All" ||
+              p.categories.contains(selectedCategory);
+        }).toList();
 
         if (filtered.isEmpty) {
           return const Center(child: Text("No rewards found"));
@@ -213,14 +211,14 @@ class ItemCard extends ConsumerWidget {
     Color statusColor = !item.isAvailable || isOutOfStock
         ? Colors.red
         : isLowStock
-        ? Colors.orange
-        : Colors.green;
+            ? Colors.orange
+            : Colors.green;
 
     String statusText = !item.isAvailable
         ? "Unavailable"
         : (isOutOfStock
-              ? "Out of Stock"
-              : (isLowStock ? "Low Stock" : "In Stock"));
+            ? "Out of Stock"
+            : (isLowStock ? "Low Stock" : "In Stock"));
 
     final isDiscounted = item.type == ListingType.discount;
 
@@ -228,7 +226,7 @@ class ItemCard extends ConsumerWidget {
       margin: const EdgeInsets.only(bottom: 15),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: const [
           BoxShadow(
@@ -285,7 +283,12 @@ class ItemCard extends ConsumerWidget {
                                     vertical: 2,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: Colors.grey.shade100,
+                                    color: Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? Theme.of(
+                                            context,
+                                          ).colorScheme.surfaceContainerHigh
+                                        : Colors.grey.shade100,
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: Text(
@@ -349,9 +352,7 @@ class ItemCard extends ConsumerWidget {
               ),
             ],
           ),
-
           const SizedBox(height: 16),
-
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -382,7 +383,6 @@ class ItemCard extends ConsumerWidget {
                   ),
                 ],
               ),
-
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 14,

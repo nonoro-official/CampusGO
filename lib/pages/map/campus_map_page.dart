@@ -30,7 +30,10 @@ class _UserMapPageState extends State<UserMapPage> {
   }
 
   void _listenToEvents() {
-    FirebaseFirestore.instance.collection('events').snapshots().listen((snapshot) {
+    FirebaseFirestore.instance
+        .collection('events')
+        .snapshots()
+        .listen((snapshot) {
       _updateMarkers(snapshot.docs);
     });
   }
@@ -56,7 +59,10 @@ class _UserMapPageState extends State<UserMapPage> {
       }
 
       // Only show events that have valid coordinates
-      return matchesSearch && matchesFilter && data['latitude'] != null && data['longitude'] != null;
+      return matchesSearch &&
+          matchesFilter &&
+          data['latitude'] != null &&
+          data['longitude'] != null;
     }).map((doc) {
       final data = doc.data();
       final event = EventModel.fromMap(data, doc.id);
@@ -125,23 +131,26 @@ class _UserMapPageState extends State<UserMapPage> {
                     borderRadius: BorderRadius.circular(14),
                     child: event.imageUrl != null && event.imageUrl!.isNotEmpty
                         ? Image.network(
-                      event.imageUrl!,
-                      width: 85,
-                      height: 85,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Image.asset(
-                        'assets/images/campusgo_logo.png',
-                        width: 85,
-                        height: 85,
-                        fit: BoxFit.cover,
-                      ),
-                    )
+                            event.imageUrl!,
+                            width: 85,
+                            height: 85,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                Image.asset(
+                              'assets/images/campusgo_logo.png',
+                              width: 85,
+                              height: 85,
+                              fit: BoxFit.cover,
+                            ),
+                          )
                         : Container(
-                      width: 85,
-                      height: 85,
-                      color: Colors.grey[200],
-                      child: Image.asset('assets/images/campusgo_logo.png', fit: BoxFit.cover),
-                    ),
+                            width: 85,
+                            height: 85,
+                            color: Colors.grey[200],
+                            child: Image.asset(
+                                'assets/images/campusgo_logo.png',
+                                fit: BoxFit.cover),
+                          ),
                   ),
                   const SizedBox(width: 16),
 
@@ -152,18 +161,23 @@ class _UserMapPageState extends State<UserMapPage> {
                       children: [
                         Text(
                           event.name,
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          style: const TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 4),
                         Row(
                           children: [
-                            const Icon(Icons.layers, size: 14, color: Colors.grey),
+                            const Icon(Icons.layers,
+                                size: 14, color: Colors.grey),
                             const SizedBox(width: 4),
                             Text(
                               "${event.location}${event.floor != null ? ' (Floor ${event.floor})' : ''}",
-                              style: const TextStyle(color: Colors.grey, fontSize: 13, fontWeight: FontWeight.w500),
+                              style: const TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500),
                             ),
                           ],
                         ),
@@ -172,7 +186,10 @@ class _UserMapPageState extends State<UserMapPage> {
                           event.description,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontSize: 13, color: Colors.grey.shade800, height: 1.3),
+                          style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey.shade800,
+                              height: 1.3),
                         ),
                       ],
                     ),
@@ -188,18 +205,23 @@ class _UserMapPageState extends State<UserMapPage> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFE46A3E),
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14)),
                   ),
                   onPressed: () {
                     Navigator.pop(context); // Dismiss summary dialog frame view
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => EventDetailScreen(event: event)),
+                      MaterialPageRoute(
+                          builder: (_) => EventDetailScreen(event: event)),
                     );
                   },
                   child: const Text(
                     "View Event Details",
-                    style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold),
                   ),
                 ),
               )
@@ -213,7 +235,8 @@ class _UserMapPageState extends State<UserMapPage> {
   @override
   void didUpdateWidget(covariant UserMapPage oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.searchQuery != widget.searchQuery || oldWidget.activeFilter != widget.activeFilter) {
+    if (oldWidget.searchQuery != widget.searchQuery ||
+        oldWidget.activeFilter != widget.activeFilter) {
       FirebaseFirestore.instance.collection('events').get().then((snapshot) {
         _updateMarkers(snapshot.docs);
       });
@@ -228,21 +251,24 @@ class _UserMapPageState extends State<UserMapPage> {
         options: const MapOptions(
           initialCenter: LatLng(14.6291, 121.0419),
           initialZoom: 17.0,
-          interactionOptions: InteractionOptions(flags: InteractiveFlag.all & ~InteractiveFlag.rotate),
+          interactionOptions: InteractionOptions(
+              flags: InteractiveFlag.all & ~InteractiveFlag.rotate),
         ),
         children: [
           TileLayer(
-              urlTemplate: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-              userAgentPackageName: 'com.campusgo.app'
-          ),
+              urlTemplate:
+                  'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+              userAgentPackageName: 'com.campusgo.app'),
           MarkerLayer(markers: markers),
         ],
       ),
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 120.0), // Kept padding spacing layout safe above your nav bar
+        padding: const EdgeInsets.only(
+            bottom:
+                120.0), // Kept padding spacing layout safe above your nav bar
         child: FloatingActionButton(
           heroTag: "btn_recenter",
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).cardColor,
           onPressed: () {
             _mapController.move(const LatLng(14.6291, 121.0419), 17.0);
           },

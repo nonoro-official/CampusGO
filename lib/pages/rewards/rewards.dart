@@ -28,7 +28,9 @@ class _ShopsScreenState extends ConsumerState<ShopsScreen> {
     final allOrganizersAsync = ref.watch(allOrganizersProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: Theme.of(context).brightness == Brightness.dark
+          ? Theme.of(context).scaffoldBackgroundColor
+          : const Color(0xFFF5F5F5),
       appBar: TopBar(
         title: 'CampusGO',
         showBack: true,
@@ -79,8 +81,7 @@ class _ShopsScreenState extends ConsumerState<ShopsScreen> {
                         .toLowerCase()
                         .contains(searchQuery.toLowerCase());
 
-                    final matchesPartner =
-                        selectedPartner == "All" ||
+                    final matchesPartner = selectedPartner == "All" ||
                         v.organizerPartner.name.toLowerCase() ==
                             selectedPartner.toLowerCase();
 
@@ -92,23 +93,19 @@ class _ShopsScreenState extends ConsumerState<ShopsScreen> {
                       filteredOrganizers.isEmpty
                           ? const Center(child: Text("No organizers found"))
                           : OrganizerFeed(organizers: filteredOrganizers),
-
                       Positioned(
                         bottom: 10,
                         right: 0,
                         child: SearchButton(
                           dark: false,
-                          onSearch: (val) =>
-                              setState(() => searchQuery = val),
+                          onSearch: (val) => setState(() => searchQuery = val),
                         ),
                       ),
                     ],
                   );
                 },
-                loading: () =>
-                    const Center(child: CircularProgressIndicator()),
-                error: (err, stack) =>
-                    Center(child: Text("Error: $err")),
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (err, stack) => Center(child: Text("Error: $err")),
               ),
             ),
 
@@ -168,7 +165,7 @@ class OrganizerCard extends ConsumerWidget {
         margin: const EdgeInsets.only(bottom: 20),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(20),
           boxShadow: const [
             BoxShadow(
@@ -185,17 +182,13 @@ class OrganizerCard extends ConsumerWidget {
               children: [
                 CircleAvatar(
                   radius: 22,
-                  backgroundColor:
-                      primaryColor.withValues(alpha: 0.1),
-                  backgroundImage: hasImage
-                      ? NetworkImage(organizer.imageUrl!)
-                      : null,
-                  child: hasImage
-                      ? null
-                      : Icon(Icons.store, color: primaryColor),
+                  backgroundColor: primaryColor.withValues(alpha: 0.1),
+                  backgroundImage:
+                      hasImage ? NetworkImage(organizer.imageUrl!) : null,
+                  child:
+                      hasImage ? null : Icon(Icons.store, color: primaryColor),
                 ),
                 const SizedBox(width: 12),
-
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -207,15 +200,12 @@ class OrganizerCard extends ConsumerWidget {
                 ),
               ],
             ),
-
             const SizedBox(height: 15),
-
             rewardsAsync.when(
               data: (rewards) {
                 if (rewards.isEmpty) {
                   return Text(
-                    organizer.description ??
-                        "No description available.",
+                    organizer.description ?? "No description available.",
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: textTheme.bodySmall,
@@ -227,8 +217,7 @@ class OrganizerCard extends ConsumerWidget {
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     itemCount: rewards.length,
-                    separatorBuilder: (_, __) =>
-                        const SizedBox(width: 10),
+                    separatorBuilder: (_, __) => const SizedBox(width: 10),
                     itemBuilder: (context, index) {
                       final reward = rewards[index];
 
@@ -244,22 +233,18 @@ class OrganizerCard extends ConsumerWidget {
                             borderRadius: 12,
                             isAvailable: effectiveStock > 0,
                           ),
-                          if (effectiveStock > 0 &&
-                              effectiveStock <= 9)
+                          if (effectiveStock > 0 && effectiveStock <= 9)
                             Positioned(
                               top: 4,
                               right: 4,
                               child: Container(
-                                padding:
-                                    const EdgeInsets.symmetric(
+                                padding: const EdgeInsets.symmetric(
                                   horizontal: 4,
                                   vertical: 2,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Colors.orange.withValues(
-                                      alpha: 0.8),
-                                  borderRadius:
-                                      BorderRadius.circular(4),
+                                  color: Colors.orange.withValues(alpha: 0.8),
+                                  borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: const Text(
                                   "Low Stock",
@@ -279,8 +264,7 @@ class OrganizerCard extends ConsumerWidget {
               },
               loading: () => const SizedBox(
                 height: 90,
-                child: Center(
-                    child: CircularProgressIndicator()),
+                child: Center(child: CircularProgressIndicator()),
               ),
               error: (_, __) => const SizedBox.shrink(),
             ),

@@ -8,9 +8,16 @@ class NavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primaryColor = Theme.of(context).primaryColor;
+    final colors = Theme.of(context).colorScheme;
+    final primaryColor = colors.primary;
 
-    final items = [Icons.home, Icons.map, Icons.qr_code_scanner, Icons.store, Icons.shopping_cart];
+    final items = [
+      Icons.home,
+      Icons.map,
+      Icons.qr_code_scanner,
+      Icons.store,
+      Icons.shopping_cart
+    ];
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -27,7 +34,9 @@ class NavBar extends StatelessWidget {
             ),
             child: Icon(
               items[index],
-              color: selectedIndex == index ? Colors.white : Colors.grey,
+              color: selectedIndex == index
+                  ? colors.onPrimary
+                  : colors.onSurfaceVariant,
             ),
           ),
         ),

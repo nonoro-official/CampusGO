@@ -84,7 +84,8 @@ class OrganizerProfileScreen extends ConsumerWidget {
               if (faqs.isEmpty)
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 20),
-                  child: Center(child: Text("No FAQs available for this Organizer.")),
+                  child: Center(
+                      child: Text("No FAQs available for this Organizer.")),
                 )
               else
                 Flexible(
@@ -130,27 +131,30 @@ class OrganizerProfileScreen extends ConsumerWidget {
     final currentUser = ref.watch(currentUserProvider);
     final isOwnerViewing = currentUser?.uid == currentOrganizer.ownerId;
 
-    final reviewsAsync = ref.watch(organizerReviewsProvider(currentOrganizer.id));
-    final hasImage = currentOrganizer.imageUrl != null && currentOrganizer.imageUrl!.isNotEmpty;
+    final reviewsAsync =
+        ref.watch(organizerReviewsProvider(currentOrganizer.id));
+    final hasImage = currentOrganizer.imageUrl != null &&
+        currentOrganizer.imageUrl!.isNotEmpty;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: Theme.of(context).brightness == Brightness.dark
+          ? Theme.of(context).scaffoldBackgroundColor
+          : const Color(0xFFF5F5F5),
       appBar: TopBar(
         title: isOwnerViewing ? "My Organizer Profile" : "Organizer Profile",
         showBack: true,
         center: true,
         dashboard: !isOwnerViewing,
-
         messageReceiverId: currentOrganizer.ownerId,
         messageReceiverName: currentOrganizer.organizerName,
         messageReceiverImage: currentOrganizer.imageUrl,
-
         rightIcon: isOwnerViewing ? Icons.edit : Icons.chat_bubble_outline,
         onRightPressed: isOwnerViewing
             ? () => editOrganizerProfile(context, currentOrganizer, ref)
             : () async {
                 // ✅ ensure chat room exists
-                await MessageService().initiateContact(currentOrganizer.ownerId);
+                await MessageService()
+                    .initiateContact(currentOrganizer.ownerId);
 
                 Navigator.push(
                   context,
@@ -187,12 +191,14 @@ class OrganizerProfileScreen extends ConsumerWidget {
                   const SizedBox(height: 12),
 
                   /// SHOP NAME
-                  Text(currentOrganizer.organizerName, style: textTheme.titleLarge),
+                  Text(currentOrganizer.organizerName,
+                      style: textTheme.titleLarge),
                   const SizedBox(height: 6),
 
                   // PARTNER TYPE BADGE
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                     decoration: BoxDecoration(
                       color: getPartnerColor(currentOrganizer.organizerPartner)
                           .withValues(alpha: 0.1),
@@ -204,13 +210,15 @@ class OrganizerProfileScreen extends ConsumerWidget {
                         Icon(
                           getPartnerIcon(currentOrganizer.organizerPartner),
                           size: 16,
-                          color: getPartnerColor(currentOrganizer.organizerPartner),
+                          color: getPartnerColor(
+                              currentOrganizer.organizerPartner),
                         ),
                         const SizedBox(width: 6),
                         Text(
                           formatPartner(currentOrganizer.organizerPartner),
                           style: textTheme.bodySmall?.copyWith(
-                            color: getPartnerColor(currentOrganizer.organizerPartner),
+                            color: getPartnerColor(
+                                currentOrganizer.organizerPartner),
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -255,13 +263,17 @@ class OrganizerProfileScreen extends ConsumerWidget {
               Icons.phone,
               "Contact",
               Text(
-                currentOrganizer.contactNumber.isEmpty ? "-" : currentOrganizer.contactNumber,
+                currentOrganizer.contactNumber.isEmpty
+                    ? "-"
+                    : currentOrganizer.contactNumber,
               ),
             ),
             _infoTile(
               Icons.email,
               "Email",
-              Text(currentOrganizer.contactEmail.isEmpty ? "-" : currentOrganizer.contactEmail),
+              Text(currentOrganizer.contactEmail.isEmpty
+                  ? "-"
+                  : currentOrganizer.contactEmail),
             ),
             _infoTile(
               Icons.help_outline,
@@ -442,7 +454,8 @@ class OrganizerProfileScreen extends ConsumerWidget {
     final effectiveStock = reward.calculateEffectiveStock(allRewards);
     final isOutOfStock = effectiveStock <= 0;
     final isLowStock = effectiveStock > 0 && effectiveStock <= 9;
-    final hasDiscount = reward.originalPoints != null && reward.originalPoints! > reward.points;
+    final hasDiscount =
+        reward.originalPoints != null && reward.originalPoints! > reward.points;
 
     return GestureDetector(
       onTap: () {
@@ -457,7 +470,7 @@ class OrganizerProfileScreen extends ConsumerWidget {
         width: 140,
         margin: const EdgeInsets.only(right: 12, bottom: 4),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(12),
           boxShadow: const [
             BoxShadow(
@@ -527,7 +540,9 @@ class OrganizerProfileScreen extends ConsumerWidget {
                       Text(
                         '${reward.points} pts',
                         style: textTheme.bodySmall?.copyWith(
-                          color: hasDiscount ? Colors.red : Theme.of(context).primaryColor,
+                          color: hasDiscount
+                              ? Colors.red
+                              : Theme.of(context).primaryColor,
                           fontWeight: FontWeight.bold,
                         ),
                       ),

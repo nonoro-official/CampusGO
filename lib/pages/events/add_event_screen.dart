@@ -35,7 +35,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
 
   Future<void> _submitEvent() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     setState(() => _isSubmitting = true);
 
     try {
@@ -43,8 +43,8 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
       final eventService = ref.read(eventServiceProvider);
 
       if (user?.organizerId == null) {
-         setState(() => _isSubmitting = false);
-         return;
+        setState(() => _isSubmitting = false);
+        return;
       }
 
       final newEvent = EventModel(
@@ -60,7 +60,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
       );
 
       final eventId = await eventService.createEvent(newEvent);
-      
+
       if (_selectedImage != null) {
         await eventService.uploadEventImage(eventId, _selectedImage!);
       }
@@ -89,131 +89,146 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
         title: const Text("Create Event"),
         centerTitle: true,
       ),
-      body: _isSubmitting 
-        ? const Center(child: CircularProgressIndicator())
-        : Form(
-            key: _formKey,
-            child: ListView(
-              padding: const EdgeInsets.all(24),
-              children: [
-                RewardImagePicker(
-                  onImagePicked: (file) => setState(() => _selectedImage = file),
-                ),
-                const SizedBox(height: 24),
-                TextFormField(
-                  controller: _nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Event Name',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.event),
+      body: _isSubmitting
+          ? const Center(child: CircularProgressIndicator())
+          : Form(
+              key: _formKey,
+              child: ListView(
+                padding: const EdgeInsets.all(24),
+                children: [
+                  RewardImagePicker(
+                    onImagePicked: (file) =>
+                        setState(() => _selectedImage = file),
                   ),
-                  validator: (v) => v!.isEmpty ? 'Required' : null,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _descriptionController,
-                  decoration: const InputDecoration(
-                    labelText: 'Description',
-                    border: OutlineInputBorder(),
-                    alignLabelWithHint: true,
-                  ),
-                  maxLines: 4,
-                  validator: (v) => v!.isEmpty ? 'Required' : null,
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      flex: 2,
-                      child: TextFormField(
-                        controller: _locationController,
-                        decoration: const InputDecoration(
-                          labelText: 'Location / Building',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.location_on),
-                        ),
-                        validator: (v) => v!.isEmpty ? 'Required' : null,
-                      ),
+                  const SizedBox(height: 24),
+                  TextFormField(
+                    controller: _nameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Event Name',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.event),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: TextFormField(
-                        controller: _floorController,
-                        decoration: const InputDecoration(
-                          labelText: 'Floor/Room',
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                const Text("Event Schedule", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                const SizedBox(height: 8),
-                Card(
-                  elevation: 0,
-                  color: Colors.grey.shade50,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    side: BorderSide(color: Colors.grey.shade300),
+                    validator: (v) => v!.isEmpty ? 'Required' : null,
                   ),
-                  child: Column(
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _descriptionController,
+                    decoration: const InputDecoration(
+                      labelText: 'Description',
+                      border: OutlineInputBorder(),
+                      alignLabelWithHint: true,
+                    ),
+                    maxLines: 4,
+                    validator: (v) => v!.isEmpty ? 'Required' : null,
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
                     children: [
-                      ListTile(
-                        title: const Text("Start Date"),
-                        subtitle: Text(_startDate.toString().split(' ')[0]),
-                        trailing: const Icon(Icons.calendar_today),
-                        onTap: () async {
-                          final date = await showDatePicker(
-                            context: context,
-                            initialDate: _startDate,
-                            firstDate: DateTime.now(),
-                            lastDate: DateTime(2030),
-                          );
-                          if (date != null) {
-                            setState(() {
-                              _startDate = date;
-                              if (_endDate.isBefore(_startDate)) {
-                                _endDate = _startDate;
-                              }
-                            });
-                          }
-                        },
+                      Expanded(
+                        flex: 2,
+                        child: TextFormField(
+                          controller: _locationController,
+                          decoration: const InputDecoration(
+                            labelText: 'Location / Building',
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.location_on),
+                          ),
+                          validator: (v) => v!.isEmpty ? 'Required' : null,
+                        ),
                       ),
-                      const Divider(height: 1),
-                      ListTile(
-                        title: const Text("End Date"),
-                        subtitle: Text(_endDate.toString().split(' ')[0]),
-                        trailing: const Icon(Icons.calendar_today),
-                        onTap: () async {
-                          final date = await showDatePicker(
-                            context: context,
-                            initialDate: _endDate,
-                            firstDate: _startDate,
-                            lastDate: DateTime(2030),
-                          );
-                          if (date != null) setState(() => _endDate = date);
-                        },
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: TextFormField(
+                          controller: _floorController,
+                          decoration: const InputDecoration(
+                            labelText: 'Floor/Room',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 40),
-                SizedBox(
-                  height: 55,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).primaryColor,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  const SizedBox(height: 24),
+                  const Text("Event Schedule",
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  const SizedBox(height: 8),
+                  Card(
+                    elevation: 0,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Theme.of(context).colorScheme.surfaceContainerLow
+                        : Colors.grey.shade50,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Theme.of(context).colorScheme.outlineVariant
+                            : Colors.grey.shade300,
+                      ),
                     ),
-                    onPressed: _submitEvent,
-                    child: const Text("Create Event", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    child: Column(
+                      children: [
+                        ListTile(
+                          title: const Text("Start Date"),
+                          subtitle: Text(_startDate.toString().split(' ')[0]),
+                          trailing: const Icon(Icons.calendar_today),
+                          onTap: () async {
+                            final date = await showDatePicker(
+                              context: context,
+                              initialDate: _startDate,
+                              firstDate: DateTime.now(),
+                              lastDate: DateTime(2030),
+                            );
+                            if (date != null) {
+                              setState(() {
+                                _startDate = date;
+                                if (_endDate.isBefore(_startDate)) {
+                                  _endDate = _startDate;
+                                }
+                              });
+                            }
+                          },
+                        ),
+                        const Divider(height: 1),
+                        ListTile(
+                          title: const Text("End Date"),
+                          subtitle: Text(_endDate.toString().split(' ')[0]),
+                          trailing: const Icon(Icons.calendar_today),
+                          onTap: () async {
+                            final date = await showDatePicker(
+                              context: context,
+                              initialDate: _endDate,
+                              firstDate: _startDate,
+                              lastDate: DateTime(2030),
+                            );
+                            if (date != null) setState(() => _endDate = date);
+                          },
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 40),
+                  SizedBox(
+                    height: 55,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).primaryColor,
+                        foregroundColor:
+                            Theme.of(context).brightness == Brightness.dark
+                                ? Theme.of(context).colorScheme.onPrimary
+                                : Colors.white,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                      ),
+                      onPressed: _submitEvent,
+                      child: const Text("Create Event",
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
     );
   }
 }

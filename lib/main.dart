@@ -23,6 +23,7 @@ import 'pages/events/event_list_screen.dart';
 import 'pages/organizer/organizer_profile_screen.dart';
 import 'pages/rewards/redemption_history.dart';
 import 'models/organizer_model.dart';
+import 'providers/theme_provider.dart';
 import 'widgets/message_notification_listener.dart';
 import 'pages/rewards/reward_qr_generator.dart';
 
@@ -31,7 +32,7 @@ final ValueNotifier<String?> currentRouteNotifier = ValueNotifier<String?>(
   null,
 );
 final ValueNotifier<String?> currentChatReceiverNotifier =
-ValueNotifier<String?>(null);
+    ValueNotifier<String?>(null);
 
 class RouteNameObserver extends NavigatorObserver {
   final ValueNotifier<String?> routeNotifier;
@@ -70,27 +71,32 @@ void main() async {
   runApp(const ProviderScope(child: MyApp()));
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final darkMode = ref.watch(darkModeProvider).value ?? false;
+
     return MaterialApp(
       navigatorKey: navigatorKey,
       navigatorObservers: [RouteNameObserver(currentRouteNotifier)],
       debugShowCheckedModeBanner: false,
       title: 'CampusGO',
       theme: AppTheme.lightTheme,
-
+      darkTheme: AppTheme.darkTheme,
+      themeMode: darkMode ? ThemeMode.dark : ThemeMode.light,
       builder: (context, child) {
-        return MessageNotificationListener(
-          navigatorKey: navigatorKey,
-          currentRouteNotifier: currentRouteNotifier,
-          currentChatReceiverNotifier: currentChatReceiverNotifier,
-          child: child!,
+        return AnnotatedRegion(
+          value: AppTheme.systemOverlayStyle(Theme.of(context).brightness),
+          child: MessageNotificationListener(
+            navigatorKey: navigatorKey,
+            currentRouteNotifier: currentRouteNotifier,
+            currentChatReceiverNotifier: currentChatReceiverNotifier,
+            child: child!,
+          ),
         );
       },
-
       initialRoute: '/',
       routes: {
         '/': (context) => const SplashScreen(),
@@ -105,13 +111,12 @@ class MyApp extends StatelessWidget {
         '/listings': (context) => const ListingScreen(),
         '/qr-generator': (context) => const QRGeneratorScreen(),
         '/history-customer': (context) =>
-        const HistoryScreen(accountType: 'Customer'),
+            const HistoryScreen(accountType: 'Customer'),
         '/history-organizer': (context) =>
-        const HistoryScreen(accountType: 'Organizer'),
+            const HistoryScreen(accountType: 'Organizer'),
         '/dashboard': (context) {
-          final args =
-          ModalRoute.of(context)?.settings.arguments
-          as Map<String, dynamic>?;
+          final args = ModalRoute.of(context)?.settings.arguments
+              as Map<String, dynamic>?;
 
           return DashboardScreen(
             accountType: 'Customer',
@@ -119,11 +124,9 @@ class MyApp extends StatelessWidget {
             backToProcessing: args?['backToProcessing'],
           );
         },
-
         '/organizer-dashboard': (context) {
-          final args =
-          ModalRoute.of(context)?.settings.arguments
-          as Map<String, dynamic>?;
+          final args = ModalRoute.of(context)?.settings.arguments
+              as Map<String, dynamic>?;
 
           return DashboardScreen(
             accountType: 'Organizer',
@@ -133,7 +136,7 @@ class MyApp extends StatelessWidget {
         },
         '/organizer-profile': (context) {
           final organizer =
-          ModalRoute.of(context)!.settings.arguments as OrganizerModel;
+              ModalRoute.of(context)!.settings.arguments as OrganizerModel;
           return OrganizerProfileScreen(organizer: organizer);
         },
         '/menu': (context) => const MenuScreen(),

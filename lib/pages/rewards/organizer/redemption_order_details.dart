@@ -48,15 +48,21 @@ class OrderDetails extends ConsumerWidget {
         final int qty = enriched.totalQty;
 
         return Scaffold(
-          backgroundColor: const Color(0xFFF5F5F5),
-
+          backgroundColor: Theme.of(context).brightness == Brightness.dark
+              ? Theme.of(context).scaffoldBackgroundColor
+              : const Color(0xFFF5F5F5),
           appBar: TopBar(title: 'Order Summary', showBack: true, dark: true),
-
           bottomNavigationBar: Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              border: Border(top: BorderSide(color: Color(0xFFEAEAEA))),
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardColor,
+              border: Border(
+                top: BorderSide(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Theme.of(context).colorScheme.outlineVariant
+                      : const Color(0xFFEAEAEA),
+                ),
+              ),
             ),
             child: Row(
               children: [
@@ -131,7 +137,6 @@ class OrderDetails extends ConsumerWidget {
               ],
             ),
           ),
-
           body: SingleChildScrollView(
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -140,9 +145,13 @@ class OrderDetails extends ConsumerWidget {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.grey.shade200),
+                    border: Border.all(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Theme.of(context).colorScheme.outlineVariant
+                          : Colors.grey.shade200,
+                    ),
                   ),
                   child: Row(
                     children: [
@@ -206,9 +215,13 @@ class OrderDetails extends ConsumerWidget {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.grey.shade200),
+                    border: Border.all(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Theme.of(context).colorScheme.outlineVariant
+                          : Colors.grey.shade200,
+                    ),
                   ),
                   child: Column(
                     children: [
@@ -242,9 +255,13 @@ class OrderDetails extends ConsumerWidget {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.grey.shade200),
+                    border: Border.all(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Theme.of(context).colorScheme.outlineVariant
+                          : Colors.grey.shade200,
+                    ),
                   ),
                   child: Row(
                     children: [
@@ -397,11 +414,15 @@ class OrderDetails extends ConsumerWidget {
         ),
         Text(
           value,
-          style: (isTotal ? textTheme.titleSmall : textTheme.bodyMedium)
-              ?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: isTotal ? primaryColor : Colors.black87,
-              ),
+          style:
+              (isTotal ? textTheme.titleSmall : textTheme.bodyMedium)?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: isTotal
+                ? primaryColor
+                : Theme.of(context).brightness == Brightness.dark
+                    ? Theme.of(context).colorScheme.onSurface
+                    : Colors.black87,
+          ),
         ),
       ],
     );
@@ -525,9 +546,13 @@ class OrderItems extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(
+          color: Theme.of(context).brightness == Brightness.dark
+              ? Theme.of(context).colorScheme.outlineVariant
+              : Colors.grey.shade200,
+        ),
       ),
       child: Row(
         children: [

@@ -40,7 +40,7 @@ class OrderSummary extends ConsumerWidget {
       data: (enriched) {
         final List<OrderItemModel> items = enriched.items;
         final OrderStatus status = enriched.orderStatus;
-        
+
         // enriched.points is the total stored in the DB (includes the 10 pesos fee)
         final int total = enriched.points;
         const int serviceFee = kServiceFeePoints;
@@ -48,15 +48,21 @@ class OrderSummary extends ConsumerWidget {
         final int qty = enriched.totalQty;
 
         return Scaffold(
-          backgroundColor: const Color(0xFFF5F5F5),
-
+          backgroundColor: Theme.of(context).brightness == Brightness.dark
+              ? Theme.of(context).scaffoldBackgroundColor
+              : const Color(0xFFF5F5F5),
           appBar: TopBar(title: 'Order Summary', showBack: true, dark: true),
-
           bottomNavigationBar: Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              border: Border(top: BorderSide(color: Color(0xFFEAEAEA))),
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardColor,
+              border: Border(
+                top: BorderSide(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Theme.of(context).colorScheme.outlineVariant
+                      : const Color(0xFFEAEAEA),
+                ),
+              ),
             ),
             child: Row(
               children: [
@@ -74,9 +80,11 @@ class OrderSummary extends ConsumerWidget {
                       children: [
                         ElevatedButton.icon(
                           onPressed: () async {
-                            final organizer = await OrganizerService().getOrganizer(enriched.organizerId);
+                            final organizer = await OrganizerService()
+                                .getOrganizer(enriched.organizerId);
                             if (organizer != null) {
-                              await MessageService().initiateContact(organizer.ownerId);
+                              await MessageService()
+                                  .initiateContact(organizer.ownerId);
                               if (context.mounted) {
                                 Navigator.push(
                                   context,
@@ -123,17 +131,19 @@ class OrderSummary extends ConsumerWidget {
                     Row(
                       children: [
                         if (status == OrderStatus.processing)
-                        ElevatedButton(
-                          onPressed: statusNotifier.isLoading 
-                              ? null 
-                              : () => _onOrganizerAction(context, ref, enriched, status, total),
-                          child: const Text("Mark Ready"),
-                        ),
+                          ElevatedButton(
+                            onPressed: statusNotifier.isLoading
+                                ? null
+                                : () => _onOrganizerAction(
+                                    context, ref, enriched, status, total),
+                            child: const Text("Mark Ready"),
+                          ),
                         if (status == OrderStatus.readyForPickup)
                           ElevatedButton(
-                            onPressed: statusNotifier.isLoading 
-                                ? null 
-                                : () => _onOrganizerAction(context, ref, enriched, status, total),
+                            onPressed: statusNotifier.isLoading
+                                ? null
+                                : () => _onOrganizerAction(
+                                    context, ref, enriched, status, total),
                             child: const Text("Confirm Payment"),
                           ),
                         const SizedBox(width: 8),
@@ -141,8 +151,8 @@ class OrderSummary extends ConsumerWidget {
                           style: OutlinedButton.styleFrom(
                             side: const BorderSide(color: Colors.red),
                           ),
-                          onPressed: () =>
-                              _cancelOrganizerOrder(context, ref, enriched, status),
+                          onPressed: () => _cancelOrganizerOrder(
+                              context, ref, enriched, status),
                           child: const Text(
                             "Cancel",
                             style: TextStyle(color: Colors.red),
@@ -153,13 +163,13 @@ class OrderSummary extends ConsumerWidget {
                   else if (status == OrderStatus.completed)
                     const Text(
                       "Completed",
-                      style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                          color: Colors.green, fontWeight: FontWeight.bold),
                     )
                 ],
               ],
             ),
           ),
-
           body: SingleChildScrollView(
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -168,9 +178,13 @@ class OrderSummary extends ConsumerWidget {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.grey.shade200),
+                    border: Border.all(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Theme.of(context).colorScheme.outlineVariant
+                          : Colors.grey.shade200,
+                    ),
                   ),
                   child: Row(
                     children: [
@@ -234,9 +248,13 @@ class OrderSummary extends ConsumerWidget {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.grey.shade200),
+                    border: Border.all(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Theme.of(context).colorScheme.outlineVariant
+                          : Colors.grey.shade200,
+                    ),
                   ),
                   child: Column(
                     children: [
@@ -270,10 +288,14 @@ class OrderSummary extends ConsumerWidget {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.grey.shade200),
+                    border: Border.all(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Theme.of(context).colorScheme.outlineVariant
+                          : Colors.grey.shade200,
                     ),
+                  ),
                   child: Row(
                     children: [
                       Icon(Icons.account_balance_wallet, color: primaryColor),
@@ -328,14 +350,12 @@ class OrderSummary extends ConsumerWidget {
           onCancel: () => Navigator.pop(context),
         ),
       );
-    } 
-    else if (status == OrderStatus.readyForPickup) {
+    } else if (status == OrderStatus.readyForPickup) {
       ModalContainer.popup(
         context: context,
         child: _ConfirmModal(
           title: 'Confirm Payment',
-          body:
-              'Confirm that the customer has paid $total pts?',
+          body: 'Confirm that the customer has paid $total pts?',
           confirmLabel: 'Confirm Payment',
           onConfirm: () async {
             Navigator.pop(context);
@@ -371,7 +391,8 @@ class OrderSummary extends ConsumerWidget {
       final organizer = await organizerService.getOrganizer(organizerId);
 
       if (organizer != null && context.mounted) {
-        Navigator.pushNamed(context, '/organizer-profile', arguments: organizer);
+        Navigator.pushNamed(context, '/organizer-profile',
+            arguments: organizer);
       } else if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Organizer no longer available')),
@@ -479,11 +500,15 @@ class OrderSummary extends ConsumerWidget {
         ),
         Text(
           value,
-          style: (isTotal ? textTheme.titleSmall : textTheme.bodyMedium)
-              ?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: isTotal ? primaryColor : Colors.black87,
-              ),
+          style:
+              (isTotal ? textTheme.titleSmall : textTheme.bodyMedium)?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: isTotal
+                ? primaryColor
+                : Theme.of(context).brightness == Brightness.dark
+                    ? Theme.of(context).colorScheme.onSurface
+                    : Colors.black87,
+          ),
         ),
       ],
     );
@@ -498,9 +523,8 @@ class _StatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String label = status == OrderStatus.readyForPickup
-        ? "To Payment"
-        : status.toName;
+    String label =
+        status == OrderStatus.readyForPickup ? "To Payment" : status.toName;
 
     final color = switch (status) {
       OrderStatus.completed => Colors.green,
@@ -603,9 +627,13 @@ class OrderItems extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(
+          color: Theme.of(context).brightness == Brightness.dark
+              ? Theme.of(context).colorScheme.outlineVariant
+              : Colors.grey.shade200,
+        ),
       ),
       child: Row(
         children: [

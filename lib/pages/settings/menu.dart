@@ -10,6 +10,7 @@ import '../../pages/settings/organizer_edit.dart';
 import '../../pages/settings/password_edit.dart';
 import '../../pages/settings/delete_account.dart';
 import '../../widgets/pfp_edit.dart';
+import '../../widgets/dark_theme_switch.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../models/enums.dart';
 import '../../providers/auth_provider.dart';
@@ -53,7 +54,8 @@ class MenuScreen extends ConsumerWidget {
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 20),
-
+                  _header(context, "Appearance", false),
+                  const DarkThemeSwitch(),
                   _buildList(context, [
                     {
                       'icon': Icons.person_outline,
@@ -66,7 +68,6 @@ class MenuScreen extends ConsumerWidget {
                       'action': () => editPassword(context, ref),
                     },
                   ]),
-
                   _header(context, "Organizer Settings", false),
                   if (user.role == Role.organizer) ...[
                     organizerAsync.when(
@@ -93,7 +94,6 @@ class MenuScreen extends ConsumerWidget {
                       },
                     ]),
                   ],
-
                   _header(context, "Support", false),
                   _buildList(context, [
                     {
@@ -154,7 +154,6 @@ class MenuScreen extends ConsumerWidget {
                       },
                     },
                   ]),
-
                   _header(context, "Danger Zone", true),
                   _buildList(context, [
                     if (user.role == Role.organizer) ...[
@@ -180,18 +179,18 @@ class MenuScreen extends ConsumerWidget {
   }
 
   Widget _header(BuildContext context, String text, bool isDangerous) => Align(
-    alignment: Alignment.centerLeft,
-    child: Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
-          color: isDangerous ? Theme.of(context).primaryColor : null,
+        alignment: Alignment.centerLeft,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Text(
+            text,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: isDangerous ? Theme.of(context).primaryColor : null,
+            ),
+          ),
         ),
-      ),
-    ),
-  );
+      );
 
   Widget _buildList(BuildContext context, List<Map<String, dynamic>> items) {
     return Column(

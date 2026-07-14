@@ -28,7 +28,9 @@ class _ListingScreenState extends ConsumerState<ListingScreen> {
     final user = ref.watch(currentUserProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: Theme.of(context).brightness == Brightness.dark
+          ? Theme.of(context).scaffoldBackgroundColor
+          : const Color(0xFFF5F5F5),
       appBar: TopBar(
         title: 'Manage Listings',
         showBack: true,
@@ -60,7 +62,6 @@ class _ListingScreenState extends ConsumerState<ListingScreen> {
         child: Column(
           children: [
             const SizedBox(height: 10),
-
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Align(
@@ -68,9 +69,7 @@ class _ListingScreenState extends ConsumerState<ListingScreen> {
                 child: Text("Reward Listings", style: textTheme.titleLarge),
               ),
             ),
-
             const SizedBox(height: 10),
-
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               child: Row(
@@ -81,9 +80,7 @@ class _ListingScreenState extends ConsumerState<ListingScreen> {
                       onSearch: (val) => setState(() => searchQuery = val),
                     ),
                   ),
-
                   const SizedBox(width: 10),
-
                   Expanded(
                     flex: 2,
                     child: FilterWidget(
@@ -101,7 +98,6 @@ class _ListingScreenState extends ConsumerState<ListingScreen> {
                 ],
               ),
             ),
-
             if (user?.organizerId != null) ...[
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -146,10 +142,7 @@ class _CategoryFilter extends ConsumerWidget {
 
     return rewardsAsync.when(
       data: (rewards) {
-        final categories = rewards
-            .expand((p) => p.categories)
-            .toSet()
-            .toList();
+        final categories = rewards.expand((p) => p.categories).toSet().toList();
         categories.sort();
         final displayCategories = ["All Categories", ...categories];
 
@@ -187,18 +180,15 @@ class InventoryList extends ConsumerWidget {
       data: (rewards) {
         final filteredRewards = rewards.where((reward) {
           final query = searchQuery.toLowerCase();
-          final matchesSearch =
-              reward.name.toLowerCase().contains(query) ||
+          final matchesSearch = reward.name.toLowerCase().contains(query) ||
               reward.description.toLowerCase().contains(query) ||
               (reward.sku.toLowerCase().contains(query)) ||
               (reward.categories.any((c) => c.toLowerCase().contains(query)));
 
           final matchesType =
-              selectedType == "All Types" ||
-              reward.type.toName == selectedType;
+              selectedType == "All Types" || reward.type.toName == selectedType;
 
-          final matchesCategory =
-              selectedCategory == "All Categories" ||
+          final matchesCategory = selectedCategory == "All Categories" ||
               reward.categories.contains(selectedCategory);
 
           return matchesSearch && matchesType && matchesCategory;
@@ -219,7 +209,6 @@ class InventoryList extends ConsumerWidget {
           },
         );
       },
-
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (err, stack) => Center(child: Text('Error: $err')),
     );
@@ -288,7 +277,7 @@ class ListingCard extends ConsumerWidget {
         margin: const EdgeInsets.only(bottom: 16),
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(22),
           boxShadow: const [BoxShadow(blurRadius: 12, color: Colors.black12)],
         ),
@@ -342,7 +331,6 @@ class ListingCard extends ConsumerWidget {
                 ),
               ],
             ),
-
             if (reward.categories.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: 8),
@@ -356,7 +344,12 @@ class ListingCard extends ConsumerWidget {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.grey.shade100,
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Theme.of(
+                                        context,
+                                      ).colorScheme.surfaceContainerHigh
+                                    : Colors.grey.shade100,
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
@@ -371,13 +364,9 @@ class ListingCard extends ConsumerWidget {
                       .toList(),
                 ),
               ),
-
             const SizedBox(height: 12),
-
             _buildListingDetails(context),
-
             const SizedBox(height: 5),
-
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -509,8 +498,7 @@ class ListingCard extends ConsumerWidget {
                   ? p.id == reward.linkedRewardId
                   : p.name == reward.name) &&
               (p.type == ListingType.regular ||
-                  (p.type == ListingType.discount &&
-                      p.linkedRewardId == null)),
+                  (p.type == ListingType.discount && p.linkedRewardId == null)),
         );
         if (baseItem != null) {
           int total = baseItem.points * reward.promoQuantity!;
@@ -522,8 +510,7 @@ class ListingCard extends ConsumerWidget {
     bool hasDiscount = originalPoints != null && originalPoints > reward.points;
 
     if (hasDiscount) {
-      double discountPercentage =
-          reward.discountPercentage ??
+      double discountPercentage = reward.discountPercentage ??
           ((1 - (reward.points / originalPoints)) * 100);
       return Row(
         children: [

@@ -28,7 +28,8 @@ class DashboardScreen extends ConsumerStatefulWidget {
   ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsBindingObserver {
+class _DashboardScreenState extends ConsumerState<DashboardScreen>
+    with WidgetsBindingObserver {
   final AuthService _authService = AuthService();
   Timer? _heartbeatTimer;
 
@@ -119,7 +120,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
               child: Container(
                 padding: const EdgeInsets.only(bottom: 20, top: 10),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Theme.of(context).cardColor,
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.1),
@@ -131,7 +132,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
                 child: NavBar(
                   selectedIndex: selectedIndex,
                   onTap: (index) {
-                    ref.read(dashboardTabIndexProvider.notifier).setIndex(index);
+                    ref
+                        .read(dashboardTabIndexProvider.notifier)
+                        .setIndex(index);
                   },
                 ),
               ),

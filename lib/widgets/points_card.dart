@@ -7,8 +7,12 @@ class PointsCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final primaryColor = Theme.of(context).primaryColor;
-    final textTheme = Theme.of(context).textTheme;
+    final theme = Theme.of(context);
+    final primaryColor = theme.primaryColor;
+    final cardPrimaryColor = theme.brightness == Brightness.dark
+        ? theme.colorScheme.primaryContainer
+        : primaryColor;
+    final textTheme = theme.textTheme;
     final user = ref.watch(currentUserProvider);
 
     if (user == null) return const SizedBox.shrink();
@@ -19,7 +23,10 @@ class PointsCard extends ConsumerWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [primaryColor, primaryColor.withValues(alpha: 0.8)],
+          colors: [
+            cardPrimaryColor,
+            cardPrimaryColor.withValues(alpha: 0.8),
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -27,7 +34,7 @@ class PointsCard extends ConsumerWidget {
         boxShadow: [
           BoxShadow(
             blurRadius: 12,
-            color: primaryColor.withValues(alpha: 0.3),
+            color: cardPrimaryColor.withValues(alpha: 0.3),
             offset: const Offset(0, 5),
           ),
         ],
@@ -70,14 +77,15 @@ class PointsCard extends ConsumerWidget {
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
-                  foregroundColor: primaryColor,
+                  foregroundColor: cardPrimaryColor,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   elevation: 0,
                 ),
-                child: const Text("Redeem", style: TextStyle(fontWeight: FontWeight.bold)),
+                child: const Text("Redeem",
+                    style: TextStyle(fontWeight: FontWeight.bold)),
               ),
             ],
           ),

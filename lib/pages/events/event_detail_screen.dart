@@ -33,47 +33,52 @@ class EventDetailScreen extends ConsumerWidget {
       error: (err, stack) => Scaffold(body: Center(child: Text("Error: $err"))),
       data: (updatedEvent) {
         final currentEvent = updatedEvent ?? event;
-        final hasJoined = organizerId != null && currentEvent.attendingOrganizerIds.contains(organizerId);
-        
-        final isCreator = organizerId != null && currentEvent.creatorId == organizerId;
+        final hasJoined = organizerId != null &&
+            currentEvent.attendingOrganizerIds.contains(organizerId);
 
-        final isMultiDay = currentEvent.endDate.isAfter(currentEvent.date) && 
-                           (currentEvent.endDate.day != currentEvent.date.day || currentEvent.endDate.month != currentEvent.date.month);
+        final isCreator =
+            organizerId != null && currentEvent.creatorId == organizerId;
+
+        final isMultiDay = currentEvent.endDate.isAfter(currentEvent.date) &&
+            (currentEvent.endDate.day != currentEvent.date.day ||
+                currentEvent.endDate.month != currentEvent.date.month);
 
         return Scaffold(
           appBar: AppBar(
             title: Text(currentEvent.name),
             actions: isCreator
-              ? [
-                IconButton(
-                  icon: const Icon(Icons.edit),
-                  tooltip: "Edit Event",
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => EditEventScreen(event: currentEvent),
+                ? [
+                    IconButton(
+                      icon: const Icon(Icons.edit),
+                      tooltip: "Edit Event",
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => EditEventScreen(event: currentEvent),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                  tooltip: "Delete Event",
-                  onPressed: () async {
-                    final deletedSuccessfully = await showDialog<bool>(
-                      context: context,
-                      builder: (_) => DeleteEventScreen(eventId: currentEvent.id),
-                    );
+                    IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      tooltip: "Delete Event",
+                      onPressed: () async {
+                        final deletedSuccessfully = await showDialog<bool>(
+                          context: context,
+                          builder: (_) =>
+                              DeleteEventScreen(eventId: currentEvent.id),
+                        );
 
-                    if (deletedSuccessfully == true && context.mounted) {
-                      Navigator.pop(context); 
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Event deleted successfully.")),
-                      );
-                    }
-                  },
-                ),
-              ]
-              : null,
+                        if (deletedSuccessfully == true && context.mounted) {
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text("Event deleted successfully.")),
+                          );
+                        }
+                      },
+                    ),
+                  ]
+                : null,
           ),
           body: SingleChildScrollView(
             padding: const EdgeInsets.all(20),
@@ -92,18 +97,21 @@ class EventDetailScreen extends ConsumerWidget {
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.hourglass_empty, color: Colors.amber.shade800),
+                        Icon(Icons.hourglass_empty,
+                            color: Colors.amber.shade800),
                         const SizedBox(width: 12),
                         const Expanded(
                           child: Text(
                             "This event is currently pending approval from admin, thus it may not be visible to all users yet.",
-                            style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w500, fontSize: 13),
+                            style: TextStyle(
+                                color: Colors.black87,
+                                fontWeight: FontWeight.w500,
+                                fontSize: 13),
                           ),
                         ),
                       ],
                     ),
                   ),
-
                 if (currentEvent.imageUrl != null)
                   ClipRRect(
                     borderRadius: BorderRadius.circular(12),
@@ -121,19 +129,26 @@ class EventDetailScreen extends ConsumerWidget {
                     Expanded(
                       child: Text(
                         currentEvent.name,
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                        style: Theme.of(context)
+                            .textTheme
+                            .headlineSmall
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                     ),
                     if (currentEvent.isEnded)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 5),
                         decoration: BoxDecoration(
                           color: Colors.red.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: const Text(
                           "CONCLUDED",
-                          style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 12),
+                          style: TextStyle(
+                              color: Colors.red,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12),
                         ),
                       ),
                   ],
@@ -141,13 +156,13 @@ class EventDetailScreen extends ConsumerWidget {
                 const SizedBox(height: 10),
                 Row(
                   children: [
-                    const Icon(Icons.calendar_today, size: 18, color: Colors.grey),
+                    const Icon(Icons.calendar_today,
+                        size: 18, color: Colors.grey),
                     const SizedBox(width: 8),
-                    Text(
-                      isMultiDay 
+                    Text(isMultiDay
                         ? "${DateFormat('MMM dd').format(currentEvent.date)} - ${DateFormat('MMM dd, yyyy').format(currentEvent.endDate)}"
-                        : DateFormat('MMMM dd, yyyy').format(currentEvent.date)
-                    ),
+                        : DateFormat('MMMM dd, yyyy')
+                            .format(currentEvent.date)),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -155,20 +170,27 @@ class EventDetailScreen extends ConsumerWidget {
                   children: [
                     const Icon(Icons.location_on, size: 18, color: Colors.grey),
                     const SizedBox(width: 8),
-                    Text("${currentEvent.location}${currentEvent.floor != null ? ' - ${currentEvent.floor}' : ''}"),
+                    Text(
+                        "${currentEvent.location}${currentEvent.floor != null ? ' - ${currentEvent.floor}' : ''}"),
                   ],
                 ),
                 const SizedBox(height: 20),
                 Text(
                   "Description",
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleMedium
+                      ?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 10),
                 Text(currentEvent.description),
                 const SizedBox(height: 30),
                 Text(
                   "Attending Organizers",
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleMedium
+                      ?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 10),
                 if (currentEvent.attendingOrganizerIds.isEmpty)
@@ -188,12 +210,16 @@ class EventDetailScreen extends ConsumerWidget {
                             return ListTile(
                               contentPadding: EdgeInsets.zero,
                               leading: CircleAvatar(
-                                backgroundImage: organizer.imageUrl != null ? NetworkImage(organizer.imageUrl!) : null,
-                                child: organizer.imageUrl == null ? const Icon(Icons.store) : null,
+                                backgroundImage: organizer.imageUrl != null
+                                    ? NetworkImage(organizer.imageUrl!)
+                                    : null,
+                                child: organizer.imageUrl == null
+                                    ? const Icon(Icons.store)
+                                    : null,
                               ),
                               title: Text(organizer.organizerName),
                               onTap: () {
-                                 Navigator.pushNamed(
+                                Navigator.pushNamed(
                                   context,
                                   '/organizer-profile',
                                   arguments: organizer,
@@ -213,16 +239,22 @@ class EventDetailScreen extends ConsumerWidget {
                     child: ElevatedButton(
                       onPressed: () async {
                         if (hasJoined) {
-                          await eventService.leaveEvent(currentEvent.id, organizerId);
+                          await eventService.leaveEvent(
+                              currentEvent.id, organizerId);
                         } else {
-                          await eventService.joinEvent(currentEvent.id, organizerId);
+                          await eventService.joinEvent(
+                              currentEvent.id, organizerId);
                         }
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: hasJoined
                             ? Colors.red
                             : Theme.of(context).primaryColor,
-                        foregroundColor: Colors.white,
+                        foregroundColor: hasJoined
+                            ? Colors.white
+                            : Theme.of(context).brightness == Brightness.dark
+                                ? Theme.of(context).colorScheme.onPrimary
+                                : Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 15),
                       ),
                       child: Text(

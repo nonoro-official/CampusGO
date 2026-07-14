@@ -12,8 +12,8 @@ import '../../../widgets/reward_image_picker.dart';
 String _generateAutoSku() {
   final random = Random();
   final timestamp = DateTime.now().millisecondsSinceEpoch.toString().substring(
-    8,
-  );
+        8,
+      );
   final randomStr = List.generate(3, (index) => random.nextInt(10)).join();
   return "SKU-$timestamp$randomStr";
 }
@@ -73,7 +73,8 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
         ? reward!.originalPoints
         : (reward?.points ?? 0.0);
 
-    pointsController = TextEditingController(text: initialBasePoints.toString());
+    pointsController =
+        TextEditingController(text: initialBasePoints.toString());
     salePointsController = TextEditingController(
       text: reward?.points.toString() ?? "0.0",
     );
@@ -225,8 +226,7 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
   }
 
   void updateStockDisplay(List<RewardModel> baseRewards) {
-    final bool isBaseItem =
-        widget.reward != null &&
+    final bool isBaseItem = widget.reward != null &&
         (widget.reward!.type == ListingType.regular ||
             (widget.reward!.type == ListingType.discount &&
                 widget.reward!.linkedRewardId == null));
@@ -303,8 +303,7 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
         imageUrl = await rewardService.uploadRewardImage(selectedImage!);
       }
 
-      bool isDiscountable =
-          selectedType == ListingType.discount ||
+      bool isDiscountable = selectedType == ListingType.discount ||
           selectedType == ListingType.promo ||
           selectedType == ListingType.bundle;
 
@@ -333,9 +332,8 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
           type: selectedType,
           isAvailable: isAvailable,
           imageUrl: imageUrl,
-          bundleItems: selectedType == ListingType.bundle
-              ? selectedBundleItems
-              : null,
+          bundleItems:
+              selectedType == ListingType.bundle ? selectedBundleItems : null,
           promoQuantity: promoQty,
           originalPoints: savedOriginalPoints,
           discountPercentage: savedDiscountPercentage,
@@ -355,9 +353,8 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
           type: selectedType,
           isAvailable: isAvailable,
           imageUrl: imageUrl,
-          bundleItems: selectedType == ListingType.bundle
-              ? selectedBundleItems
-              : null,
+          bundleItems:
+              selectedType == ListingType.bundle ? selectedBundleItems : null,
           promoQuantity: promoQty,
           originalPoints: savedOriginalPoints,
           discountPercentage: savedDiscountPercentage,
@@ -385,7 +382,8 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
     final textTheme = Theme.of(context).textTheme;
     final primaryColor = Theme.of(context).primaryColor;
 
-    final rewardsAsync = ref.watch(organizerRewardsProvider(widget.organizerId));
+    final rewardsAsync =
+        ref.watch(organizerRewardsProvider(widget.organizerId));
     final allRewards = rewardsAsync.value ?? [];
 
     final baseRewards = allRewards
@@ -400,27 +398,24 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
       (p) => p.id == selectedBaseRewardId,
     );
 
-    final bool isBaseItem =
-        widget.reward != null &&
+    final bool isBaseItem = widget.reward != null &&
         (widget.reward!.type == ListingType.regular ||
             (widget.reward!.type == ListingType.discount &&
                 widget.reward!.linkedRewardId == null));
 
-    bool isDiscountable =
-        selectedType == ListingType.discount ||
+    bool isDiscountable = selectedType == ListingType.discount ||
         selectedType == ListingType.promo ||
         selectedType == ListingType.bundle;
 
-    final existingCategories = allRewards
-        .expand((p) => p.categories)
-        .toSet()
-        .toList();
+    final existingCategories =
+        allRewards.expand((p) => p.categories).toSet().toList();
     existingCategories.sort();
 
     final allDisplayCategories = {
       ...existingCategories,
       ...localSuggestions,
-    }.toList()..sort();
+    }.toList()
+      ..sort();
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
@@ -435,13 +430,11 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
             style: textTheme.titleLarge,
           ),
           const SizedBox(height: 20),
-
           RewardImagePicker(
             initialImageUrl: widget.reward?.imageUrl,
             onImagePicked: (file) => setState(() => selectedImage = file),
           ),
           const SizedBox(height: 20),
-
           if (isBaseItem)
             Container(
               padding: const EdgeInsets.all(12),
@@ -475,9 +468,8 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
                     activeThumbColor: Colors.red,
                     onChanged: (val) {
                       setState(() {
-                        selectedType = val
-                            ? ListingType.discount
-                            : ListingType.regular;
+                        selectedType =
+                            val ? ListingType.discount : ListingType.regular;
                         if (!val) {
                           discountPercentController.text = "0";
                           salePointsController.text = pointsController.text;
@@ -497,21 +489,18 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
                 labelText: 'Listing Type',
                 border: OutlineInputBorder(),
               ),
-              items: ListingType.values
-                  .where((t) {
-                    if (t == ListingType.regular) return false;
-                    if (widget.reward == null && t == ListingType.discount) {
-                      return false;
-                    }
-                    return true;
-                  })
-                  .map((type) {
-                    return DropdownMenuItem(
-                      value: type,
-                      child: Text(type.toName),
-                    );
-                  })
-                  .toList(),
+              items: ListingType.values.where((t) {
+                if (t == ListingType.regular) return false;
+                if (widget.reward == null && t == ListingType.discount) {
+                  return false;
+                }
+                return true;
+              }).map((type) {
+                return DropdownMenuItem(
+                  value: type,
+                  child: Text(type.toName),
+                );
+              }).toList(),
               onChanged: (val) {
                 if (val != null) {
                   setState(() {
@@ -536,7 +525,6 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
               },
             ),
           const SizedBox(height: 15),
-
           if (isDiscountable) ...[
             Row(
               children: [
@@ -578,7 +566,6 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
             ),
             const SizedBox(height: 15),
           ],
-
           if (!isBaseItem &&
               (selectedType == ListingType.promo ||
                   (selectedType == ListingType.discount &&
@@ -606,8 +593,8 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
                       pointsController.text =
                           ((p.originalPoints ?? p.points) * qty).toString();
                     } else {
-                      pointsController.text = (p.originalPoints ?? p.points)
-                          .toString();
+                      pointsController.text =
+                          (p.originalPoints ?? p.points).toString();
                     }
 
                     _syncSalePoints();
@@ -621,7 +608,6 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
             ),
             const SizedBox(height: 15),
           ],
-
           if (selectedType == ListingType.bundle) ...[
             Text("Select Bundle Items", style: textTheme.bodySmall),
             const SizedBox(height: 5),
@@ -670,7 +656,6 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
             ),
             const SizedBox(height: 15),
           ],
-
           TextField(
             controller: nameController,
             decoration: const InputDecoration(
@@ -679,16 +664,14 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
             enabled: !isBaseItem,
           ),
           const SizedBox(height: 15),
-
           Row(
             children: [
               Expanded(
                 child: TextField(
                   controller: pointsController,
                   decoration: InputDecoration(
-                    labelText: isDiscountable
-                        ? 'Original Points *'
-                        : 'Points *',
+                    labelText:
+                        isDiscountable ? 'Original Points *' : 'Points *',
                   ),
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
@@ -719,7 +702,6 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
               ),
             ],
           ),
-
           const SizedBox(height: 15),
           TextField(
             controller: skuController,
@@ -748,8 +730,7 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
             ),
             style: Theme.of(context).textTheme.bodyMedium,
             onSubmitted: (_) => _addManualCategory(),
-            enabled:
-                !isBaseItem ||
+            enabled: !isBaseItem ||
                 (isBaseItem && selectedType == ListingType.discount),
           ),
           if (allDisplayCategories.isNotEmpty &&
@@ -781,16 +762,31 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
                         cat,
                         style: TextStyle(
                           fontSize: 11,
-                          color: isSelected ? Colors.white : Colors.black87,
+                          color: isSelected
+                              ? Theme.of(context).brightness == Brightness.dark
+                                  ? Theme.of(context).colorScheme.onPrimary
+                                  : Colors.white
+                              : Theme.of(context).brightness == Brightness.dark
+                                  ? Theme.of(context).colorScheme.onSurface
+                                  : Colors.black87,
                         ),
                       ),
                       selected: isSelected,
                       onSelected: (_) => _toggleCategory(cat),
                       selectedColor: Theme.of(context).primaryColor,
-                      checkmarkColor: Colors.white,
+                      checkmarkColor:
+                          Theme.of(context).brightness == Brightness.dark
+                              ? Theme.of(context).colorScheme.onPrimary
+                              : Colors.white,
                       showCheckmark: true,
                       labelStyle: TextStyle(
-                        color: isSelected ? Colors.white : Colors.black87,
+                        color: isSelected
+                            ? Theme.of(context).brightness == Brightness.dark
+                                ? Theme.of(context).colorScheme.onPrimary
+                                : Colors.white
+                            : Theme.of(context).brightness == Brightness.dark
+                                ? Theme.of(context).colorScheme.onSurface
+                                : Colors.black87,
                       ),
                       padding: EdgeInsets.zero,
                       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -808,7 +804,6 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
             ),
             enabled: !isBaseItem,
           ),
-
           if (selectedType == ListingType.promo) ...[
             const SizedBox(height: 15),
             TextField(
@@ -834,7 +829,6 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
               },
             ),
           ],
-
           const SizedBox(height: 15),
           TextField(
             controller: descriptionController,
@@ -842,9 +836,7 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
             maxLines: 2,
             enabled: !isBaseItem,
           ),
-
           const SizedBox(height: 30),
-
           SizedBox(
             width: double.infinity,
             height: 50,
@@ -857,9 +849,7 @@ class _ListingModalState extends ConsumerState<_ListingModal> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : Text(
-                      widget.reward == null
-                          ? 'Create Listing'
-                          : 'Save Changes',
+                      widget.reward == null ? 'Create Listing' : 'Save Changes',
                     ),
             ),
           ),

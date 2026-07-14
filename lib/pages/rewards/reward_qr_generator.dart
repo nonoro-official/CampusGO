@@ -24,7 +24,9 @@ class QRGeneratorScreen extends ConsumerWidget {
     final user = ref.watch(currentUserProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: Theme.of(context).brightness == Brightness.dark
+          ? Theme.of(context).scaffoldBackgroundColor
+          : const Color(0xFFF5F5F5),
       appBar: const TopBar(
         title: 'Generate Reward QR',
         showBack: true,
@@ -111,14 +113,22 @@ class RewardSelectionCard extends StatelessWidget {
     final int stock = reward.calculateEffectiveStock(allRewards);
 
     return GestureDetector(
-      onTap: stock > 0 ? () => _showQRGenerationDialog(context, reward, allRewards) : null,
+      onTap: stock > 0
+          ? () => _showQRGenerationDialog(context, reward, allRewards)
+          : null,
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: stock > 0 ? Colors.white : Colors.grey.shade100,
+          color: stock > 0
+              ? Theme.of(context).cardColor
+              : Theme.of(context).brightness == Brightness.dark
+                  ? Theme.of(context).colorScheme.surfaceContainerHigh
+                  : Colors.grey.shade100,
           borderRadius: BorderRadius.circular(22),
-          boxShadow: stock > 0 ? const [BoxShadow(blurRadius: 12, color: Colors.black12)] : null,
+          boxShadow: stock > 0
+              ? const [BoxShadow(blurRadius: 12, color: Colors.black12)]
+              : null,
         ),
         child: Opacity(
           opacity: stock > 0 ? 1.0 : 0.6,
@@ -147,13 +157,13 @@ class RewardSelectionCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: stock > 0 ? primaryColor.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
+                      color: stock > 0
+                          ? primaryColor.withOpacity(0.1)
+                          : Colors.grey.withOpacity(0.1),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(
-                      Icons.qr_code, 
-                      color: stock > 0 ? primaryColor : Colors.grey
-                    ),
+                    child: Icon(Icons.qr_code,
+                        color: stock > 0 ? primaryColor : Colors.grey),
                   ),
                 ],
               ),
@@ -173,7 +183,8 @@ class RewardSelectionCard extends StatelessWidget {
     );
   }
 
-  void _showQRGenerationDialog(BuildContext context, RewardModel reward, List<RewardModel> allRewards) {
+  void _showQRGenerationDialog(
+      BuildContext context, RewardModel reward, List<RewardModel> allRewards) {
     showDialog(
       context: context,
       builder: (context) {
@@ -226,29 +237,37 @@ class _QRGenerationModalState extends State<QRGenerationModal> {
         throw Exception("Gallery access denied.");
       }
 
-      final RenderRepaintBoundary boundary = _qrKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+      final RenderRepaintBoundary boundary =
+          _qrKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
       final ui.Image image = await boundary.toImage(pixelRatio: 3.0);
-      final ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-      
+      final ByteData? byteData =
+          await image.toByteData(format: ui.ImageByteFormat.png);
+
       if (byteData != null) {
         final Uint8List pngBytes = byteData.buffer.asUint8List();
-        
+
         final tempDir = await getTemporaryDirectory();
-        final file = await File('${tempDir.path}/qr_${DateTime.now().millisecondsSinceEpoch}.png').create();
+        final file = await File(
+                '${tempDir.path}/qr_${DateTime.now().millisecondsSinceEpoch}.png')
+            .create();
         await file.writeAsBytes(pngBytes);
 
         await Gal.putImage(file.path);
-        
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("QR Code saved to Gallery!"), backgroundColor: Colors.green),
+            const SnackBar(
+                content: Text("QR Code saved to Gallery!"),
+                backgroundColor: Colors.green),
           );
         }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to save QR: $e"), backgroundColor: Colors.redAccent),
+          SnackBar(
+              content: Text("Failed to save QR: $e"),
+              backgroundColor: Colors.redAccent),
         );
       }
     } finally {
@@ -265,11 +284,15 @@ class _QRGenerationModalState extends State<QRGenerationModal> {
     final int totalPoints = (widget.reward.points * quantity).toInt();
 
     // Create a highly distinct identifier token combining Reward ID + Current Epoch Timestamp
-    final String uniqueId = "${widget.reward.id}_${DateTime.now().millisecondsSinceEpoch}";
+    final String uniqueId =
+        "${widget.reward.id}_${DateTime.now().millisecondsSinceEpoch}";
 
     try {
       // 1. Log the token signature in the decentralized db cloud ledger
-      await FirebaseFirestore.instance.collection('rewards_ledger').doc(uniqueId).set({
+      await FirebaseFirestore.instance
+          .collection('rewards_ledger')
+          .doc(uniqueId)
+          .set({
         'points': totalPoints,
         'status': 'unused', // Key parameter checked by Part 1 scanner
         'createdAt': FieldValue.serverTimestamp(),
@@ -325,8 +348,10 @@ class _QRGenerationModalState extends State<QRGenerationModal> {
     );
   }
 
-  Widget _buildConfigurationView(TextTheme textTheme, Color primaryColor, int totalPoints) {
-    final int maxStock = widget.reward.calculateEffectiveStock(widget.allRewards);
+  Widget _buildConfigurationView(
+      TextTheme textTheme, Color primaryColor, int totalPoints) {
+    final int maxStock =
+        widget.reward.calculateEffectiveStock(widget.allRewards);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -356,26 +381,29 @@ class _QRGenerationModalState extends State<QRGenerationModal> {
               onPressed: _isLoading
                   ? null
                   : () {
-                if (quantity > 1) setState(() => quantity--);
-              },
+                      if (quantity > 1) setState(() => quantity--);
+                    },
             ),
             const SizedBox(width: 20),
             Text(
               "$quantity",
-              style: textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
+              style: textTheme.headlineMedium
+                  ?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(width: 20),
             IconButton(
               icon: const Icon(Icons.add_circle_outline),
-              color: quantity < maxStock && !_isLoading ? primaryColor : Colors.grey,
+              color: quantity < maxStock && !_isLoading
+                  ? primaryColor
+                  : Colors.grey,
               iconSize: 32,
               onPressed: _isLoading
                   ? null
                   : () {
-                if (quantity < maxStock) {
-                  setState(() => quantity++);
-                }
-              },
+                      if (quantity < maxStock) {
+                        setState(() => quantity++);
+                      }
+                    },
             ),
           ],
         ),
@@ -392,15 +420,21 @@ class _QRGenerationModalState extends State<QRGenerationModal> {
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
             ),
             onPressed: _isLoading ? null : _generateQR,
             child: _isLoading
-                ? const SizedBox(
-              height: 20,
-              width: 20,
-              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-            )
+                ? SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Theme.of(context).colorScheme.onPrimary
+                          : Colors.white,
+                    ),
+                  )
                 : const Text("Generate QR Code"),
           ),
         ),
@@ -408,7 +442,8 @@ class _QRGenerationModalState extends State<QRGenerationModal> {
     );
   }
 
-  Widget _buildQRView(TextTheme textTheme, Color primaryColor, int totalPoints) {
+  Widget _buildQRView(
+      TextTheme textTheme, Color primaryColor, int totalPoints) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -452,13 +487,17 @@ class _QRGenerationModalState extends State<QRGenerationModal> {
             Expanded(
               child: ElevatedButton.icon(
                 onPressed: _isSaving ? null : _saveQRCode,
-                icon: _isSaving 
-                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Icon(Icons.download),
+                icon: _isSaving
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.download),
                 label: const Text("Save Image"),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
                 ),
               ),
             ),
@@ -467,7 +506,8 @@ class _QRGenerationModalState extends State<QRGenerationModal> {
               child: OutlinedButton(
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
                 ),
                 onPressed: () {
                   Navigator.pop(context); // Close dialog
