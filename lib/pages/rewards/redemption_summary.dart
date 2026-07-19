@@ -74,45 +74,49 @@ class OrderSummary extends ConsumerWidget {
                 /// BUYER VIEW (Regardless of user's role, if they are viewing through their History/Cart)
                 if (accountType == "Customer") ...[
                   if (status == OrderStatus.processing)
-                    Row(
-                      children: [
-                        ElevatedButton.icon(
-                          onPressed: () async {
-                            final organizer = await OrganizerService()
-                                .getOrganizer(enriched.organizerId);
-                            if (organizer != null) {
-                              await MessageService()
-                                  .initiateContact(organizer.ownerId);
-                              if (context.mounted) {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => ChatPage(
-                                      receiverName: organizer.organizerName,
-                                      receiverID: organizer.ownerId,
-                                      receiverImageUrl: organizer.imageUrl,
+                    Expanded(
+                      flex: 2,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          ElevatedButton.icon(
+                            onPressed: () async {
+                              final organizer = await OrganizerService()
+                                  .getOrganizer(enriched.organizerId);
+                              if (organizer != null) {
+                                await MessageService()
+                                    .initiateContact(organizer.ownerId);
+                                if (context.mounted) {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => ChatPage(
+                                        receiverName: organizer.organizerName,
+                                        receiverID: organizer.ownerId,
+                                        receiverImageUrl: organizer.imageUrl,
+                                      ),
                                     ),
-                                  ),
-                                );
+                                  );
+                                }
                               }
-                            }
-                          },
-                          icon: const Icon(Icons.chat, size: 18),
-                          label: const Text("Contact Seller"),
-                        ),
-                        const SizedBox(width: 8),
-                        OutlinedButton(
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: Colors.red),
+                            },
+                            icon: const Icon(Icons.chat, size: 18),
+                            label: const Text("Contact Seller"),
                           ),
-                          onPressed: () =>
-                              _cancelCustomerOrder(context, ref, enriched),
-                          child: const Text(
-                            "Cancel",
-                            style: TextStyle(color: Colors.red),
+                          const SizedBox(width: 8),
+                          OutlinedButton(
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: Colors.red),
+                            ),
+                            onPressed: () =>
+                                _cancelCustomerOrder(context, ref, enriched),
+                            child: const Text(
+                              "Cancel",
+                              style: TextStyle(color: Colors.red),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     )
                   else if (status == OrderStatus.completed)
                     ElevatedButton(
@@ -126,37 +130,41 @@ class OrderSummary extends ConsumerWidget {
                 else ...[
                   if (status == OrderStatus.processing ||
                       status == OrderStatus.readyForPickup)
-                    Row(
-                      children: [
-                        if (status == OrderStatus.processing)
-                          ElevatedButton(
-                            onPressed: statusNotifier.isLoading
-                                ? null
-                                : () => _onOrganizerAction(
-                                    context, ref, enriched, status, total),
-                            child: const Text("Mark Ready"),
+                    Expanded(
+                      flex: 2,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          if (status == OrderStatus.processing)
+                            ElevatedButton(
+                              onPressed: statusNotifier.isLoading
+                                  ? null
+                                  : () => _onOrganizerAction(
+                                      context, ref, enriched, status, total),
+                              child: const Text("Mark Ready"),
+                            ),
+                          if (status == OrderStatus.readyForPickup)
+                            ElevatedButton(
+                              onPressed: statusNotifier.isLoading
+                                  ? null
+                                  : () => _onOrganizerAction(
+                                      context, ref, enriched, status, total),
+                              child: const Text("Confirm Payment"),
+                            ),
+                          const SizedBox(width: 8),
+                          OutlinedButton(
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: Colors.red),
+                            ),
+                            onPressed: () => _cancelOrganizerOrder(
+                                context, ref, enriched, status),
+                            child: const Text(
+                              "Cancel",
+                              style: TextStyle(color: Colors.red),
+                            ),
                           ),
-                        if (status == OrderStatus.readyForPickup)
-                          ElevatedButton(
-                            onPressed: statusNotifier.isLoading
-                                ? null
-                                : () => _onOrganizerAction(
-                                    context, ref, enriched, status, total),
-                            child: const Text("Confirm Payment"),
-                          ),
-                        const SizedBox(width: 8),
-                        OutlinedButton(
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: Colors.red),
-                          ),
-                          onPressed: () => _cancelOrganizerOrder(
-                              context, ref, enriched, status),
-                          child: const Text(
-                            "Cancel",
-                            style: TextStyle(color: Colors.red),
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     )
                   else if (status == OrderStatus.completed)
                     const Text(

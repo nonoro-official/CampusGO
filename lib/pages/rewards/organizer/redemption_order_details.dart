@@ -73,63 +73,67 @@ class OrderDetails extends ConsumerWidget {
                 if (accountType == 'Organizer' &&
                     status != OrderStatus.completed &&
                     status != OrderStatus.cancelled)
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
+                  Expanded(
+                    flex: 2,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Expanded(
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            onPressed: statusNotifier.isLoading
+                                ? null
+                                : () => _onOrganizerAction(
+                                      context,
+                                      ref,
+                                      enriched,
+                                      isProcessing,
+                                      isReady,
+                                      total,
+                                    ),
+                            child: statusNotifier.isLoading
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2),
+                                  )
+                                : Text(
+                                    isProcessing
+                                        ? 'Mark Ready'
+                                        : isReady
+                                            ? 'Complete Order'
+                                            : 'Confirm',
+                                  ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: Colors.red),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 12,
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
                           onPressed: statusNotifier.isLoading
                               ? null
-                              : () => _onOrganizerAction(
-                                    context,
-                                    ref,
-                                    enriched,
-                                    isProcessing,
-                                    isReady,
-                                    total,
-                                  ),
-                          child: statusNotifier.isLoading
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child:
-                                      CircularProgressIndicator(strokeWidth: 2),
-                                )
-                              : Text(
-                                  isProcessing
-                                      ? 'Mark Ready'
-                                      : isReady
-                                          ? 'Complete Order'
-                                          : 'Confirm',
-                                ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      OutlinedButton(
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: Colors.red),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 12,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                              : () => _cancelOrder(context, ref, enriched),
+                          child: const Text(
+                            "Cancel",
+                            style: TextStyle(color: Colors.red),
                           ),
                         ),
-                        onPressed: statusNotifier.isLoading
-                            ? null
-                            : () => _cancelOrder(context, ref, enriched),
-                        child: const Text(
-                          "Cancel",
-                          style: TextStyle(color: Colors.red),
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
               ],
             ),
