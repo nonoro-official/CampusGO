@@ -62,7 +62,7 @@ class _RewardDetailScreenState extends ConsumerState<RewardDetailScreen> {
     final isOutOfStock = displayStock <= 0;
     final isLowStock = displayStock > 0 && displayStock <= 9;
 
-    final totalPoints = (reward.points * quantity) + kServiceFeePoints;
+    final totalPoints = (reward.points * quantity);
     final hasEnoughPoints = user != null && user.points >= totalPoints;
 
     return Scaffold(
@@ -255,7 +255,7 @@ class _RewardDetailScreenState extends ConsumerState<RewardDetailScreen> {
                       ),
                       if (!hasEnoughPoints)
                         Text(
-                          "Need ${totalPoints - user.points} more pts (+$kServiceFeePoints pts fee)",
+                          "Need ${totalPoints - user.points} more pts",
                           style:
                               textTheme.labelSmall?.copyWith(color: Colors.red),
                         ),
@@ -435,7 +435,7 @@ class _RewardDetailScreenState extends ConsumerState<RewardDetailScreen> {
                                   title: const Text('Buy Now'),
                                   content: Text(
                                     'Place order for ${reward.name} x$quantity '
-                                    'totalling $totalPoints pts (includes $kServiceFeePoints pts fee)?',
+                                    'totalling $totalPoints pts?',
                                   ),
                                   actions: [
                                     TextButton(

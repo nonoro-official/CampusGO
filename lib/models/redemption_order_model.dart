@@ -1,7 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-const int kServiceFeePoints = 10;
-
 // ─── Order Status ────────────────────────────────────────────────────────────
 
 enum OrderStatus {
@@ -85,7 +83,7 @@ class OrderModel {
 
   final DateTime timestamp;
   final OrderStatus orderStatus;
-  final int points; // total points (subtotal + fees)
+  final int points;
 
   /// Enriched line-items — populated client-side after fetching reward names
   final List<OrderItemModel> items;

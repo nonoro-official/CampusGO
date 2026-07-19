@@ -115,15 +115,15 @@ class CartNotifier extends AsyncNotifier<void> {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       final orderService = OrderService();
-      // Calculate total including 10 pesos service fee.
-      // We explicitly pass the total with fee to ensure database consistency.
-      final totalWithFee = cart.points + kServiceFeePoints;
+      // Calculate total.
+      // We explicitly pass the total to ensure database consistency.
+      final total = cart.points;
       
       await orderService.placeOrder(
         organizerId: cart.organizerId,
         userId: user.uid,
         orders: cart.rewards,
-        points: totalWithFee,
+        points: total,
       );
 
       // Delete the cart after the order is placed
@@ -143,14 +143,14 @@ class CartNotifier extends AsyncNotifier<void> {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       final orderService = OrderService();
-      // Calculate total including 10 pesos service fee.
-      final totalWithFee = (reward.points * quantity) + kServiceFeePoints;
+      // Calculate total.
+      final total = (reward.points * quantity);
       
       await orderService.placeOrder(
         organizerId: organizerId,
         userId: user.uid,
         orders: {reward.id: quantity},
-        points: totalWithFee,
+        points: total,
       );
     });
   }

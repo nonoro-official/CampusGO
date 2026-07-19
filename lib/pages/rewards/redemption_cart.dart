@@ -141,8 +141,8 @@ class _CartCardState extends ConsumerState<_CartCard> {
           return const SizedBox.shrink();
         }
 
-        final totalWithFee = enriched.points + kServiceFeePoints;
-        final hasEnoughPoints = user != null && user.points >= totalWithFee;
+        final total = enriched.points;
+        final hasEnoughPoints = user != null && user.points >= total;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -181,22 +181,12 @@ class _CartCardState extends ConsumerState<_CartCard> {
                     },
                   ),
                   const Spacer(),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        '${enriched.points} pts',
-                        style: textTheme.titleSmall?.copyWith(
-                          color: primaryColor,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        '+ $kServiceFeePoints pts fee',
-                        style:
-                            textTheme.labelSmall?.copyWith(color: Colors.grey),
-                      ),
-                    ],
+                  Text(
+                    '${enriched.points} pts',
+                    style: textTheme.titleSmall?.copyWith(
+                      color: primaryColor,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
@@ -205,7 +195,7 @@ class _CartCardState extends ConsumerState<_CartCard> {
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Text(
-                  'Insufficient points. You need ${totalWithFee - user.points} more pts.',
+                  'Insufficient points. You need ${total - user.points} more pts.',
                   style: const TextStyle(color: Colors.red, fontSize: 12),
                 ),
               ),
@@ -399,7 +389,7 @@ class _CartCardState extends ConsumerState<_CartCard> {
                           const Icon(Icons.shopping_cart_checkout),
                           const SizedBox(width: 8),
                           Text(
-                            'Place Order  •  $totalWithFee pts',
+                            'Place Order  •  $total pts',
                           ),
                         ],
                       ),

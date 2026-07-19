@@ -42,9 +42,6 @@ class OrderDetails extends ConsumerWidget {
 
         // Grand Total from DB
         final int total = enriched.points;
-        const int serviceFee = kServiceFeePoints;
-        // Subtotal is (Grand Total - Fee)
-        final int subtotal = math.max(0, total - serviceFee);
         final int qty = enriched.totalQty;
 
         return Scaffold(
@@ -225,18 +222,6 @@ class OrderDetails extends ConsumerWidget {
                   ),
                   child: Column(
                     children: [
-                      _buildRow(
-                        context,
-                        'Subtotal',
-                        '${subtotal} pts',
-                      ),
-                      const SizedBox(height: 10),
-                      _buildRow(
-                        context,
-                        'Service Fee',
-                        '${serviceFee} pts',
-                      ),
-                      const SizedBox(height: 10),
                       _buildRow(context, 'Campus Pickup', 'Free'),
                       const Divider(height: 25),
                       _buildRow(

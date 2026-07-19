@@ -25,7 +25,7 @@ class CartItemScreen extends StatelessWidget {
     // ignore: unused_local_variable
     final int subtotal = order["subtotal"];
     final int total =
-        order["subtotal"] + 10; // Adding service fee for demonstration
+        order["subtotal"];
     int qty = order["total_qty"];
 
     final status = order["status"];
@@ -279,10 +279,6 @@ class CartItemScreen extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  _buildRow(context, "Subtotal", "$subtotal pts"),
-                  const SizedBox(height: 10),
-                  _buildRow(context, "Service Fee", "10 pts"),
-                  const SizedBox(height: 10),
                   _buildRow(context, "Campus Pickup", "Free"),
                   const Divider(height: 25),
                   _buildRow(context, "Total Payment", "$total pts",

@@ -41,10 +41,8 @@ class OrderSummary extends ConsumerWidget {
         final List<OrderItemModel> items = enriched.items;
         final OrderStatus status = enriched.orderStatus;
 
-        // enriched.points is the total stored in the DB (includes the 10 pesos fee)
+        // enriched.points is the total stored in the DB
         final int total = enriched.points;
-        const int serviceFee = kServiceFeePoints;
-        final int subtotal = math.max(0, total - serviceFee);
         final int qty = enriched.totalQty;
 
         return Scaffold(
@@ -258,18 +256,6 @@ class OrderSummary extends ConsumerWidget {
                   ),
                   child: Column(
                     children: [
-                      _buildRow(
-                        context,
-                        'Subtotal',
-                        '$subtotal pts',
-                      ),
-                      const SizedBox(height: 10),
-                      _buildRow(
-                        context,
-                        'Service Fee',
-                        '$serviceFee pts',
-                      ),
-                      const SizedBox(height: 10),
                       _buildRow(context, 'Campus Pickup', 'Free'),
                       const Divider(height: 25),
                       _buildRow(
