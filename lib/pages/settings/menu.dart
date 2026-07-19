@@ -3,6 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:campusgo/pages/settings/deactivate_organizer.dart';
 import 'package:campusgo/pages/settings/privacy_policy.dart';
 import 'package:campusgo/pages/settings/terms_and_conditions.dart';
+import 'package:campusgo/pages/settings/notification_settings.dart';
 import 'package:campusgo/widgets/top_bar.dart';
 import '../../pages/settings/profile_edit.dart';
 import '../../pages/settings/help_center.dart';
@@ -66,6 +67,16 @@ class MenuScreen extends ConsumerWidget {
                       'icon': Icons.password,
                       'label': 'Change Password',
                       'action': () => editPassword(context, ref),
+                    },
+                    {
+                      'icon': Icons.notifications_none,
+                      'label': 'Notifications',
+                      'action': () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const NotificationSettingsScreen(),
+                        ),
+                      ),
                     },
                   ]),
                   _header(context, "Organizer Settings", false),

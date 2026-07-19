@@ -141,7 +141,10 @@ class _EventListScreenState extends ConsumerState<EventListScreen> {
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(event.location),
+                            Text(
+                              "${event.location} • ${DateFormat('hh:mm a').format(event.date)}",
+                              style: const TextStyle(fontSize: 13),
+                            ),
                             if (event.isEnded)
                               const Text("Concluded",
                                   style: TextStyle(

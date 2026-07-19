@@ -6,6 +6,7 @@ import '../../../providers/auth_provider.dart';
 import '../../../providers/event_provider.dart';
 import '../../../models/organizer_model.dart';
 import '../../../providers/organizer_provider.dart';
+import '../../../providers/notification_provider.dart';
 
 import 'edit_event_screen.dart';
 import 'delete_event_screen.dart';
@@ -43,42 +44,67 @@ class EventDetailScreen extends ConsumerWidget {
             (currentEvent.endDate.day != currentEvent.date.day ||
                 currentEvent.endDate.month != currentEvent.date.month);
 
+        final notifPrefs = ref.watch(notificationPreferencesProvider).value;
+        final isReminded =
+            notifPrefs?.remindedEventIds.contains(currentEvent.id) ?? false;
+
         return Scaffold(
           appBar: AppBar(
             title: Text(currentEvent.name),
-            actions: isCreator
-                ? [
-                    IconButton(
-                      icon: const Icon(Icons.edit),
-                      tooltip: "Edit Event",
-                      onPressed: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => EditEventScreen(event: currentEvent),
-                        ),
+            actions: [
+              if (!currentEvent.isEnded)
+                IconButton(
+                  icon: Icon(
+                    isReminded ? Icons.notifications_active : Icons.notifications_none,
+                    color: isReminded ? Theme.of(context).primaryColor : null,
+                  ),
+                  tooltip: isReminded ? "Remove Reminder" : "Notify Me",
+                  onPressed: () {
+                    ref
+                        .read(notificationPreferencesProvider.notifier)
+                        .toggleEventReminder(currentEvent);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(isReminded
+                            ? "Reminder removed"
+                            : "Reminder set! Check notification settings for details."),
+                        duration: const Duration(seconds: 2),
                       ),
+                    );
+                  },
+                ),
+              if (isCreator) ...[
+                IconButton(
+                  icon: const Icon(Icons.edit),
+                  tooltip: "Edit Event",
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => EditEventScreen(event: currentEvent),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red),
-                      tooltip: "Delete Event",
-                      onPressed: () async {
-                        final deletedSuccessfully = await showDialog<bool>(
-                          context: context,
-                          builder: (_) =>
-                              DeleteEventScreen(eventId: currentEvent.id),
-                        );
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.red),
+                  tooltip: "Delete Event",
+                  onPressed: () async {
+                    final deletedSuccessfully = await showDialog<bool>(
+                      context: context,
+                      builder: (_) =>
+                          DeleteEventScreen(eventId: currentEvent.id),
+                    );
 
-                        if (deletedSuccessfully == true && context.mounted) {
-                          Navigator.pop(context);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text("Event deleted successfully.")),
-                          );
-                        }
-                      },
-                    ),
-                  ]
-                : null,
+                    if (deletedSuccessfully == true && context.mounted) {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text("Event deleted successfully.")),
+                      );
+                    }
+                  },
+                ),
+              ]
+            ],
           ),
           body: SingleChildScrollView(
             padding: const EdgeInsets.all(20),
@@ -159,10 +185,11 @@ class EventDetailScreen extends ConsumerWidget {
                     const Icon(Icons.calendar_today,
                         size: 18, color: Colors.grey),
                     const SizedBox(width: 8),
-                    Text(isMultiDay
-                        ? "${DateFormat('MMM dd').format(currentEvent.date)} - ${DateFormat('MMM dd, yyyy').format(currentEvent.endDate)}"
-                        : DateFormat('MMMM dd, yyyy')
-                            .format(currentEvent.date)),
+                    Expanded(
+                      child: Text(isMultiDay
+                          ? "${DateFormat('MMM dd, hh:mm a').format(currentEvent.date)} - ${DateFormat('MMM dd, yyyy, hh:mm a').format(currentEvent.endDate)}"
+                          : "${DateFormat('MMMM dd, yyyy').format(currentEvent.date)} (${DateFormat('hh:mm a').format(currentEvent.date)} - ${DateFormat('hh:mm a').format(currentEvent.endDate)})"),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 8),

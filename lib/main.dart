@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusgo/pages/auth/register_organizer.dart';
 import 'package:campusgo/services/fcm_service.dart';
+import 'package:campusgo/services/local_notification_service.dart';
 import 'themes/theme.dart';
 import 'firebase_options.dart';
 import 'pages/wrapper.dart';
@@ -65,6 +66,12 @@ class RouteNameObserver extends NavigatorObserver {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Initialize Local Notifications for event reminders
+  await LocalNotificationService.init();
+  
+  // Initialize FCM for cloud messages
+  await FCMService.init();
 
   // Register background handler BEFORE runApp
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
