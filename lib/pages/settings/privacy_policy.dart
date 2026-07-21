@@ -75,7 +75,7 @@ void privacyPolicy(BuildContext context, WidgetRef ref) {
             _buildSection(
               context,
               "Contact Us",
-              "• For questions regarding your privacy, please contact us at:\n- noah.penaranda@ciit.edu.ph\n- rysa.abadier@ciit.edu.ph\n- danielle.serrato@ciit.edu.ph.",
+              "• For questions regarding your privacy, please contact us at:\n- noah.penaranda@ciit.edu.ph\n- lloyd.lorenzo@ciit.edu.ph\n- danielle.serrato@ciit.edu.ph.",
             ),
           ],
         ),
