@@ -43,11 +43,6 @@ class AnalyticsGrid extends ConsumerWidget {
               o.orderStatus == OrderStatus.readyForPickup,
         );
 
-        final revenue = completedOrders.fold<int>(
-          0,
-          (sum, o) => sum + o.points,
-        );
-
         final Map<String, int> rewardSales = {};
 
         for (final order in completedOrders) {
@@ -117,18 +112,6 @@ class AnalyticsGrid extends ConsumerWidget {
             }
 
             final analytics = [
-              {
-                'label': 'Revenue',
-                'value': '$revenue pts',
-                'icon': Icons.attach_money,
-                'isReward': false,
-              },
-              {
-                'label': 'Total Sales',
-                'value': completedOrders.length.toString(),
-                'icon': Icons.trending_up,
-                'isReward': false,
-              },
               {
                 'label': 'Pending Orders',
                 'value': pendingOrders.length.toString(),
