@@ -70,8 +70,8 @@ void main() async {
   // Initialize Local Notifications for event reminders
   await LocalNotificationService.init();
   
-  // Initialize FCM for cloud messages
-  await FCMService.init();
+  // Initialize FCM for cloud messages (don't await to avoid blocking UI if permission dialog hangs)
+  FCMService.init();
 
   // Register background handler BEFORE runApp
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);

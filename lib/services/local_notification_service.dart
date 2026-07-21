@@ -1,6 +1,7 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
+import 'package:flutter_timezone/flutter_timezone.dart';
 import '../models/event_model.dart';
 
 class LocalNotificationService {
@@ -9,9 +10,11 @@ class LocalNotificationService {
 
   static Future<void> init() async {
     tz.initializeTimeZones();
+    final String timeZoneName = await FlutterTimezone.getLocalTimezone();
+    tz.setLocalLocation(tz.getLocation(timeZoneName));
     
     const AndroidInitializationSettings androidSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+        AndroidInitializationSettings('@mipmap/launcher_icon');
 
     const DarwinInitializationSettings iosSettings =
         DarwinInitializationSettings();
@@ -27,6 +30,15 @@ class LocalNotificationService {
         // Handle notification tap
       },
     );
+
+    // Request permissions for Android 13+
+    final androidPlugin = notificationsPlugin
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>();
+    if (androidPlugin != null) {
+      await androidPlugin.requestNotificationsPermission();
+      await androidPlugin.requestExactAlarmsPermission();
+    }
 
     // Create the channel for event reminders
     const androidChannel = AndroidNotificationChannel(

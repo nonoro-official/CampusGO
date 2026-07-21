@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import '../../services/local_notification_service.dart';
 import '../../providers/notification_provider.dart';
 import '../../widgets/top_bar.dart';
 
@@ -23,6 +25,37 @@ class NotificationSettingsScreen extends ConsumerWidget {
         data: (prefs) => ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            FutureBuilder<bool?>(
+              future: LocalNotificationService.notificationsPlugin
+                  .resolvePlatformSpecificImplementation<
+                      AndroidFlutterLocalNotificationsPlugin>()
+                  ?.areNotificationsEnabled(),
+              builder: (context, snapshot) {
+                if (snapshot.hasData && snapshot.data == false) {
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 20),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade100,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.error_outline, color: Colors.red),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            "Notifications are disabled in system settings. Please enable them to receive reminders.",
+                            style: TextStyle(color: Colors.red),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+            ),
             _buildSectionHeader(context, 'Event Reminders'),
             SwitchListTile(
               title: const Text('When Event Starts'),
@@ -52,6 +85,26 @@ class NotificationSettingsScreen extends ConsumerWidget {
               activeColor: Theme.of(context).primaryColor,
             ),
             const Divider(height: 40),
+            ElevatedButton.icon(
+              onPressed: () async {
+                await LocalNotificationService.notificationsPlugin.show(
+                  id: 999,
+                  title: 'Test Notification',
+                  body: 'If you see this, notifications are working!',
+                  notificationDetails: NotificationDetails(
+                    android: AndroidNotificationDetails(
+                      'event_reminders',
+                      'Event Reminders',
+                      importance: Importance.max,
+                      priority: Priority.high,
+                    ),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.notifications_active),
+              label: const Text('Send Test Notification'),
+            ),
+            const SizedBox(height: 20),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(

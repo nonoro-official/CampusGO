@@ -94,7 +94,7 @@ class NotificationNotifier extends AsyncNotifier<NotificationPreferences> {
 
   Future<void> _scheduleReminders(EventModel event) async {
     final prefs = state.value!;
-    final baseId = event.id.hashCode;
+    final baseId = event.id.hashCode.abs();
 
     if (prefs.notifyAtStart) {
       await LocalNotificationService.scheduleEventReminder(
@@ -111,7 +111,7 @@ class NotificationNotifier extends AsyncNotifier<NotificationPreferences> {
       await LocalNotificationService.scheduleEventReminder(
         event: event,
         scheduledDate: oneDayBefore,
-        notificationId: baseId + 1,
+        notificationId: baseId + 1000000,
         title: 'Event Tomorrow',
         body: '${event.name} starts tomorrow at ${event.location}.',
       );
@@ -122,7 +122,7 @@ class NotificationNotifier extends AsyncNotifier<NotificationPreferences> {
       await LocalNotificationService.scheduleEventReminder(
         event: event,
         scheduledDate: oneWeekBefore,
-        notificationId: baseId + 2,
+        notificationId: baseId + 2000000,
         title: 'Event Next Week',
         body: '${event.name} is happening next week!',
       );
@@ -130,10 +130,10 @@ class NotificationNotifier extends AsyncNotifier<NotificationPreferences> {
   }
 
   Future<void> _cancelReminders(EventModel event) async {
-    final baseId = event.id.hashCode;
+    final baseId = event.id.hashCode.abs();
     await LocalNotificationService.cancelNotification(baseId);
-    await LocalNotificationService.cancelNotification(baseId + 1);
-    await LocalNotificationService.cancelNotification(baseId + 2);
+    await LocalNotificationService.cancelNotification(baseId + 1000000);
+    await LocalNotificationService.cancelNotification(baseId + 2000000);
   }
 }
 
