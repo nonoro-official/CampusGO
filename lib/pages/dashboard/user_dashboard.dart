@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../constants/categories.dart';
 import '../../widgets/welcome_card.dart';
+import '../../widgets/points_card.dart';
 import '../../widgets/recommended_row.dart';
-import '../../widgets/category_icon.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/organizer_provider.dart';
 import '../../services/event_service.dart';
 import '../../models/event_model.dart';
+import '../../models/organizer_model.dart';
 import '../../pages/events/event_list_screen.dart';
 import '../../pages/events/event_detail_screen.dart';
 
@@ -22,14 +23,16 @@ class HomeScreen extends ConsumerWidget {
     final roleName = user?.role.name.toLowerCase() ?? 'guest';
 
     return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(height: isOrganizer ? 80 : 20),
           const WelcomeCard(),
+          const SizedBox(height: 15),
+          const PointsCard(),
           const SizedBox(height: 25),
-
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -38,7 +41,8 @@ class HomeScreen extends ConsumerWidget {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const EventListScreen()),
+                    MaterialPageRoute(
+                        builder: (context) => const EventListScreen()),
                   );
                 },
                 child: const Text("See All"),
@@ -48,32 +52,19 @@ class HomeScreen extends ConsumerWidget {
           const SizedBox(height: 10),
           const EventCarousel(),
           const SizedBox(height: 30),
-
           Text("Announcements", style: textTheme.titleMedium),
           const SizedBox(height: 15),
           const AnnouncementBar(),
           const SizedBox(height: 30),
-
           if (roleName == 'customer') ...[
             Text("Recommended for You", style: textTheme.titleMedium),
             const SizedBox(height: 15),
             const RecommendedRow(),
             const SizedBox(height: 30),
           ],
-
-          Text("Event Categories", style: textTheme.titleMedium),
+          Text("Organizations", style: textTheme.titleMedium),
           const SizedBox(height: 15),
-
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: shopCategories.map((cat) {
-                return categoryIcon(context, cat.label, cat.icon, cat.label);
-              }).toList(),
-            ),
-          ),
-
+          const OrganizationListView(shrinkWrap: true),
           const SizedBox(height: 100),
         ],
       ),
@@ -100,23 +91,30 @@ class EventCarousel extends ConsumerWidget {
         }
 
         final events = snapshot.data?.where((e) => !e.isEnded).toList() ?? [];
-        
+
         if (events.isEmpty) {
-           return Container(
-             width: double.infinity,
-             height: 100,
-             decoration: BoxDecoration(
-               color: Colors.grey[50],
-               borderRadius: BorderRadius.circular(16),
-               border: Border.all(color: Colors.grey[200]!),
-             ),
-             child: const Center(
-               child: Text(
-                 "No upcoming events this month.",
-                 style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
-               ),
-             ),
-           );
+          return Container(
+            width: double.infinity,
+            height: 100,
+            decoration: BoxDecoration(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Theme.of(context).colorScheme.surfaceContainerLow
+                  : Colors.grey[50],
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Theme.of(context).colorScheme.outlineVariant
+                    : Colors.grey[200]!,
+              ),
+            ),
+            child: const Center(
+              child: Text(
+                "No upcoming events this month.",
+                style:
+                    TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
+              ),
+            ),
+          );
         }
 
         return SizedBox(
@@ -126,12 +124,13 @@ class EventCarousel extends ConsumerWidget {
             itemCount: events.length,
             itemBuilder: (context, index) {
               final event = events[index];
-              final isMultiDay = event.endDate.isAfter(event.date) && 
-                                 (event.endDate.day != event.date.day || event.endDate.month != event.date.month);
+              final isMultiDay = event.endDate.isAfter(event.date) &&
+                  (event.endDate.day != event.date.day ||
+                      event.endDate.month != event.date.month);
 
               return GestureDetector(
                 onTap: () {
-                   Navigator.push(
+                  Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => EventDetailScreen(event: event),
@@ -169,14 +168,16 @@ class EventCarousel extends ConsumerWidget {
                         ),
                       ),
                       Text(
-                        isMultiDay 
+                        isMultiDay
                             ? "${DateFormat('MMM dd').format(event.date)} - ${DateFormat('MMM dd').format(event.endDate)} @ ${event.location}"
                             : "${DateFormat('MMM dd').format(event.date)} @ ${event.location}",
-                        style: const TextStyle(color: Colors.white70, fontSize: 13),
+                        style: const TextStyle(
+                            color: Colors.white70, fontSize: 13),
                       ),
                       const SizedBox(height: 5),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
                           color: Colors.white24,
                           borderRadius: BorderRadius.circular(20),
@@ -214,7 +215,7 @@ class AnnouncementBar extends StatelessWidget {
       {"title": "Lemon Frenzy Buy 1 Take 1", "subtitle": "Today only 🥤"},
       {
         "title": "Free Delivery on Campus Orders",
-        "subtitle": "Min. ₱100 purchase",
+        "subtitle": "Min. 100 pts purchase",
       },
     ];
 
@@ -252,57 +253,74 @@ class AnnouncementBar extends StatelessWidget {
   }
 }
 
-class CategoryGridView extends StatelessWidget {
-  const CategoryGridView({super.key});
+class OrganizationListView extends ConsumerWidget {
+  final bool shrinkWrap;
+  const OrganizationListView({super.key, this.shrinkWrap = false});
 
   @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final allOrganizersAsync = ref.watch(allOrganizersProvider);
     final primaryColor = Theme.of(context).primaryColor;
 
-    return GridView.builder(
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 100),
-      itemCount: shopCategories.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-      ),
-      itemBuilder: (context, index) {
-        final category = shopCategories[index];
-        return InkWell(
-          onTap: () {
-            Navigator.pushNamed(
-              context,
-              '/shops',
-              arguments: {'category': category.label},
+    return allOrganizersAsync.when(
+      data: (organizers) {
+        if (organizers.isEmpty) {
+          return const Center(child: Text("No organizers found"));
+        }
+
+        return ListView.builder(
+          shrinkWrap: shrinkWrap,
+          physics: shrinkWrap ? const NeverScrollableScrollPhysics() : null,
+          padding: shrinkWrap
+              ? EdgeInsets.zero
+              : const EdgeInsets.fromLTRB(12, 12, 12, 100),
+          itemCount: organizers.length,
+          itemBuilder: (context, index) {
+            final organizer = organizers[index];
+
+            return Card(
+              margin: const EdgeInsets.only(bottom: 12),
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15)),
+              child: ListTile(
+                contentPadding: const EdgeInsets.all(12),
+                leading: CircleAvatar(
+                  radius: 25,
+                  backgroundColor: primaryColor.withValues(alpha: 0.1),
+                  backgroundImage: (organizer.imageUrl != null &&
+                          organizer.imageUrl!.isNotEmpty)
+                      ? NetworkImage(organizer.imageUrl!)
+                      : null,
+                  child: (organizer.imageUrl == null ||
+                          organizer.imageUrl!.isEmpty)
+                      ? Icon(Icons.business, color: primaryColor)
+                      : null,
+                ),
+                title: Text(
+                  organizer.organizerName,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                subtitle: Text(
+                  organizer.description ?? "No description available",
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  Navigator.pushNamed(
+                    context,
+                    '/organizer-profile',
+                    arguments: organizer,
+                  );
+                },
+              ),
             );
           },
-          child: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: primaryColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  category.icon,
-                  size: 42,
-                  color: primaryColor,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  category.label,
-                  style: textTheme.titleSmall,
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
         );
       },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (err, stack) => Center(child: Text("Error: $err")),
     );
   }
 }

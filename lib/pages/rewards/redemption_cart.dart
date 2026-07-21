@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/cart_item_model.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/organizer_provider.dart';
+import '../../providers/auth_provider.dart';
+import '../../models/redemption_order_model.dart';
 
 class CartScreen extends ConsumerWidget {
   const CartScreen({super.key});
@@ -74,7 +76,7 @@ class _CartCardState extends ConsumerState<_CartCard> {
         title: const Text('Confirm Order'),
         content: Text(
           'Place order for ${enriched.lineItems.length} item(s) '
-          'totalling ₱${enriched.price.toStringAsFixed(2)}?',
+          'totalling ${enriched.points} pts?',
         ),
         actions: [
           TextButton(
@@ -100,7 +102,8 @@ class _CartCardState extends ConsumerState<_CartCard> {
         if (state.hasError) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(state.error.toString().replaceAll('Exception: ', '')),
+              content:
+                  Text(state.error.toString().replaceAll('Exception: ', '')),
               backgroundColor: Colors.red,
             ),
           );
@@ -120,6 +123,7 @@ class _CartCardState extends ConsumerState<_CartCard> {
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
     final primaryColor = theme.primaryColor;
+    final user = ref.watch(currentUserProvider);
 
     final enrichedAsync = ref.watch(enrichedCartProvider(widget.cart));
 
@@ -137,6 +141,9 @@ class _CartCardState extends ConsumerState<_CartCard> {
           return const SizedBox.shrink();
         }
 
+        final total = enriched.points;
+        final hasEnoughPoints = user != null && user.points >= total;
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -149,7 +156,7 @@ class _CartCardState extends ConsumerState<_CartCard> {
                   Consumer(
                     builder: (context, ref, child) {
                       final organizerAsync = ref.watch(
-                        OrganizerProvider(enriched.organizerId),
+                        organizerProvider(enriched.organizerId),
                       );
                       return organizerAsync.when(
                         data: (b) => Text(
@@ -175,7 +182,7 @@ class _CartCardState extends ConsumerState<_CartCard> {
                   ),
                   const Spacer(),
                   Text(
-                    '₱${enriched.price.toStringAsFixed(2)}',
+                    '${enriched.points} pts',
                     style: textTheme.titleSmall?.copyWith(
                       color: primaryColor,
                       fontWeight: FontWeight.bold,
@@ -184,10 +191,17 @@ class _CartCardState extends ConsumerState<_CartCard> {
                 ],
               ),
             ),
-
+            if (user != null && !hasEnoughPoints)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(
+                  'Insufficient points. You need ${total - user.points} more pts.',
+                  style: const TextStyle(color: Colors.red, fontSize: 12),
+                ),
+              ),
             ...enriched.lineItems.map((item) {
               return Dismissible(
-                key: ValueKey('${enriched.id}_${item.productId}'),
+                key: ValueKey('${enriched.id}_${item.rewardId}'),
                 direction: DismissDirection.endToStart,
                 background: Container(
                   alignment: Alignment.centerRight,
@@ -200,21 +214,23 @@ class _CartCardState extends ConsumerState<_CartCard> {
                   child: const Icon(Icons.delete, color: Colors.red),
                 ),
                 onDismissed: (_) {
-                  ref
-                      .read(cartNotifierProvider.notifier)
-                      .removeProduct(
+                  ref.read(cartNotifierProvider.notifier).removeReward(
                         cartId: enriched.id,
-                        productId: item.productId,
-                        currentProducts: enriched.products,
+                        rewardId: item.rewardId,
+                        currentRewards: enriched.rewards,
                       );
                 },
                 child: Container(
                   margin: const EdgeInsets.only(bottom: 15),
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.grey.shade200),
+                    border: Border.all(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Theme.of(context).colorScheme.outlineVariant
+                          : Colors.grey.shade200,
+                    ),
                   ),
                   child: Row(
                     children: [
@@ -248,7 +264,7 @@ class _CartCardState extends ConsumerState<_CartCard> {
                             ),
                             const SizedBox(height: 6),
                             Text(
-                              '₱${item.total.toStringAsFixed(2)}',
+                              '${item.total} pts',
                               style: textTheme.titleSmall?.copyWith(
                                 color: primaryColor,
                               ),
@@ -260,36 +276,42 @@ class _CartCardState extends ConsumerState<_CartCard> {
                         children: [
                           _QtyButton(
                             icon: Icons.add,
-                            onTap: _isLocalLoading ? () {} : () async {
-                              setState(() => _isLocalLoading = true);
-                              try {
-                                await ref
-                                    .read(cartNotifierProvider.notifier)
-                                    .updateQuantity(
-                                      cartId: enriched.id,
-                                      productId: item.productId,
-                                      newQuantity: item.quantity + 1,
-                                      currentProducts: enriched.products,
-                                    );
+                            onTap: _isLocalLoading
+                                ? () {}
+                                : () async {
+                                    setState(() => _isLocalLoading = true);
+                                    try {
+                                      await ref
+                                          .read(cartNotifierProvider.notifier)
+                                          .updateQuantity(
+                                            cartId: enriched.id,
+                                            rewardId: item.rewardId,
+                                            newQuantity: item.quantity + 1,
+                                            currentRewards: enriched.rewards,
+                                          );
 
-                                final state = ref.read(cartNotifierProvider);
-                                if (state.hasError && context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        state.error
-                                            .toString()
-                                            .replaceAll('Exception: ', ''),
-                                      ),
-                                      backgroundColor: Colors.orange.shade800,
-                                      duration: const Duration(seconds: 2),
-                                    ),
-                                  );
-                                }
-                              } finally {
-                                if (mounted) setState(() => _isLocalLoading = false);
-                              }
-                            },
+                                      final state =
+                                          ref.read(cartNotifierProvider);
+                                      if (state.hasError && context.mounted) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              state.error.toString().replaceAll(
+                                                  'Exception: ', ''),
+                                            ),
+                                            backgroundColor:
+                                                Colors.orange.shade800,
+                                            duration:
+                                                const Duration(seconds: 2),
+                                          ),
+                                        );
+                                      }
+                                    } finally {
+                                      if (mounted)
+                                        setState(() => _isLocalLoading = false);
+                                    }
+                                  },
                           ),
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 4),
@@ -300,31 +322,35 @@ class _CartCardState extends ConsumerState<_CartCard> {
                           ),
                           _QtyButton(
                             icon: Icons.remove,
-                            onTap: _isLocalLoading ? () {} : () async {
-                              if (item.quantity > 1) {
-                                setState(() => _isLocalLoading = true);
-                                try {
-                                  await ref
-                                      .read(cartNotifierProvider.notifier)
-                                      .updateQuantity(
-                                        cartId: enriched.id,
-                                        productId: item.productId,
-                                        newQuantity: item.quantity - 1,
-                                        currentProducts: enriched.products,
-                                      );
-                                } finally {
-                                  if (mounted) setState(() => _isLocalLoading = false);
-                                }
-                              } else {
-                                ref
-                                    .read(cartNotifierProvider.notifier)
-                                    .removeProduct(
-                                      cartId: enriched.id,
-                                      productId: item.productId,
-                                      currentProducts: enriched.products,
-                                    );
-                              }
-                            },
+                            onTap: _isLocalLoading
+                                ? () {}
+                                : () async {
+                                    if (item.quantity > 1) {
+                                      setState(() => _isLocalLoading = true);
+                                      try {
+                                        await ref
+                                            .read(cartNotifierProvider.notifier)
+                                            .updateQuantity(
+                                              cartId: enriched.id,
+                                              rewardId: item.rewardId,
+                                              newQuantity: item.quantity - 1,
+                                              currentRewards: enriched.rewards,
+                                            );
+                                      } finally {
+                                        if (mounted)
+                                          setState(
+                                              () => _isLocalLoading = false);
+                                      }
+                                    } else {
+                                      ref
+                                          .read(cartNotifierProvider.notifier)
+                                          .removeReward(
+                                            cartId: enriched.id,
+                                            rewardId: item.rewardId,
+                                            currentRewards: enriched.rewards,
+                                          );
+                                    }
+                                  },
                           ),
                         ],
                       ),
@@ -333,25 +359,28 @@ class _CartCardState extends ConsumerState<_CartCard> {
                 ),
               );
             }),
-
             const SizedBox(height: 4),
             SizedBox(
               width: double.infinity,
               height: 48,
               child: ElevatedButton(
-                onPressed: _isLocalLoading ? null : () => _handleCheckout(context, enriched),
+                onPressed: (_isLocalLoading || !hasEnoughPoints)
+                    ? null
+                    : () => _handleCheckout(context, enriched),
                 style: ElevatedButton.styleFrom(
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
                   ),
                 ),
                 child: _isLocalLoading
-                    ? const SizedBox(
+                    ? SizedBox(
                         height: 20,
                         width: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.white,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Theme.of(context).colorScheme.onPrimary
+                              : Colors.white,
                         ),
                       )
                     : Row(
@@ -360,7 +389,7 @@ class _CartCardState extends ConsumerState<_CartCard> {
                           const Icon(Icons.shopping_cart_checkout),
                           const SizedBox(width: 8),
                           Text(
-                            'Place Order  •  ₱${enriched.price.toStringAsFixed(2)}',
+                            'Place Order  •  $total pts',
                           ),
                         ],
                       ),
@@ -388,7 +417,11 @@ class _QtyButton extends StatelessWidget {
         width: 28,
         height: 28,
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey.shade300),
+          border: Border.all(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Theme.of(context).colorScheme.outline
+                : Colors.grey.shade300,
+          ),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Icon(icon, size: 16),

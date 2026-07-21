@@ -1,20 +1,20 @@
 // ─── Enriched line-item (client-side only, for UI display) ───────────────────
 
 class CartLineItem {
-  final String productId;
+  final String rewardId;
   final String name;
   final String? imageUrl;
   final int quantity;
-  final double unitPrice;
+  final int unitPoints;
 
-  double get total => unitPrice * quantity;
+  int get total => unitPoints * quantity;
 
   const CartLineItem({
-    required this.productId,
+    required this.rewardId,
     required this.name,
     this.imageUrl,
     required this.quantity,
-    required this.unitPrice,
+    required this.unitPoints,
   });
 }
 
@@ -25,34 +25,34 @@ class CartItemModel {
   final String organizerId;
   final String userId;
 
-  ///Map of productId → quantity
-  final Map<String, int> products;
+  ///Map of rewardId → quantity
+  final Map<String, int> rewards;
 
-  ///Total price (sum of unit price × qty for every product)
-  final double price;
+  ///Total points (sum of unit points × qty for every reward)
+  final int points;
 
-  ///Enriched line-items — populated client-side after fetching product info
+  ///Enriched line-items — populated client-side after fetching reward info
   final List<CartLineItem> lineItems;
 
-  int get totalQty => products.values.fold(0, (sum, qty) => sum + qty);
+  int get totalQty => rewards.values.fold(0, (sum, qty) => sum + qty);
 
   CartItemModel({
     required this.id,
     required this.organizerId,
     required this.userId,
-    required this.products,
-    required this.price,
+    required this.rewards,
+    required this.points,
     this.lineItems = const [],
   });
 
   //Firestore -> Model
 
   factory CartItemModel.fromMap(Map<String, dynamic> data, String id) {
-    final rawProducts = data['products'];
-    final Map<String, int> productsMap = {};
-    if (rawProducts is Map) {
-      rawProducts.forEach((key, value) {
-        productsMap[key.toString()] =
+    final rawRewards = data['rewards'];
+    final Map<String, int> rewardsMap = {};
+    if (rawRewards is Map) {
+      rawRewards.forEach((key, value) {
+        rewardsMap[key.toString()] =
             value is int ? value : int.tryParse(value.toString()) ?? 0;
       });
     }
@@ -61,8 +61,8 @@ class CartItemModel {
       id: id,
       organizerId: data['organizerId'] ?? '',
       userId: data['userId'] ?? '',
-      products: productsMap,
-      price: (data['price'] ?? 0).toDouble(),
+      rewards: rewardsMap,
+      points: (data['points'] as num?)?.toInt() ?? 0,
     );
   }
 
@@ -72,22 +72,22 @@ class CartItemModel {
     return {
       'organizerId': organizerId,
       'userId': userId,
-      'products': products,
-      'price': price,
+      'rewards': rewards,
+      'points': points,
     };
   }
 
   CartItemModel copyWith({
-    Map<String, int>? products,
-    double? price,
+    Map<String, int>? rewards,
+    int? points,
     List<CartLineItem>? lineItems,
   }) {
     return CartItemModel(
       id: id,
       organizerId: organizerId,
       userId: userId,
-      products: products ?? this.products,
-      price: price ?? this.price,
+      rewards: rewards ?? this.rewards,
+      points: points ?? this.points,
       lineItems: lineItems ?? this.lineItems,
     );
   }
@@ -97,8 +97,8 @@ class CartItemModel {
       id: id,
       organizerId: organizerId,
       userId: userId,
-      products: products,
-      price: price,
+      rewards: rewards,
+      points: points,
       lineItems: lineItems,
     );
   }

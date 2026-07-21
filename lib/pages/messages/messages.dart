@@ -13,7 +13,7 @@ class MessagesScreen extends ConsumerWidget {
   MessagesScreen({super.key});
 
   final MessageService _messageService = MessageService();
-  final OrganizerService _OrganizerService = OrganizerService();
+  final OrganizerService _organizerService = OrganizerService();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -44,18 +44,18 @@ class MessagesScreen extends ConsumerWidget {
           final allUsers = userSnapshot.data!;
 
           return StreamBuilder<List<OrganizerModel>>(
-            stream: _OrganizerService.getAllOrganizers(),
-            builder: (context, OrganizerSnapshot) {
-              if (OrganizerSnapshot.hasError) {
-                return const Center(child: Text('Error loading Organizers'));
+            stream: _organizerService.getAllOrganizers(),
+            builder: (context, organizerSnapshot) {
+              if (organizerSnapshot.hasError) {
+                return const Center(child: Text('Error loading organizers'));
               }
-              if (!OrganizerSnapshot.hasData) {
-                return const Center(child: Text('Loading Organizers...'));
+              if (!organizerSnapshot.hasData) {
+                return const Center(child: Text('Loading organizers...'));
               }
 
-              final OrganizersByOwnerId = {
-                for (final Organizer in OrganizerSnapshot.data!)
-                  Organizer.ownerId: Organizer,
+              final organizersByOwnerId = {
+                for (final organizer in organizerSnapshot.data!)
+                  organizer.ownerId: organizer,
               };
 
               return StreamBuilder<List<Map<String, dynamic>>>(
@@ -83,7 +83,7 @@ class MessagesScreen extends ConsumerWidget {
                     if (otherId.isEmpty) continue;
 
                     final otherIsOrganizer =
-                        OrganizersByOwnerId.containsKey(otherId);
+                        organizersByOwnerId.containsKey(otherId);
 
                     bool isValidPartner = false;
                     if (isOrganizer) {
@@ -146,14 +146,14 @@ class MessagesScreen extends ConsumerWidget {
                         }
                       }
 
-                      final Organizer = OrganizersByOwnerId[uid];
+                      final organizer = organizersByOwnerId[uid];
 
                       String displayName = 'Unknown';
                       String? avatarUrl;
 
-                      if (Organizer != null) {
-                        displayName = Organizer.organizerName;
-                        avatarUrl = Organizer.imageUrl;
+                      if (organizer != null) {
+                        displayName = organizer.organizerName;
+                        avatarUrl = organizer.imageUrl;
                       } else {
                         final firstName = user['firstName'] ?? '';
                         final lastName = user['lastName'] ?? '';

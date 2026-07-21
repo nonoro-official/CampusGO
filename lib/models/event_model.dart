@@ -12,6 +12,8 @@ class EventModel {
   final double? longitude;
   final String? imageUrl;
   final List<String> attendingOrganizerIds;
+  final String status; // For event approval, 'pending' or 'approved'
+  final String creatorId; // ID of the organizer who created the event
 
   EventModel({
     required this.id,
@@ -25,6 +27,8 @@ class EventModel {
     this.longitude,
     this.imageUrl,
     this.attendingOrganizerIds = const [],
+    this.status = 'pending', // Default
+    required this.creatorId,
   });
 
   bool get isEnded {
@@ -53,6 +57,8 @@ class EventModel {
       longitude: (data['longitude'] as num?)?.toDouble(),
       imageUrl: data['imageUrl'],
       attendingOrganizerIds: List<String>.from(data['attendingOrganizerIds'] ?? []),
+      status: data['status'] ?? 'pending',
+      creatorId: data['creatorId'] ?? '',
     );
   }
 
@@ -68,6 +74,8 @@ class EventModel {
       'longitude': longitude,
       'imageUrl': imageUrl,
       'attendingOrganizerIds': attendingOrganizerIds,
+      'status': status,
+      'creatorId': creatorId,
     };
   }
 }

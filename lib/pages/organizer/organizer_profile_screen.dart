@@ -7,13 +7,13 @@ import '../../models/reward_item_model.dart';
 import '../../models/faq_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/review_provider.dart';
-import '../../providers/product_provider.dart';
+import '../../providers/reward_provider.dart';
 import '../../providers/organizer_provider.dart';
 import '../../utils/organizer_utils.dart';
 import '../../components/sheets/leave_review_sheet.dart';
 import '../../pages/settings/organizer_edit.dart';
 import '../rewards/reward_item_detail_screen.dart';
-import '../../widgets/product_image.dart';
+import '../../widgets/reward_image.dart';
 import '../../components/sheets/report_organizer_sheet.dart';
 import '../../models/enums.dart';
 import '../messages/chat_page.dart';
@@ -84,7 +84,8 @@ class OrganizerProfileScreen extends ConsumerWidget {
               if (faqs.isEmpty)
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 20),
-                  child: Center(child: Text("No FAQs available for this Organizer.")),
+                  child: Center(
+                      child: Text("No FAQs available for this Organizer.")),
                 )
               else
                 Flexible(
@@ -122,7 +123,7 @@ class OrganizerProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Watch the live organizer data if we have it, otherwise fallback to the passed organizer object
-    final organizerStream = ref.watch(OrganizerProvider(organizer.id));
+    final organizerStream = ref.watch(organizerProvider(organizer.id));
     final currentOrganizer = organizerStream.value ?? organizer;
 
     final primaryColor = Theme.of(context).primaryColor;
@@ -130,27 +131,30 @@ class OrganizerProfileScreen extends ConsumerWidget {
     final currentUser = ref.watch(currentUserProvider);
     final isOwnerViewing = currentUser?.uid == currentOrganizer.ownerId;
 
-    final reviewsAsync = ref.watch(OrganizerReviewsProvider(currentOrganizer.id));
-    final hasImage = currentOrganizer.imageUrl != null && currentOrganizer.imageUrl!.isNotEmpty;
+    final reviewsAsync =
+        ref.watch(organizerReviewsProvider(currentOrganizer.id));
+    final hasImage = currentOrganizer.imageUrl != null &&
+        currentOrganizer.imageUrl!.isNotEmpty;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: Theme.of(context).brightness == Brightness.dark
+          ? Theme.of(context).scaffoldBackgroundColor
+          : const Color(0xFFF5F5F5),
       appBar: TopBar(
         title: isOwnerViewing ? "My Organizer Profile" : "Organizer Profile",
         showBack: true,
         center: true,
         dashboard: !isOwnerViewing,
-
         messageReceiverId: currentOrganizer.ownerId,
         messageReceiverName: currentOrganizer.organizerName,
         messageReceiverImage: currentOrganizer.imageUrl,
-
         rightIcon: isOwnerViewing ? Icons.edit : Icons.chat_bubble_outline,
         onRightPressed: isOwnerViewing
             ? () => editOrganizerProfile(context, currentOrganizer, ref)
             : () async {
                 // ✅ ensure chat room exists
-                await MessageService().initiateContact(currentOrganizer.ownerId);
+                await MessageService()
+                    .initiateContact(currentOrganizer.ownerId);
 
                 Navigator.push(
                   context,
@@ -187,12 +191,14 @@ class OrganizerProfileScreen extends ConsumerWidget {
                   const SizedBox(height: 12),
 
                   /// SHOP NAME
-                  Text(currentOrganizer.organizerName, style: textTheme.titleLarge),
+                  Text(currentOrganizer.organizerName,
+                      style: textTheme.titleLarge),
                   const SizedBox(height: 6),
 
                   // PARTNER TYPE BADGE
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                     decoration: BoxDecoration(
                       color: getPartnerColor(currentOrganizer.organizerPartner)
                           .withValues(alpha: 0.1),
@@ -204,13 +210,15 @@ class OrganizerProfileScreen extends ConsumerWidget {
                         Icon(
                           getPartnerIcon(currentOrganizer.organizerPartner),
                           size: 16,
-                          color: getPartnerColor(currentOrganizer.organizerPartner),
+                          color: getPartnerColor(
+                              currentOrganizer.organizerPartner),
                         ),
                         const SizedBox(width: 6),
                         Text(
                           formatPartner(currentOrganizer.organizerPartner),
                           style: textTheme.bodySmall?.copyWith(
-                            color: getPartnerColor(currentOrganizer.organizerPartner),
+                            color: getPartnerColor(
+                                currentOrganizer.organizerPartner),
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -255,13 +263,17 @@ class OrganizerProfileScreen extends ConsumerWidget {
               Icons.phone,
               "Contact",
               Text(
-                currentOrganizer.contactNumber.isEmpty ? "-" : currentOrganizer.contactNumber,
+                currentOrganizer.contactNumber.isEmpty
+                    ? "-"
+                    : currentOrganizer.contactNumber,
               ),
             ),
             _infoTile(
               Icons.email,
               "Email",
-              Text(currentOrganizer.contactEmail.isEmpty ? "-" : currentOrganizer.contactEmail),
+              Text(currentOrganizer.contactEmail.isEmpty
+                  ? "-"
+                  : currentOrganizer.contactEmail),
             ),
             _infoTile(
               Icons.help_outline,
@@ -282,7 +294,7 @@ class OrganizerProfileScreen extends ConsumerWidget {
             const SizedBox(height: 25),
 
             /// PRODUCTS SECTION
-            _buildProductsSection(currentOrganizer.id, context, ref),
+            _buildRewardsSection(currentOrganizer.id, context, ref),
 
             const SizedBox(height: 30),
 
@@ -385,33 +397,33 @@ class OrganizerProfileScreen extends ConsumerWidget {
     );
   }
 
-  static Widget _buildProductsSection(
+  static Widget _buildRewardsSection(
     String organizerId,
     BuildContext context,
     WidgetRef ref,
   ) {
-    final productsAsync = ref.watch(organizerProductsProvider(organizerId));
+    final rewardsAsync = ref.watch(organizerRewardsProvider(organizerId));
     final textTheme = Theme.of(context).textTheme;
 
-    return productsAsync.when(
-      data: (products) {
-        if (products.isEmpty) {
+    return rewardsAsync.when(
+      data: (rewards) {
+        if (rewards.isEmpty) {
           return const SizedBox.shrink();
         }
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Products', style: textTheme.titleMedium),
+            Text('Rewards', style: textTheme.titleMedium),
             const SizedBox(height: 12),
             SizedBox(
               height: 180,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
-                itemCount: products.length,
+                itemCount: rewards.length,
                 itemBuilder: (context, index) {
-                  final product = products[index];
-                  return _productCard(product, context, textTheme, products);
+                  final reward = rewards[index];
+                  return _rewardCard(reward, context, textTheme, rewards);
                 },
               ),
             ),
@@ -421,7 +433,7 @@ class OrganizerProfileScreen extends ConsumerWidget {
       loading: () => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Products', style: textTheme.titleMedium),
+          Text('Rewards', style: textTheme.titleMedium),
           const SizedBox(height: 12),
           const SizedBox(
             height: 180,
@@ -433,23 +445,24 @@ class OrganizerProfileScreen extends ConsumerWidget {
     );
   }
 
-  static Widget _productCard(
-    ProductModel product,
+  static Widget _rewardCard(
+    RewardModel reward,
     BuildContext context,
     TextTheme textTheme,
-    List<ProductModel> allProducts,
+    List<RewardModel> allRewards,
   ) {
-    final effectiveStock = product.calculateEffectiveStock(allProducts);
+    final effectiveStock = reward.calculateEffectiveStock(allRewards);
     final isOutOfStock = effectiveStock <= 0;
     final isLowStock = effectiveStock > 0 && effectiveStock <= 9;
-    final hasDiscount = product.originalPrice != null && product.originalPrice! > product.price;
+    final hasDiscount =
+        reward.originalPoints != null && reward.originalPoints! > reward.points;
 
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => ProductDetailScreen(product: product),
+            builder: (_) => RewardDetailScreen(reward: reward),
           ),
         );
       },
@@ -457,7 +470,7 @@ class OrganizerProfileScreen extends ConsumerWidget {
         width: 140,
         margin: const EdgeInsets.only(right: 12, bottom: 4),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(12),
           boxShadow: const [
             BoxShadow(
@@ -473,8 +486,8 @@ class OrganizerProfileScreen extends ConsumerWidget {
             /// IMAGE
             Stack(
               children: [
-                ProductImage(
-                  imageUrl: product.imageUrl,
+                RewardImage(
+                  imageUrl: reward.imageUrl,
                   width: double.infinity,
                   height: 100,
                   borderRadius: 12,
@@ -514,7 +527,7 @@ class OrganizerProfileScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    product.name,
+                    reward.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: textTheme.bodyMedium?.copyWith(
@@ -525,16 +538,18 @@ class OrganizerProfileScreen extends ConsumerWidget {
                   Row(
                     children: [
                       Text(
-                        '₱${product.price.toStringAsFixed(2)}',
+                        '${reward.points} pts',
                         style: textTheme.bodySmall?.copyWith(
-                          color: hasDiscount ? Colors.red : Theme.of(context).primaryColor,
+                          color: hasDiscount
+                              ? Colors.red
+                              : Theme.of(context).primaryColor,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      if (hasDiscount && product.discountPercentage != null) ...[
+                      if (hasDiscount && reward.discountPercentage != null) ...[
                         const SizedBox(width: 6),
                         Text(
-                          '-${product.discountPercentage!.toStringAsFixed(0)}%',
+                          '-${reward.discountPercentage!.toStringAsFixed(0)}%',
                           style: const TextStyle(
                             color: Colors.red,
                             fontSize: 11,

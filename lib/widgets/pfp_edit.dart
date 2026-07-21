@@ -33,11 +33,17 @@ class _EditProfilePictureState extends ConsumerState<EditProfilePicture> {
             width: 150,
             height: 150,
             decoration: BoxDecoration(
-              color: (imageUrl != null && imageUrl.isNotEmpty) || _localFile != null
+              color: (imageUrl != null && imageUrl.isNotEmpty) ||
+                      _localFile != null
                   ? Colors.white
                   : primaryColor.withValues(alpha: 0.1),
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.grey.shade300, width: 1),
+              border: Border.all(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Theme.of(context).colorScheme.outline
+                    : Colors.grey.shade300,
+                width: 1,
+              ),
             ),
             child: ClipOval(
               child: _localFile != null
@@ -51,7 +57,7 @@ class _EditProfilePictureState extends ConsumerState<EditProfilePicture> {
                           fadeOutDuration: Duration.zero,
                           // Shows white while loading
                           placeholder: (context, url) =>
-                              Container(color: Colors.white),
+                              Container(color: Theme.of(context).cardColor),
                           errorWidget: (context, url, error) =>
                               const Icon(Icons.error),
                         )
@@ -103,7 +109,7 @@ class _EditProfilePictureState extends ConsumerState<EditProfilePicture> {
   }
 
   Future<void> _pickAndUploadImage() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
+    FilePickerResult? result = await FilePicker.pickFiles(
       type: FileType.image,
     );
 

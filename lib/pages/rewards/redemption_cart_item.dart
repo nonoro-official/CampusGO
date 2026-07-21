@@ -25,25 +25,32 @@ class CartItemScreen extends StatelessWidget {
     // ignore: unused_local_variable
     final int subtotal = order["subtotal"];
     final int total =
-        order["subtotal"] + 10; // Adding service fee for demonstration
+        order["subtotal"];
     int qty = order["total_qty"];
 
     final status = order["status"];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-
+      backgroundColor: Theme.of(context).brightness == Brightness.dark
+          ? Theme.of(context).scaffoldBackgroundColor
+          : const Color(0xFFF5F5F5),
       bottomNavigationBar: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          border: Border(top: BorderSide(color: Color(0xFFEAEAEA))),
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          border: Border(
+            top: BorderSide(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Theme.of(context).colorScheme.outlineVariant
+                  : const Color(0xFFEAEAEA),
+            ),
+          ),
         ),
         child: Row(
           children: [
             Expanded(
               child: Text(
-                "Total: ₱$total",
+                "Total: $total pts",
                 style: textTheme.titleMedium?.copyWith(color: primaryColor),
               ),
             ),
@@ -143,7 +150,7 @@ class CartItemScreen extends StatelessWidget {
                                 style: textTheme.titleSmall,
                               ),
                               Text(
-                                "₱$total",
+                                "$total pts",
                                 style: textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   color: primaryColor,
@@ -184,26 +191,28 @@ class CartItemScreen extends StatelessWidget {
               child: status == "Completed"
                   ? const Text("Buy Again")
                   : status == "To Payment"
-                  ? const Text("Proceed to Payment")
-                  : const Text("Contact Seller"),
+                      ? const Text("Proceed to Payment")
+                      : const Text("Contact Seller"),
             ),
           ],
         ),
       ),
-
       appBar: TopBar(title: 'Order Summary', showBack: true, dark: true),
-
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            // Product Section
+            // Reward Section
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.grey.shade200),
+                border: Border.all(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Theme.of(context).colorScheme.outlineVariant
+                      : Colors.grey.shade200,
+                ),
               ),
               child: Row(
                 children: [
@@ -228,7 +237,7 @@ class CartItemScreen extends StatelessWidget {
                         Text(order["order_id"], style: textTheme.titleMedium),
                         const SizedBox(height: 6),
                         Text(
-                          "₱$total",
+                          "$total pts",
                           style: textTheme.titleSmall?.copyWith(
                             color: primaryColor,
                           ),
@@ -260,19 +269,20 @@ class CartItemScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.grey.shade200),
+                border: Border.all(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Theme.of(context).colorScheme.outlineVariant
+                      : Colors.grey.shade200,
+                ),
               ),
               child: Column(
                 children: [
-                  _buildRow(context, "Subtotal", "₱$subtotal"),
-                  const SizedBox(height: 10),
-                  _buildRow(context, "Service Fee", "₱10"),
-                  const SizedBox(height: 10),
                   _buildRow(context, "Campus Pickup", "Free"),
                   const Divider(height: 25),
-                  _buildRow(context, "Total Payment", "₱$total", isTotal: true),
+                  _buildRow(context, "Total Payment", "$total pts",
+                      isTotal: true),
                 ],
               ),
             ),
@@ -283,9 +293,13 @@ class CartItemScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.grey.shade200),
+                border: Border.all(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Theme.of(context).colorScheme.outlineVariant
+                      : Colors.grey.shade200,
+                ),
               ),
               child: Row(
                 children: [
@@ -321,11 +335,15 @@ class CartItemScreen extends StatelessWidget {
         ),
         Text(
           value,
-          style: (isTotal ? textTheme.titleSmall : textTheme.bodyMedium)
-              ?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: isTotal ? primaryColor : Colors.black87,
-              ),
+          style:
+              (isTotal ? textTheme.titleSmall : textTheme.bodyMedium)?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: isTotal
+                ? primaryColor
+                : Theme.of(context).brightness == Brightness.dark
+                    ? Theme.of(context).colorScheme.onSurface
+                    : Colors.black87,
+          ),
         ),
       ],
     );
@@ -346,9 +364,13 @@ class OrderSummaryItems extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(
+          color: Theme.of(context).brightness == Brightness.dark
+              ? Theme.of(context).colorScheme.outlineVariant
+              : Colors.grey.shade200,
+        ),
       ),
       child: Row(
         children: [
@@ -361,7 +383,7 @@ class OrderSummaryItems extends StatelessWidget {
                 Text("Qty: ${item["quantity"]}", style: textTheme.bodySmall),
                 const SizedBox(height: 6),
                 Text(
-                  "₱${item["total"]}",
+                  "${item["total"]} pts",
                   style: textTheme.titleSmall?.copyWith(color: primaryColor),
                 ),
               ],

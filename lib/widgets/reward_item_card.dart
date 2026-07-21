@@ -10,8 +10,7 @@ class OrganizerShopCard extends ConsumerWidget {
   const OrganizerShopCard({super.key});
 
   String formatPartner(OrganizerPartner partner) {
-    return partner.name[0].toUpperCase() +
-        partner.name.substring(1);
+    return partner.name[0].toUpperCase() + partner.name.substring(1);
   }
 
   // icon per partner type
@@ -40,8 +39,9 @@ class OrganizerShopCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final primaryColor = Theme.of(context).primaryColor;
-    final textTheme = Theme.of(context).textTheme;
+    final theme = Theme.of(context);
+    final primaryColor = theme.colorScheme.primary;
+    final textTheme = theme.textTheme;
 
     final organizerAsync = ref.watch(myOrganizerProvider);
 
@@ -49,7 +49,7 @@ class OrganizerShopCard extends ConsumerWidget {
       data: (organizer) {
         if (organizer == null) return const SizedBox.shrink();
 
-        final reviewsAsync = ref.watch(OrganizerReviewsProvider(organizer.id));
+        final reviewsAsync = ref.watch(organizerReviewsProvider(organizer.id));
         final hasImage =
             organizer.imageUrl != null && organizer.imageUrl!.isNotEmpty;
 
@@ -68,7 +68,7 @@ class OrganizerShopCard extends ConsumerWidget {
             return Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: theme.cardColor,
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: const [
                   BoxShadow(
@@ -87,9 +87,8 @@ class OrganizerShopCard extends ConsumerWidget {
                       CircleAvatar(
                         radius: 28,
                         backgroundColor: primaryColor.withValues(alpha: 0.1),
-                        backgroundImage: hasImage
-                            ? NetworkImage(organizer.imageUrl!)
-                            : null,
+                        backgroundImage:
+                            hasImage ? NetworkImage(organizer.imageUrl!) : null,
                         child: hasImage
                             ? null
                             : Icon(Icons.store, color: primaryColor),
@@ -130,8 +129,7 @@ class OrganizerShopCard extends ConsumerWidget {
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
-                                    formatPartner(
-                                        organizer.organizerPartner),
+                                    formatPartner(organizer.organizerPartner),
                                     style: textTheme.bodySmall?.copyWith(
                                       color: partnerColor,
                                       fontWeight: FontWeight.w600,
@@ -182,8 +180,8 @@ class OrganizerShopCard extends ConsumerWidget {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) =>
-                                    OrganizerProfileScreen(organizer: organizer),
+                                builder: (_) => OrganizerProfileScreen(
+                                    organizer: organizer),
                               ),
                             );
                           },

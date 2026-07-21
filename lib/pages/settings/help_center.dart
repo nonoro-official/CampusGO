@@ -12,16 +12,16 @@ void helpCenter(BuildContext context, WidgetRef ref) {
           {
             "question": "About Us",
             "answer":
-                "CampusGO is a centralized campus e-commerce platform designed to bring student Organizers into one accessible space, making it easier for the campus community to discover, support, and engage with them.\n\nPrototype for Mobile Application Development 2 and Science, Technology, and Society.",
+                "CampusGO is a centralized campus event management platform designed to connect students, organizations, and campus activities in one convenient mobile application.\n\nPrototype for Software Engineering 1.",
           },
           {
             "question": "Contact Tech and Support",
             "answer":
-                "noah.penaranda@ciit.edu.ph\nrysa.abadier@ciit.edu.ph\ndanielle.serrato@ciit.edu.ph",
+                "noah.penaranda@ciit.edu.ph\nlloyd.lorenzo@ciit.edu.ph\ndanielle.serrato@ciit.edu.ph",
           },
           {
             "question": "Contact Branding",
-            "answer": "rysa.abadier@ciit.edu.ph\nace.saman@ciit.edu.ph",
+            "answer": "josh.delgado@ciit.edu.ph\nfrancis.andres@ciit.edu.ph",
           },
           {
             "question": "Contact Logistics",

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:campusgo/models/enums.dart';
 import 'package:campusgo/services/auth_service.dart';
 import 'package:campusgo/widgets/top_bar.dart';
@@ -20,11 +21,9 @@ class RedirectScreen extends StatelessWidget {
           children: [
             Align(
               alignment: Alignment.center,
-              child: Image.asset('assets/images/campusgo_logo.png', width: 235),
+              child: Image.asset('assets/images/campusgo_logo.png', width: 400),
             ),
             const SizedBox(height: 10),
-            Text('Buy and Sell', style: textTheme.bodyMedium),
-            const SizedBox(height: 40),
             ElevatedButton(
               onPressed: () => Navigator.push(
                 context,
@@ -65,6 +64,7 @@ class RegisterScreen extends StatefulWidget {
 class _RegisterScreenState extends State<RegisterScreen> {
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
+  final _schoolIdController = TextEditingController();
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -75,11 +75,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
     // 1. Extract and trim the email for consistent checking
     final email = _emailController.text.trim();
     final phone = _phoneController.text.trim();
+    final schoolId = _schoolIdController.text.trim();
     final password = _passwordController.text;
 
     // 2. Original empty field validation
     if (_firstNameController.text.trim().isEmpty ||
         _lastNameController.text.trim().isEmpty ||
+        schoolId.isEmpty ||
         phone.isEmpty ||
         email.isEmpty ||
         password.isEmpty) {
@@ -135,6 +137,37 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _isLoading = true);
 
     try {
+      // 4. NEW: School ID verification using the dedicated collection
+      final schoolIdDoc = await FirebaseFirestore.instance
+          .collection('school_ids')
+          .doc(schoolId)
+          .get();
+
+      if (!schoolIdDoc.exists) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Invalid School ID. Please check and try again.'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      final schoolIdData = schoolIdDoc.data() as Map<String, dynamic>;
+      if (schoolIdData['isUsed'] == true) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('This School ID is already registered.'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+        setState(() => _isLoading = false);
+        return;
+      }
+
       final cleanEmail = email.trim().toLowerCase();
 
       if (widget.accountType == 'Organizer') {
@@ -151,6 +184,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 'firstName': _firstNameController.text.trim(),
                 'lastName': _lastNameController.text.trim(),
                 'phoneNumber': phone,
+                'schoolId': schoolId,
                 'role': Role.fromString(widget.accountType),
               },
             ),
@@ -164,6 +198,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           firstName: _firstNameController.text.trim(),
           lastName: _lastNameController.text.trim(),
           phoneNumber: phone,
+          schoolId: schoolId,
           role: Role.fromString(widget.accountType),
         );
 
@@ -204,7 +239,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.grey.shade300),
+              border: Border.all(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Theme.of(context).colorScheme.outline
+                    : Colors.grey.shade300,
+              ),
             ),
             child: Column(
               children: [
@@ -224,6 +263,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   controller: _lastNameController,
                   decoration: const InputDecoration(
                     labelText: 'Last Name',
+                    contentPadding: EdgeInsets.symmetric(
+                      vertical: 15,
+                      horizontal: 12,
+                    ),
+                  ),
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: _schoolIdController,
+                  decoration: const InputDecoration(
+                    labelText: 'School ID',
                     contentPadding: EdgeInsets.symmetric(
                       vertical: 15,
                       horizontal: 12,
@@ -292,16 +343,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   child: ElevatedButton(
                     onPressed: _isLoading ? null : _onNext,
                     child: _isLoading
-                        ? const SizedBox(
+                        ? SizedBox(
                             height: 20,
                             width: 20,
                             child: CircularProgressIndicator(
-                              color: Colors.white,
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Theme.of(context).colorScheme.onPrimary
+                                  : Colors.white,
                             ),
                           )
                         : isOrganizer
-                        ? const Text('Next')
-                        : const Text('Register'),
+                            ? const Text('Next')
+                            : const Text('Register'),
                   ),
                 ),
               ],
@@ -316,6 +370,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void dispose() {
     _firstNameController.dispose();
     _lastNameController.dispose();
+    _schoolIdController.dispose();
     _phoneController.dispose();
     _emailController.dispose();
     _passwordController.dispose();

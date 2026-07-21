@@ -17,7 +17,7 @@ void termsAndConditions(BuildContext context, WidgetRef ref) {
             ),
             const SizedBox(height: 10),
             Text(
-              "Last Updated: March 23, 2026",
+              "Last Updated: July 23, 2026",
               style: Theme.of(context).textTheme.bodySmall,
             ),
             const SizedBox(height: 20),
@@ -26,7 +26,7 @@ void termsAndConditions(BuildContext context, WidgetRef ref) {
             _buildSection(
               context,
               "Welcome",
-              "Welcome to campusgo! By using our service, you agree to the following terms:",
+              "Welcome to CampuGO! By using our service, you agree to the following terms:",
             ),
             _buildSection(
               context,
@@ -82,7 +82,7 @@ void termsAndConditions(BuildContext context, WidgetRef ref) {
             _buildSection(
               context,
               "Contact Us",
-              "• If you have questions about these terms, contact us at:\n- noah.penaranda@ciit.edu.ph\n- rysa.abadier@ciit.edu.ph\n- danielle.serrato@ciit.edu.ph.",
+              "• If you have questions about these terms, contact us at:\n- noah.penaranda@ciit.edu.ph\n- lloyd.lorenzo@ciit.edu.ph\n- danielle.serrato@ciit.edu.ph.",
             ),
           ],
         ),

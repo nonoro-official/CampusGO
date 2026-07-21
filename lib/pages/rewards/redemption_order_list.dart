@@ -29,7 +29,9 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
     final primaryColor = theme.primaryColor;
 
     // Use the correct provider based on account type
-    final ordersAsync = ref.watch(myOrdersProvider);
+    final ordersAsync = widget.accountType == 'Organizer'
+        ? ref.watch(organizerOrdersProvider)
+        : ref.watch(myOrdersProvider);
 
     return ordersAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -42,13 +44,11 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
           // Tab filter
           bool matchesTab;
           if (widget.filter == "Completed") {
-            matchesTab = 
-            status == OrderStatus.completed ||
-            status == OrderStatus.cancelled;
+            matchesTab = status == OrderStatus.completed ||
+                status == OrderStatus.cancelled;
           } else {
             // "Processing" tab shows: toPayment (readyForPickUp), processing
-            matchesTab =
-                status == OrderStatus.readyForPickup ||
+            matchesTab = status == OrderStatus.readyForPickup ||
                 status == OrderStatus.processing;
           }
 
@@ -168,9 +168,13 @@ class _OrderCard extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 15),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey.shade200),
+          border: Border.all(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Theme.of(context).colorScheme.outlineVariant
+                : Colors.grey.shade200,
+          ),
         ),
         child: Row(
           children: [
@@ -196,12 +200,12 @@ class _OrderCard extends StatelessWidget {
                   Text('Qty: ${order.totalQty}', style: textTheme.bodySmall),
                   const SizedBox(height: 6),
                   Text(
-                    '₱${order.price.toStringAsFixed(2)}',
+                    '${order.points} pts',
                     style: textTheme.titleSmall?.copyWith(color: primaryColor),
                   ),
                 ],
               ),
-                ),
+            ),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(

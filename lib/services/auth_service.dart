@@ -34,8 +34,19 @@ class AuthService {
     required String firstName,
     required String lastName,
     required String phoneNumber,
+    required String schoolId,
     required Role role,
   }) async {
+    // 1. Initial check (optional but good for early failure before creating Auth user)
+    final schoolIdDoc = await _db.collection('school_ids').doc(schoolId).get();
+    if (!schoolIdDoc.exists) {
+      throw Exception("School ID not found in database.");
+    }
+    if (schoolIdDoc.data()?['isUsed'] == true) {
+      throw Exception("This School ID is already associated with an account.");
+    }
+
+    // 2. Create the Auth user
     final result = await _auth.createUserWithEmailAndPassword(
       email: email,
       password: password,
@@ -43,22 +54,48 @@ class AuthService {
 
     final uid = result.user!.uid;
 
-    // 🔥 Force refresh token so email is available in rules
-    await result.user!.getIdToken(true);
+    try {
+      // 3. Use a transaction to ensure both user doc is created and ID is marked as used
+      await _db.runTransaction((transaction) async {
+        final sDoc =
+            await transaction.get(_db.collection('school_ids').doc(schoolId));
 
-    await _db.collection('users').doc(uid).set({
-      'email': email,
-      'firstName': firstName,
-      'lastName': lastName,
-      'phoneNumber': phoneNumber,
-      'role': role.toName,
-      'organizerId': null,
-      'createdAt': FieldValue.serverTimestamp(),
-      'isOnline': true,
-      'lastSeen': FieldValue.serverTimestamp(),
-    });
+        if (!sDoc.exists || sDoc.data()?['isUsed'] == true) {
+          throw Exception("School ID invalid or already used.");
+        }
 
-    return uid;
+        // Create user document
+        transaction.set(_db.collection('users').doc(uid), {
+          'email': email,
+          'firstName': firstName,
+          'lastName': lastName,
+          'phoneNumber': phoneNumber,
+          'schoolId': schoolId,
+          'role': role.toName,
+          'organizerId': null,
+          'createdAt': FieldValue.serverTimestamp(),
+          'isOnline': true,
+          'lastSeen': FieldValue.serverTimestamp(),
+        });
+
+        // Mark School ID as used
+        transaction.update(_db.collection('school_ids').doc(schoolId), {
+          'isUsed': true,
+          'usedBy': uid,
+        });
+      });
+
+      // 🔥 Force refresh token so email is available in rules
+      await result.user!.getIdToken(true);
+
+      return uid;
+    } catch (e) {
+      // If Firestore setup fails, we might have an "orphaned" Auth user.
+      // In a real app, you might want to delete the auth user here,
+      // but that requires re-authentication or admin SDK.
+      // For now, throwing the error is the standard approach.
+      rethrow;
+    }
   }
 
   Future<Role> login(String email, String password) async {
@@ -199,7 +236,7 @@ class AuthService {
   }
 
   Future<void> deleteAccount({required String password}) async {
-    // deletes organizer and products
+    // deletes organizer and rewards
     final user = _auth.currentUser;
 
     if (user == null || user.email == null) {
@@ -215,7 +252,7 @@ class AuthService {
       await user.reauthenticateWithCredential(credential);
 
       final organizerQuery = await _db
-          .collection('Organizers')
+          .collection('organizers')
           .where('ownerId', isEqualTo: user.uid)
           .get();
 
@@ -253,20 +290,20 @@ class AuthService {
 
       await user.reauthenticateWithCredential(credential);
 
-      final docRef = _db.collection('Organizers').doc(organizerId);
+      final docRef = _db.collection('organizers').doc(organizerId);
 
       final doc = await docRef.get();
       if (!doc.exists) {
         throw Exception("Organizer not found");
       }
 
-      final productsQuery = await _db
-          .collection('products')
+      final rewardsQuery = await _db
+          .collection('rewards')
           .where('organizerId', isEqualTo: organizerId)
           .get();
 
-      for (var productDoc in productsQuery.docs) {
-        await productDoc.reference.delete();
+      for (var rewardDoc in rewardsQuery.docs) {
+        await rewardDoc.reference.delete();
       }
 
       await docRef.delete();

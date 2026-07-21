@@ -11,8 +11,10 @@ class UserModel {
   final Timestamp lastSeen;
   final UserTier userTier;
   final String? organizerId;
+  final String? schoolId;
   final String? imageUrl;
   final bool isOnline;
+  final int points;
 
   UserModel({
     required this.uid,
@@ -24,8 +26,10 @@ class UserModel {
     required this.lastSeen,
     required this.userTier,
     this.organizerId,
+    this.schoolId,
     this.imageUrl,
     this.isOnline = false,
+    this.points = 0,
   });
 
   // Convert Firestore Document to Model
@@ -42,8 +46,10 @@ class UserModel {
           : (data['lastOnline'] is Timestamp ? data['lastOnline'] as Timestamp : Timestamp.now()),
       userTier: UserTier.fromString(data['userTier'] ?? 'Free'),
       organizerId: data['organizerId'],
+      schoolId: data['schoolId'],
       imageUrl: data['imageUrl'],
       isOnline: data['isOnline'] ?? false,
+      points: (data['points'] as num?)?.toInt() ?? 0,
     );
   }
 
@@ -58,8 +64,10 @@ class UserModel {
       'lastSeen': lastSeen,
       'userTier': userTier.toName,
       'organizerId': organizerId,
+      'schoolId': schoolId,
       'imageUrl': imageUrl,
       'isOnline': isOnline,
+      'points': points,
     };
   }
 }

@@ -14,7 +14,9 @@ class MessageNotificationBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primary = Theme.of(context).primaryColor;
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final primary = colors.primary;
 
     return Positioned(
       top: 60,
@@ -29,7 +31,7 @@ class MessageNotificationBanner extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: theme.cardColor,
               borderRadius: BorderRadius.circular(18),
               border: Border.all(
                 color: primary.withValues(alpha: 0.25),
@@ -39,10 +41,9 @@ class MessageNotificationBanner extends StatelessWidget {
               children: [
                 CircleAvatar(
                   backgroundColor: primary,
-                  child: const Icon(Icons.message, color: Colors.white),
+                  child: Icon(Icons.message, color: colors.onPrimary),
                 ),
                 const SizedBox(width: 12),
-
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -64,7 +65,6 @@ class MessageNotificationBanner extends StatelessWidget {
                     ],
                   ),
                 ),
-
                 Icon(Icons.chevron_right, color: primary)
               ],
             ),

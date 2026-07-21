@@ -4,41 +4,42 @@ import 'package:campusgo/widgets/top_bar.dart';
 import '../../models/reward_item_model.dart';
 import '../../models/enums.dart';
 import '../../providers/cart_provider.dart';
-import '../../providers/product_provider.dart';
+import '../../providers/reward_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../models/redemption_order_model.dart';
 
-class ProductDetailScreen extends ConsumerStatefulWidget {
-  final dynamic product;
+class RewardDetailScreen extends ConsumerStatefulWidget {
+  final dynamic reward;
 
-  const ProductDetailScreen({super.key, required this.product});
+  const RewardDetailScreen({super.key, required this.reward});
 
   @override
-  ConsumerState<ProductDetailScreen> createState() =>
-      _ProductDetailScreenState();
+  ConsumerState<RewardDetailScreen> createState() => _RewardDetailScreenState();
 }
 
-class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
+class _RewardDetailScreenState extends ConsumerState<RewardDetailScreen> {
   int quantity = 1;
 
   @override
   Widget build(BuildContext context) {
-    final initialProduct = widget.product as ProductModel;
-    
-    // Watch the product stream to get real-time stock updates
-    final productsAsync = ref.watch(organizerProductsProvider(initialProduct.organizerId));
-    
-    return productsAsync.when(
-      loading: () => _buildScaffold(context, initialProduct),
-      error: (e, _) => _buildScaffold(context, initialProduct),
-      data: (products) {
-        final product = products.firstWhere(
-          (p) => p.id == initialProduct.id,
-          orElse: () => initialProduct,
+    final initialReward = widget.reward as RewardModel;
+
+    // Watch the reward stream to get real-time stock updates
+    final rewardsAsync =
+        ref.watch(organizerRewardsProvider(initialReward.organizerId));
+
+    return rewardsAsync.when(
+      loading: () => _buildScaffold(context, initialReward),
+      error: (e, _) => _buildScaffold(context, initialReward),
+      data: (rewards) {
+        final reward = rewards.firstWhere(
+          (p) => p.id == initialReward.id,
+          orElse: () => initialReward,
         );
-        
+
         // Calculate effective stock if it's a promo, discount, or bundle
-        final effectiveStock = product.calculateEffectiveStock(products);
-        
+        final effectiveStock = reward.calculateEffectiveStock(rewards);
+
         // Adjust quantity if it exceeds current stock
         if (quantity > effectiveStock && effectiveStock > 0) {
           quantity = effectiveStock;
@@ -46,22 +47,29 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
           quantity = 0;
         }
 
-        return _buildScaffold(context, product, effectiveStock: effectiveStock);
+        return _buildScaffold(context, reward, effectiveStock: effectiveStock);
       },
     );
   }
 
-  Widget _buildScaffold(BuildContext context, ProductModel product, {int? effectiveStock}) {
+  Widget _buildScaffold(BuildContext context, RewardModel reward,
+      {int? effectiveStock}) {
     final textTheme = Theme.of(context).textTheme;
     final primaryColor = Theme.of(context).primaryColor;
-    
-    final displayStock = effectiveStock ?? product.stock;
+    final user = ref.watch(currentUserProvider);
+
+    final displayStock = effectiveStock ?? reward.stock;
     final isOutOfStock = displayStock <= 0;
     final isLowStock = displayStock > 0 && displayStock <= 9;
 
+    final totalPoints = (reward.points * quantity);
+    final hasEnoughPoints = user != null && user.points >= totalPoints;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      appBar: TopBar(title: "Product", dark: true, showBack: true),
+      backgroundColor: Theme.of(context).brightness == Brightness.dark
+          ? Theme.of(context).scaffoldBackgroundColor
+          : const Color(0xFFF5F5F5),
+      appBar: TopBar(title: "Reward", dark: true, showBack: true),
       body: Column(
         children: [
           /// PRODUCT IMAGE
@@ -70,10 +78,26 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
               ColorFiltered(
                 colorFilter: isOutOfStock
                     ? const ColorFilter.matrix([
-                        0.2126, 0.7152, 0.0722, 0, 0,
-                        0.2126, 0.7152, 0.0722, 0, 0,
-                        0.2126, 0.7152, 0.0722, 0, 0,
-                        0, 0, 0, 1, 0,
+                        0.2126,
+                        0.7152,
+                        0.0722,
+                        0,
+                        0,
+                        0.2126,
+                        0.7152,
+                        0.0722,
+                        0,
+                        0,
+                        0.2126,
+                        0.7152,
+                        0.0722,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
                       ])
                     : const ColorFilter.mode(
                         Colors.transparent,
@@ -82,9 +106,11 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                 child: Container(
                   height: 260,
                   width: double.infinity,
-                  color: Colors.grey.shade200,
-                  child: product.imageUrl != null
-                      ? Image.network(product.imageUrl!, fit: BoxFit.cover)
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Theme.of(context).colorScheme.surfaceContainerHighest
+                      : Colors.grey.shade200,
+                  child: reward.imageUrl != null
+                      ? Image.network(reward.imageUrl!, fit: BoxFit.cover)
                       : const Icon(Icons.image, size: 80, color: Colors.grey),
                 ),
               ),
@@ -111,9 +137,11 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
           Expanded(
             child: Container(
               padding: const EdgeInsets.all(20),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+              decoration: BoxDecoration(
+                color: Theme.of(context).cardColor,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(28),
+                ),
               ),
               child: SingleChildScrollView(
                 child: Column(
@@ -124,7 +152,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Expanded(
-                          child: Text(product.name, style: textTheme.titleLarge),
+                          child: Text(reward.name, style: textTheme.titleLarge),
                         ),
                         if (isOutOfStock)
                           Container(
@@ -179,31 +207,33 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                     Row(
                       children: [
                         Text(
-                          "₱${product.price.toStringAsFixed(2)}",
+                          "${reward.points} pts",
                           style: textTheme.titleMedium?.copyWith(
                             color: primaryColor,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        if (product.originalPrice != null && product.originalPrice! > product.price) ...[
+                        if (reward.originalPoints != null &&
+                            reward.originalPoints! > reward.points) ...[
                           const SizedBox(width: 10),
                           Text(
-                            "₱${product.originalPrice!.toStringAsFixed(2)}",
+                            "${reward.originalPoints} pts",
                             style: textTheme.bodyMedium?.copyWith(
                               color: Colors.grey,
                               decoration: TextDecoration.lineThrough,
                             ),
                           ),
                           const SizedBox(width: 8),
-                          if (product.discountPercentage != null)
+                          if (reward.discountPercentage != null)
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
                                 color: Colors.red.shade100,
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
-                                "-${product.discountPercentage!.toStringAsFixed(0)}%",
+                                "-${reward.discountPercentage!.toStringAsFixed(0)}%",
                                 style: TextStyle(
                                   color: Colors.red.shade900,
                                   fontSize: 12,
@@ -215,22 +245,47 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                       ],
                     ),
 
-                    if (product.categories.isNotEmpty) ...[
+                    if (user != null) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        "Your Points: ${user.points} pts",
+                        style: textTheme.bodySmall?.copyWith(
+                          color: hasEnoughPoints ? Colors.green : Colors.red,
+                        ),
+                      ),
+                      if (!hasEnoughPoints)
+                        Text(
+                          "Need ${totalPoints - user.points} more pts",
+                          style:
+                              textTheme.labelSmall?.copyWith(color: Colors.red),
+                        ),
+                    ],
+
+                    if (reward.categories.isNotEmpty) ...[
                       const SizedBox(height: 12),
                       Wrap(
                         spacing: 8,
                         runSpacing: 8,
-                        children: product.categories.map((cat) => Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade100,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            cat,
-                            style: textTheme.bodySmall?.copyWith(color: Colors.grey.shade700),
-                          ),
-                        )).toList(),
+                        children: reward.categories
+                            .map((cat) => Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? Theme.of(context)
+                                            .colorScheme
+                                            .surfaceContainerHigh
+                                        : Colors.grey.shade100,
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Text(
+                                    cat,
+                                    style: textTheme.bodySmall
+                                        ?.copyWith(color: Colors.grey.shade700),
+                                  ),
+                                ))
+                            .toList(),
                       ),
                     ],
 
@@ -240,8 +295,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                     Text("Description", style: textTheme.titleSmall),
                     const SizedBox(height: 6),
                     Text(
-                      product.description.isNotEmpty
-                          ? product.description
+                      reward.description.isNotEmpty
+                          ? reward.description
                           : "No description available.",
                       style: textTheme.bodyMedium,
                     ),
@@ -249,13 +304,13 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                     const SizedBox(height: 20),
 
                     /// ADDITIONAL INFO
-                    if (product.sku.isNotEmpty || product.supplier.isNotEmpty) ...[
-                      Text("Product Details", style: textTheme.titleSmall),
+                    if (reward.sku.isNotEmpty ||
+                        reward.supplier.isNotEmpty) ...[
+                      Text("Reward Details", style: textTheme.titleSmall),
                       const SizedBox(height: 10),
-                      if (product.sku.isNotEmpty)
-                        _detailRow("SKU", product.sku),
-                      if (product.supplier.isNotEmpty)
-                        _detailRow("Supplier", product.supplier),
+                      if (reward.sku.isNotEmpty) _detailRow("SKU", reward.sku),
+                      if (reward.supplier.isNotEmpty)
+                        _detailRow("Supplier", reward.supplier),
                       const SizedBox(height: 20),
                     ],
 
@@ -331,8 +386,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                               await ref
                                   .read(cartNotifierProvider.notifier)
                                   .addToCart(
-                                    organizerId: product.organizerId,
-                                    product: product,
+                                    organizerId: reward.organizerId,
+                                    reward: reward,
                                     quantity: quantity,
                                   );
 
@@ -342,7 +397,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                 ).showSnackBar(
                                   SnackBar(
                                     content: Text(
-                                      '${product.name} x$quantity added to cart!',
+                                      '${reward.name} x$quantity added to cart!',
                                     ),
                                   ),
                                 );
@@ -350,10 +405,13 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                               }
                             },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: isOutOfStock
-                            ? Colors.grey
-                            : primaryColor,
-                        foregroundColor: Colors.white,
+                        backgroundColor:
+                            isOutOfStock ? Colors.grey : primaryColor,
+                        foregroundColor: isOutOfStock
+                            ? Colors.white
+                            : Theme.of(context).brightness == Brightness.dark
+                                ? Theme.of(context).colorScheme.onPrimary
+                                : Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),
                         ),
@@ -367,7 +425,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: isOutOfStock
+                      onPressed: (isOutOfStock || !hasEnoughPoints)
                           ? null
                           : () async {
                               // Show confirmation dialog
@@ -376,8 +434,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                 builder: (ctx) => AlertDialog(
                                   title: const Text('Buy Now'),
                                   content: Text(
-                                    'Place order for ${product.name} x$quantity '
-                                    'totalling ₱${(product.price * quantity).toStringAsFixed(2)}?',
+                                    'Place order for ${reward.name} x$quantity '
+                                    'totalling $totalPoints pts?',
                                   ),
                                   actions: [
                                     TextButton(
@@ -395,18 +453,22 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                               );
 
                               if (confirmed != true) return;
-                              
+
                               try {
-                                await ref.read(cartNotifierProvider.notifier).buyNow(
-                                  organizerId: product.organizerId,
-                                  product: product,
-                                  quantity: quantity,
-                                );
-                                
+                                await ref
+                                    .read(cartNotifierProvider.notifier)
+                                    .buyNow(
+                                      organizerId: reward.organizerId,
+                                      reward: reward,
+                                      quantity: quantity,
+                                    );
+
                                 if (context.mounted) {
                                   final user = ref.read(currentUserProvider);
-                                  final route = user?.role != Role.customer ? '/Organizer-dashboard' : '/dashboard';
-                                  
+                                  final route = user?.role != Role.customer
+                                      ? '/Organizer-dashboard'
+                                      : '/dashboard';
+
                                   Navigator.pushNamedAndRemoveUntil(
                                     context,
                                     route,
@@ -423,9 +485,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                               }
                             },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: isOutOfStock
-                            ? Colors.grey
-                            : Colors.black,
+                        backgroundColor:
+                            isOutOfStock ? Colors.grey : Colors.black,
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),

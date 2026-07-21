@@ -26,7 +26,7 @@ class _ReportOrganizerSheetState extends ConsumerState<ReportOrganizerSheet> {
   final reasons = [
     "Fake Organizer",
     "Scam / Fraud",
-    "Inappropriate Products",
+    "Inappropriate Rewards",
     "Harassment",
     "Other",
   ];
@@ -48,7 +48,6 @@ class _ReportOrganizerSheetState extends ConsumerState<ReportOrganizerSheet> {
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 15),
-
           DropdownButtonFormField(
             initialValue: selectedReason,
             items: reasons
@@ -56,9 +55,7 @@ class _ReportOrganizerSheetState extends ConsumerState<ReportOrganizerSheet> {
                 .toList(),
             onChanged: (val) => setState(() => selectedReason = val!),
           ),
-
           const SizedBox(height: 10),
-
           TextField(
             controller: descController,
             maxLines: 3,
@@ -67,15 +64,17 @@ class _ReportOrganizerSheetState extends ConsumerState<ReportOrganizerSheet> {
               border: OutlineInputBorder(),
             ),
           ),
-
           const SizedBox(height: 15),
-
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
               onPressed: loading ? null : _submit,
               child: loading
-                  ? const CircularProgressIndicator(color: Colors.white)
+                  ? CircularProgressIndicator(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Theme.of(context).colorScheme.onPrimary
+                          : Colors.white,
+                    )
                   : const Text("Submit Report"),
             ),
           ),

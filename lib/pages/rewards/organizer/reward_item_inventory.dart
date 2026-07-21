@@ -3,10 +3,10 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../widgets/modal.dart';
-import '../../../widgets/product_image_picker.dart';
+import '../../../widgets/reward_image_picker.dart';
 import '../../../providers/auth_provider.dart';
-import '../../../providers/product_provider.dart';
-import '../../../services/product_service.dart';
+import '../../../providers/reward_provider.dart';
+import '../../../services/reward_service.dart';
 import '../../../models/reward_item_model.dart';
 import '../../../models/enums.dart';
 
@@ -24,7 +24,7 @@ class _AddItemModal extends ConsumerStatefulWidget {
 class _AddItemModalState extends ConsumerState<_AddItemModal> {
   late final TextEditingController nameController;
   late final TextEditingController descriptionController;
-  late final TextEditingController priceController;
+  late final TextEditingController pointsController;
   late final TextEditingController stockController;
   late final TextEditingController skuController;
   late final TextEditingController categoryController;
@@ -39,7 +39,7 @@ class _AddItemModalState extends ConsumerState<_AddItemModal> {
     super.initState();
     nameController = TextEditingController();
     descriptionController = TextEditingController();
-    priceController = TextEditingController();
+    pointsController = TextEditingController();
     stockController = TextEditingController();
     skuController = TextEditingController(text: _generateAutoSku());
     categoryController = TextEditingController();
@@ -48,9 +48,8 @@ class _AddItemModalState extends ConsumerState<_AddItemModal> {
 
   String _generateAutoSku() {
     final random = Random();
-    final timestamp = DateTime.now().millisecondsSinceEpoch
-        .toString()
-        .substring(8);
+    final timestamp =
+        DateTime.now().millisecondsSinceEpoch.toString().substring(8);
     final randomStr = List.generate(3, (index) => random.nextInt(10)).join();
     return "SKU-$timestamp$randomStr";
   }
@@ -59,7 +58,7 @@ class _AddItemModalState extends ConsumerState<_AddItemModal> {
   void dispose() {
     nameController.dispose();
     descriptionController.dispose();
-    priceController.dispose();
+    pointsController.dispose();
     stockController.dispose();
     skuController.dispose();
     categoryController.dispose();
@@ -103,7 +102,7 @@ class _AddItemModalState extends ConsumerState<_AddItemModal> {
         title: const Text('Delete Category Suggestion'),
         content: Text(
           isExisting
-              ? 'This will remove "$cat" from ALL your products. Continue?'
+              ? 'This will remove "$cat" from ALL your rewards. Continue?'
               : 'Remove "$cat" from your temporary suggestions?',
         ),
         actions: [
@@ -124,7 +123,7 @@ class _AddItemModalState extends ConsumerState<_AddItemModal> {
       if (isExisting) {
         try {
           await ref
-              .read(productServiceProvider)
+              .read(rewardServiceProvider)
               .removeCategoryFromOrganizer(organizerId, cat);
           if (mounted) {
             setState(() {
@@ -132,7 +131,7 @@ class _AddItemModalState extends ConsumerState<_AddItemModal> {
             });
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Category "$cat" removed from all products'),
+                content: Text('Category "$cat" removed from all rewards'),
               ),
             );
           }
@@ -164,7 +163,8 @@ class _AddItemModalState extends ConsumerState<_AddItemModal> {
     final allDisplayCategories = {
       ...existingCategories,
       ...localSuggestions,
-    }.toList()..sort();
+    }.toList()
+      ..sort();
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
@@ -180,7 +180,7 @@ class _AddItemModalState extends ConsumerState<_AddItemModal> {
               ),
             ),
             const SizedBox(height: 20),
-            ProductImagePicker(
+            RewardImagePicker(
               onImagePicked: (file) => setState(() => selectedImage = file),
             ),
             const SizedBox(height: 20),
@@ -197,9 +197,9 @@ class _AddItemModalState extends ConsumerState<_AddItemModal> {
               children: [
                 Expanded(
                   child: TextField(
-                    controller: priceController,
+                    controller: pointsController,
                     decoration: const InputDecoration(
-                      labelText: 'Price (₱) *',
+                      labelText: 'Points *',
                       border: OutlineInputBorder(),
                     ),
                     keyboardType: const TextInputType.numberWithOptions(
@@ -251,9 +251,9 @@ class _AddItemModalState extends ConsumerState<_AddItemModal> {
                 child: Text(
                   "Select Categories * (Long press to delete suggestion):",
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey,
-                    fontSize: 10,
-                  ),
+                        color: Colors.grey,
+                        fontSize: 10,
+                      ),
                 ),
               ),
               const SizedBox(height: 8),
@@ -273,16 +273,33 @@ class _AddItemModalState extends ConsumerState<_AddItemModal> {
                           cat,
                           style: TextStyle(
                             fontSize: 11,
-                            color: isSelected ? Colors.white : Colors.black87,
+                            color: isSelected
+                                ? Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Theme.of(context).colorScheme.onPrimary
+                                    : Colors.white
+                                : Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Theme.of(context).colorScheme.onSurface
+                                    : Colors.black87,
                           ),
                         ),
                         selected: isSelected,
                         onSelected: (_) => _toggleCategory(cat),
                         selectedColor: Theme.of(context).primaryColor,
-                        checkmarkColor: Colors.white,
+                        checkmarkColor:
+                            Theme.of(context).brightness == Brightness.dark
+                                ? Theme.of(context).colorScheme.onPrimary
+                                : Colors.white,
                         showCheckmark: true,
                         labelStyle: TextStyle(
-                          color: isSelected ? Colors.white : Colors.black87,
+                          color: isSelected
+                              ? Theme.of(context).brightness == Brightness.dark
+                                  ? Theme.of(context).colorScheme.onPrimary
+                                  : Colors.white
+                              : Theme.of(context).brightness == Brightness.dark
+                                  ? Theme.of(context).colorScheme.onSurface
+                                  : Colors.black87,
                         ),
                         padding: EdgeInsets.zero,
                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -337,7 +354,7 @@ class _AddItemModalState extends ConsumerState<_AddItemModal> {
   Future<void> _handleAddItem() async {
     final name = nameController.text.trim();
     final description = descriptionController.text.trim();
-    final priceStr = priceController.text.trim();
+    final pointsStr = pointsController.text.trim();
     final stock = int.tryParse(stockController.text) ?? 0;
     final sku = skuController.text.trim();
     final supplier = supplierController.text.trim();
@@ -345,7 +362,7 @@ class _AddItemModalState extends ConsumerState<_AddItemModal> {
     _addCategory();
 
     if (name.isEmpty ||
-        priceStr.isEmpty ||
+        pointsStr.isEmpty ||
         sku.isEmpty ||
         categories.isEmpty ||
         supplier.isEmpty) {
@@ -355,9 +372,9 @@ class _AddItemModalState extends ConsumerState<_AddItemModal> {
       return;
     }
 
-    final price = double.tryParse(priceStr) ?? 0.0;
-    if (price <= 0) {
-      _showError('Price must be greater than 0');
+    final points = int.tryParse(pointsStr) ?? 0;
+    if (points <= 0) {
+      _showError('Points must be greater than 0');
       return;
     }
 
@@ -370,18 +387,18 @@ class _AddItemModalState extends ConsumerState<_AddItemModal> {
         return;
       }
 
-      final productService = ref.read(productServiceProvider);
+      final rewardService = ref.read(rewardServiceProvider);
       String? imageUrl;
 
       if (selectedImage != null) {
-        imageUrl = await productService.uploadProductImage(selectedImage!);
+        imageUrl = await rewardService.uploadRewardImage(selectedImage!);
       }
 
-      await productService.createOrganizerProduct(
+      await rewardService.createOrganizerReward(
         organizerId: user!.organizerId!,
         name: name,
         description: description,
-        price: price,
+        points: points,
         stock: stock,
         imageUrl: imageUrl,
         sku: sku,
@@ -410,23 +427,23 @@ class _AddItemModalState extends ConsumerState<_AddItemModal> {
   }
 }
 
-void editItemInventory(BuildContext context, ProductModel product) {
+void editItemInventory(BuildContext context, RewardModel reward) {
   ModalContainer.show(
     context: context,
-    child: _EditItemModal(product: product),
+    child: _EditItemModal(reward: reward),
   );
 }
 
 Future<void> deleteItemInventory(
   BuildContext context,
-  ProductModel product,
+  RewardModel reward,
 ) async {
   final confirmed = await showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('Delete Product'),
+      title: const Text('Delete Reward'),
       content: Text(
-        'Are you sure you want to delete "${product.name}"? This action cannot be undone.',
+        'Are you sure you want to delete "${reward.name}"? This action cannot be undone.',
       ),
       actions: [
         TextButton(
@@ -444,28 +461,28 @@ Future<void> deleteItemInventory(
 
   if (confirmed == true) {
     try {
-      final productService = ProductService();
-      await productService.deleteOrganizerProduct(product.id);
+      final rewardService = RewardService();
+      await rewardService.deleteOrganizerReward(reward.id);
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Product deleted successfully')),
+          const SnackBar(content: Text('Reward deleted successfully')),
         );
       }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Error deleting product: $e')));
+        ).showSnackBar(SnackBar(content: Text('Error deleting reward: $e')));
       }
     }
   }
 }
 
 class _EditItemModal extends ConsumerStatefulWidget {
-  final ProductModel product;
+  final RewardModel reward;
 
-  const _EditItemModal({required this.product});
+  const _EditItemModal({required this.reward});
 
   @override
   ConsumerState<_EditItemModal> createState() => _EditItemModalState();
@@ -474,7 +491,7 @@ class _EditItemModal extends ConsumerStatefulWidget {
 class _EditItemModalState extends ConsumerState<_EditItemModal> {
   late final TextEditingController nameController;
   late final TextEditingController descriptionController;
-  late final TextEditingController priceController;
+  late final TextEditingController pointsController;
   late final TextEditingController stockController;
   late final TextEditingController skuController;
   late final TextEditingController categoryController;
@@ -487,28 +504,28 @@ class _EditItemModalState extends ConsumerState<_EditItemModal> {
   @override
   void initState() {
     super.initState();
-    nameController = TextEditingController(text: widget.product.name);
+    nameController = TextEditingController(text: widget.reward.name);
     descriptionController = TextEditingController(
-      text: widget.product.description,
+      text: widget.reward.description,
     );
 
-    final basePrice = widget.product.originalPrice ?? widget.product.price;
-    priceController = TextEditingController(text: basePrice.toString());
+    final basePoints = widget.reward.originalPoints ?? widget.reward.points;
+    pointsController = TextEditingController(text: basePoints.toString());
     stockController = TextEditingController(
-      text: widget.product.stock.toString()  ?? "0",
+      text: widget.reward.stock.toString() ?? "0",
     );
 
-    skuController = TextEditingController(text: widget.product.sku);
+    skuController = TextEditingController(text: widget.reward.sku);
     categoryController = TextEditingController();
-    supplierController = TextEditingController(text: widget.product.supplier);
-    categories = List<String>.from(widget.product.categories);
+    supplierController = TextEditingController(text: widget.reward.supplier);
+    categories = List<String>.from(widget.reward.categories);
   }
 
   @override
   void dispose() {
     nameController.dispose();
     descriptionController.dispose();
-    priceController.dispose();
+    pointsController.dispose();
     stockController.dispose();
     skuController.dispose();
     categoryController.dispose();
@@ -552,7 +569,7 @@ class _EditItemModalState extends ConsumerState<_EditItemModal> {
         title: const Text('Delete Category Suggestion'),
         content: Text(
           isExisting
-              ? 'This will remove "$cat" from ALL your products in the database. Continue?'
+              ? 'This will remove "$cat" from ALL your rewards in the database. Continue?'
               : 'Remove "$cat" from your temporary suggestions?',
         ),
         actions: [
@@ -573,7 +590,7 @@ class _EditItemModalState extends ConsumerState<_EditItemModal> {
       if (isExisting) {
         try {
           await ref
-              .read(productServiceProvider)
+              .read(rewardServiceProvider)
               .removeCategoryFromOrganizer(organizerId, cat);
           if (mounted) {
             setState(() {
@@ -581,7 +598,7 @@ class _EditItemModalState extends ConsumerState<_EditItemModal> {
             });
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Category "$cat" removed from all products'),
+                content: Text('Category "$cat" removed from all rewards'),
               ),
             );
           }
@@ -603,7 +620,7 @@ class _EditItemModalState extends ConsumerState<_EditItemModal> {
 
   Future<void> _saveChanges() async {
     final name = nameController.text.trim();
-    final priceStr = priceController.text.trim();
+    final pointsStr = pointsController.text.trim();
     final stock = int.tryParse(stockController.text) ?? 0;
     final sku = skuController.text.trim();
     final supplier = supplierController.text.trim();
@@ -611,7 +628,7 @@ class _EditItemModalState extends ConsumerState<_EditItemModal> {
     _addCategory();
 
     if (name.isEmpty ||
-        priceStr.isEmpty ||
+        pointsStr.isEmpty ||
         sku.isEmpty ||
         categories.isEmpty ||
         supplier.isEmpty) {
@@ -619,40 +636,41 @@ class _EditItemModalState extends ConsumerState<_EditItemModal> {
       return;
     }
 
-    final basePrice = double.tryParse(priceStr);
-    if (basePrice == null || basePrice <= 0) {
-      _showError('Please enter a valid price');
+    final basePoints = int.tryParse(pointsStr);
+    if (basePoints == null || basePoints <= 0) {
+      _showError('Please enter valid points');
       return;
     }
 
     setState(() => isLoading = true);
 
     try {
-      final productService = ref.read(productServiceProvider);
+      final rewardService = ref.read(rewardServiceProvider);
 
-      String? imageUrl = widget.product.imageUrl;
+      String? imageUrl = widget.reward.imageUrl;
       if (selectedImage != null) {
-        imageUrl = await productService.uploadProductImage(selectedImage!);
+        imageUrl = await rewardService.uploadRewardImage(selectedImage!);
       }
 
-      double finalPrice = basePrice;
-      double? originalPrice;
-      if (widget.product.type == ListingType.discount &&
-          widget.product.discountPercentage != null) {
-        originalPrice = basePrice;
-        finalPrice =
-            basePrice * (1 - (widget.product.discountPercentage! / 100));
+      int finalPoints = basePoints;
+      int? originalPoints;
+      if (widget.reward.type == ListingType.discount &&
+          widget.reward.discountPercentage != null) {
+        originalPoints = basePoints;
+        finalPoints =
+            (basePoints * (1 - (widget.reward.discountPercentage! / 100)))
+                .round();
       }
 
-      await productService.updateOrganizerProduct(
-        productId: widget.product.id,
-        OrganizerId: widget.product.organizerId,
+      await rewardService.updateOrganizerReward(
+        rewardId: widget.reward.id,
+        organizerId: widget.reward.organizerId,
         name: name,
         description: descriptionController.text.trim(),
-        price: finalPrice,
+        points: finalPoints,
         stock: stock,
-        originalPrice: originalPrice,
-        discountPercentage: widget.product.discountPercentage,
+        originalPoints: originalPoints,
+        discountPercentage: widget.reward.discountPercentage,
         imageUrl: imageUrl,
         sku: sku,
         categories: categories,
@@ -662,11 +680,11 @@ class _EditItemModalState extends ConsumerState<_EditItemModal> {
       if (mounted) {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Product updated successfully')),
+          const SnackBar(content: Text('Reward updated successfully')),
         );
       }
     } catch (e) {
-      _showError('Error updating product: $e');
+      _showError('Error updating reward: $e');
     } finally {
       if (mounted) setState(() => isLoading = false);
     }
@@ -681,8 +699,8 @@ class _EditItemModalState extends ConsumerState<_EditItemModal> {
 
   @override
   Widget build(BuildContext context) {
-    final isDiscounted = widget.product.type == ListingType.discount;
-    final organizerId = widget.product.organizerId;
+    final isDiscounted = widget.reward.type == ListingType.discount;
+    final organizerId = widget.reward.organizerId;
     final existingCategoriesAsync = ref.watch(
       organizerCategoriesProvider(organizerId),
     );
@@ -691,7 +709,8 @@ class _EditItemModalState extends ConsumerState<_EditItemModal> {
     final allDisplayCategories = {
       ...existingCategories,
       ...localSuggestions,
-    }.toList()..sort();
+    }.toList()
+      ..sort();
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
@@ -707,12 +726,11 @@ class _EditItemModalState extends ConsumerState<_EditItemModal> {
               ),
             ),
             const SizedBox(height: 20),
-            ProductImagePicker(
-              initialImageUrl: widget.product.imageUrl,
+            RewardImagePicker(
+              initialImageUrl: widget.reward.imageUrl,
               onImagePicked: (file) => setState(() => selectedImage = file),
             ),
             const SizedBox(height: 20),
-
             if (isDiscounted)
               Container(
                 width: double.infinity,
@@ -729,7 +747,7 @@ class _EditItemModalState extends ConsumerState<_EditItemModal> {
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        "This item is currently discounted (${widget.product.discountPercentage?.toStringAsFixed(0)}%). You can manage the discount in the Listings tab.",
+                        "This item is currently discounted (${widget.reward.discountPercentage?.toStringAsFixed(0)}%). You can manage the discount in the Listings tab.",
                         style: TextStyle(
                           color: Colors.red.shade900,
                           fontSize: 12,
@@ -739,7 +757,6 @@ class _EditItemModalState extends ConsumerState<_EditItemModal> {
                   ],
                 ),
               ),
-
             TextField(
               controller: nameController,
               decoration: const InputDecoration(
@@ -753,11 +770,9 @@ class _EditItemModalState extends ConsumerState<_EditItemModal> {
               children: [
                 Expanded(
                   child: TextField(
-                    controller: priceController,
+                    controller: pointsController,
                     decoration: InputDecoration(
-                      labelText: isDiscounted
-                          ? 'Base Price (₱) *'
-                          : 'Price (₱) *',
+                      labelText: isDiscounted ? 'Base Points *' : 'Points *',
                       border: const OutlineInputBorder(),
                     ),
                     keyboardType: const TextInputType.numberWithOptions(
@@ -809,9 +824,9 @@ class _EditItemModalState extends ConsumerState<_EditItemModal> {
                 child: Text(
                   "Select Categories (Long press to delete suggestion):",
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey,
-                    fontSize: 10,
-                  ),
+                        color: Colors.grey,
+                        fontSize: 10,
+                      ),
                 ),
               ),
               const SizedBox(height: 8),
@@ -831,16 +846,33 @@ class _EditItemModalState extends ConsumerState<_EditItemModal> {
                           cat,
                           style: TextStyle(
                             fontSize: 11,
-                            color: isSelected ? Colors.white : Colors.black87,
+                            color: isSelected
+                                ? Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Theme.of(context).colorScheme.onPrimary
+                                    : Colors.white
+                                : Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Theme.of(context).colorScheme.onSurface
+                                    : Colors.black87,
                           ),
                         ),
                         selected: isSelected,
                         onSelected: (_) => _toggleCategory(cat),
                         selectedColor: Theme.of(context).primaryColor,
-                        checkmarkColor: Colors.white,
+                        checkmarkColor:
+                            Theme.of(context).brightness == Brightness.dark
+                                ? Theme.of(context).colorScheme.onPrimary
+                                : Colors.white,
                         showCheckmark: true,
                         labelStyle: TextStyle(
-                          color: isSelected ? Colors.white : Colors.black87,
+                          color: isSelected
+                              ? Theme.of(context).brightness == Brightness.dark
+                                  ? Theme.of(context).colorScheme.onPrimary
+                                  : Colors.white
+                              : Theme.of(context).brightness == Brightness.dark
+                                  ? Theme.of(context).colorScheme.onSurface
+                                  : Colors.black87,
                         ),
                         padding: EdgeInsets.zero,
                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,

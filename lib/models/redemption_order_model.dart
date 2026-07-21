@@ -32,41 +32,41 @@ enum OrderStatus {
 // ─── Order Item ──────────────────────────────────────────────────────────────
 
 class OrderItemModel {
-  final String productId;
+  final String rewardId;
   final String name;
   final String? imageUrl;
   final int quantity;
-  final double price;
+  final int points;
 
-  double get total => price * quantity;
+  int get total => points * quantity;
 
   OrderItemModel({
-    required this.productId,
+    required this.rewardId,
     required this.name,
     this.imageUrl,
     required this.quantity,
-    required this.price,
+    required this.points,
   });
 
   factory OrderItemModel.fromMap(Map<String, dynamic> data) {
     return OrderItemModel(
-      productId: data['productId'] ?? '',
+      rewardId: data['rewardId'] ?? '',
       name: data['name'] ?? '',
       imageUrl: data['imageUrl'],
       quantity: (data['quantity'] ?? 1) is int
           ? data['quantity']
           : int.tryParse(data['quantity']?.toString() ?? '1') ?? 1,
-      price: (data['price'] ?? 0).toDouble(),
+      points: (data['points'] as num?)?.toInt() ?? 0,
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
-      'productId': productId,
+      'rewardId': rewardId,
       'name': name,
       'imageUrl': imageUrl,
       'quantity': quantity,
-      'price': price,
+      'points': points,
     };
   }
 }
@@ -78,14 +78,14 @@ class OrderModel {
   final String organizerId;
   final String userId;
 
-  /// Map of productId → quantity  (the raw "orders" field from Firestore)
+  /// Map of rewardId → quantity  (the raw "orders" field from Firestore)
   final Map<String, int> orders;
 
   final DateTime timestamp;
   final OrderStatus orderStatus;
-  final double price; // total price (subtotal + fees)
+  final int points;
 
-  /// Enriched line-items — populated client-side after fetching product names
+  /// Enriched line-items — populated client-side after fetching reward names
   final List<OrderItemModel> items;
 
   final String? orderNumber; // human-friendly order number (optional)
@@ -99,13 +99,13 @@ class OrderModel {
     required this.orders,
     required this.timestamp,
     required this.orderStatus,
-    required this.price,
+    required this.points,
     this.items = const [],
     this.orderNumber,
   });
 
   factory OrderModel.fromMap(Map<String, dynamic> data, String id) {
-    // Parse the orders map (productId → quantity)
+    // Parse the orders map (rewardId → quantity)
     final rawOrders = data['orders'];
     final Map<String, int> ordersMap = {};
     if (rawOrders is Map) {
@@ -144,7 +144,7 @@ class OrderModel {
       orders: ordersMap,
       timestamp: ts,
       orderStatus: OrderStatus.fromString(data['orderStatus'] ?? ''),
-      price: (data['price'] ?? 0).toDouble(),
+      points: (data['points'] as num?)?.toInt() ?? 0,
       items: items,
       orderNumber: data['orderNumber'],
     );
@@ -157,7 +157,7 @@ class OrderModel {
       'orders': orders,
       'timestamp': Timestamp.fromDate(timestamp),
       'orderStatus': orderStatus.name,
-      'price': price,
+      'points': points,
       if (orderNumber != null) 'orderNumber': orderNumber,
     };
   }
@@ -171,7 +171,7 @@ class OrderModel {
       orders: orders,
       timestamp: timestamp,
       orderStatus: orderStatus,
-      price: price,
+      points: points,
       items: items,
       orderNumber: orderNumber,
     );
@@ -186,7 +186,7 @@ class OrderModel {
       orders: orders,
       timestamp: timestamp,
       orderStatus: status,
-      price: price,
+      points: points,
       items: items,
       orderNumber: orderNumber,
     );

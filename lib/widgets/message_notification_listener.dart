@@ -186,7 +186,7 @@ class _MessageNotificationListenerState
 
           final String? organizerId = data['organizerId'];
           if (organizerId != null && organizerId.isNotEmpty) {
-            final organizerDoc = await FirebaseFirestore.instance.collection('Organizers').doc(organizerId).get();
+            final organizerDoc = await FirebaseFirestore.instance.collection('organizers').doc(organizerId).get();
             if (organizerDoc.exists) {
               final bName = organizerDoc.data()?['organizerName']?.toString();
               if (bName != null && bName.isNotEmpty) return bName;
@@ -204,7 +204,7 @@ class _MessageNotificationListenerState
       }
 
       final organizerQuery = await FirebaseFirestore.instance
-          .collection('Organizers')
+          .collection('organizers')
           .where('ownerId', isEqualTo: senderId)
           .limit(1)
           .get();

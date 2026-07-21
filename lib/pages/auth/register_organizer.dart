@@ -16,7 +16,8 @@ class RegisterOrganizerScreen extends StatefulWidget {
   final bool? isCustomer;
 
   @override
-  State<RegisterOrganizerScreen> createState() => _RegisterOrganizerScreenState();
+  State<RegisterOrganizerScreen> createState() =>
+      _RegisterOrganizerScreenState();
 }
 
 class _RegisterOrganizerScreenState extends State<RegisterOrganizerScreen> {
@@ -67,6 +68,7 @@ class _RegisterOrganizerScreenState extends State<RegisterOrganizerScreen> {
           firstName: regData['firstName'] ?? '',
           lastName: regData['lastName'] ?? '',
           phoneNumber: regData['phoneNumber'] ?? '',
+          schoolId: regData['schoolId'] ?? '',
           role: regData['role'] ?? Role.customer,
         );
 
@@ -84,11 +86,13 @@ class _RegisterOrganizerScreenState extends State<RegisterOrganizerScreen> {
         await AuthService().updateUserRoleToOrganizer();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Organizer registered! Please sign in.')),
+          const SnackBar(
+              content: Text('Organizer registered! Please sign in.')),
         );
 
         await AuthService().signOut();
-        Navigator.pushNamedAndRemoveUntil(context, '/auth-wrapper', (route) => false);
+        Navigator.pushNamedAndRemoveUntil(
+            context, '/auth-wrapper', (route) => false);
       }
       // CASE 2: EXISTING USER
       else if (currentUid != null) {
@@ -143,7 +147,11 @@ class _RegisterOrganizerScreenState extends State<RegisterOrganizerScreen> {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.grey.shade300),
+              border: Border.all(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Theme.of(context).colorScheme.outline
+                    : Colors.grey.shade300,
+              ),
             ),
             child: Column(
               children: [
@@ -219,11 +227,14 @@ class _RegisterOrganizerScreenState extends State<RegisterOrganizerScreen> {
                   child: ElevatedButton(
                     onPressed: _isLoading ? null : _onRegister,
                     child: _isLoading
-                        ? const SizedBox(
+                        ? SizedBox(
                             height: 20,
                             width: 20,
                             child: CircularProgressIndicator(
-                              color: Colors.white,
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Theme.of(context).colorScheme.onPrimary
+                                  : Colors.white,
                             ),
                           )
                         : const Text('Register'),

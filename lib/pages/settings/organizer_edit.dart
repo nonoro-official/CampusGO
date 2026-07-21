@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../constants/categories.dart';
 import '../../../widgets/modal.dart';
 import '../../../widgets/pfp_edit.dart';
 import '../../../models/organizer_model.dart';
@@ -9,23 +8,18 @@ import '../../../providers/organizer_provider.dart';
 
 void editOrganizerProfile(
   BuildContext context,
-  OrganizerModel Organizer,
+  OrganizerModel organizer,
   WidgetRef ref,
 ) {
-  final nameController = TextEditingController(text: Organizer.organizerName);
-  final emailController = TextEditingController(text: Organizer.contactEmail);
-  final contactController = TextEditingController(text: Organizer.contactNumber);
+  final nameController = TextEditingController(text: organizer.organizerName);
+  final emailController = TextEditingController(text: organizer.contactEmail);
+  final contactController = TextEditingController(text: organizer.contactNumber);
   final descriptionController = TextEditingController(
-    text: Organizer.description ?? '',
+    text: organizer.description ?? '',
   );
 
-  // mutable state for the modal
-  String selectedCategory = shopCategories.any((c) => c.label == Organizer.category)
-      ? Organizer.category!
-      : shopCategories.first.label;
-
   // copy existing FAQs
-  List<FAQModel> editedFaqs = List.from(Organizer.faqs);
+  List<FAQModel> editedFaqs = List.from(organizer.faqs);
 
   ModalContainer.show(
     context: context,
@@ -60,14 +54,13 @@ void editOrganizerProfile(
               'contactEmail': email,
               'contactNumber': contact,
               'description': description,
-              'category': selectedCategory,
               'faqs': editedFaqs.map((f) => f.toMap()).toList(),
             };
 
 
             await ref
-                .read(OrganizerServiceProvider)
-                .updateOrganizerData(organizerId: Organizer.id, data: data);
+                .read(organizerServiceProvider)
+                .updateOrganizerData(organizerId: organizer.id, data: data);
 
             if (context.mounted) {
               Navigator.pop(context);
@@ -155,26 +148,6 @@ void editOrganizerProfile(
                 "Description",
                 context,
                 maxLines: 3,
-              ),
-              const SizedBox(height: 10),
-              const SizedBox(height: 4),
-              DropdownButtonFormField<String>(
-                style: Theme.of(context).textTheme.bodyMedium,
-                initialValue: selectedCategory,
-                items: shopCategories
-                    .map((c) => DropdownMenuItem(value: c.label, child: Text(c.label)))
-                    .toList(),
-                onChanged: (v) {
-                  if (v != null) setModalState(() => selectedCategory = v);
-                },
-                decoration: const InputDecoration(
-                  labelText: "Category",
-                  border: OutlineInputBorder(),
-                  contentPadding: EdgeInsets.symmetric(
-                    vertical: 12,
-                    horizontal: 10,
-                  ),
-                ),
               ),
               const SizedBox(height: 20),
 

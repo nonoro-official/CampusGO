@@ -19,8 +19,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
     return TogglePagesButton(
       pages: [
         const CartScreen(),
-        const OrdersScreen(filter: "Processing", accountType: "Customer"),
-        const OrdersScreen(filter: "Completed", accountType: "Customer"),
+        OrdersScreen(filter: "Processing", accountType: widget.accountType),
+        OrdersScreen(filter: "Completed", accountType: widget.accountType),
       ],
       customTitles: ["Cart", "Processing", "Completed"],
       initialPage: widget.openTab,

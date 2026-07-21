@@ -5,7 +5,7 @@ import '../../../widgets/search.dart';
 import '../../../widgets/filter.dart';
 import '../../../widgets/top_bar.dart';
 import '../../../providers/auth_provider.dart';
-import '../../../providers/product_provider.dart';
+import '../../../providers/reward_provider.dart';
 import '../../../models/reward_item_model.dart';
 import '../../../models/enums.dart';
 import 'edit_reward_listings.dart';
@@ -28,7 +28,9 @@ class _ListingScreenState extends ConsumerState<ListingScreen> {
     final user = ref.watch(currentUserProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: Theme.of(context).brightness == Brightness.dark
+          ? Theme.of(context).scaffoldBackgroundColor
+          : const Color(0xFFF5F5F5),
       appBar: TopBar(
         title: 'Manage Listings',
         showBack: true,
@@ -60,17 +62,14 @@ class _ListingScreenState extends ConsumerState<ListingScreen> {
         child: Column(
           children: [
             const SizedBox(height: 10),
-
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Align(
                 alignment: Alignment.center,
-                child: Text("Product Listings", style: textTheme.titleLarge),
+                child: Text("Reward Listings", style: textTheme.titleLarge),
               ),
             ),
-
             const SizedBox(height: 10),
-
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               child: Row(
@@ -81,9 +80,7 @@ class _ListingScreenState extends ConsumerState<ListingScreen> {
                       onSearch: (val) => setState(() => searchQuery = val),
                     ),
                   ),
-
                   const SizedBox(width: 10),
-
                   Expanded(
                     flex: 2,
                     child: FilterWidget(
@@ -101,12 +98,11 @@ class _ListingScreenState extends ConsumerState<ListingScreen> {
                 ],
               ),
             ),
-
             if (user?.organizerId != null) ...[
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: _CategoryFilter(
-                  OrganizerId: user!.organizerId!,
+                  organizerId: user!.organizerId!,
                   selectedCategory: selectedCategory,
                   onChanged: (val) => setState(() => selectedCategory = val!),
                 ),
@@ -130,26 +126,23 @@ class _ListingScreenState extends ConsumerState<ListingScreen> {
 }
 
 class _CategoryFilter extends ConsumerWidget {
-  final String OrganizerId;
+  final String organizerId;
   final String selectedCategory;
   final ValueChanged<String?> onChanged;
 
   const _CategoryFilter({
-    required this.OrganizerId,
+    required this.organizerId,
     required this.selectedCategory,
     required this.onChanged,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final productsAsync = ref.watch(organizerProductsProvider(OrganizerId));
+    final rewardsAsync = ref.watch(organizerRewardsProvider(organizerId));
 
-    return productsAsync.when(
-      data: (products) {
-        final categories = products
-            .expand((p) => p.categories)
-            .toSet()
-            .toList();
+    return rewardsAsync.when(
+      data: (rewards) {
+        final categories = rewards.expand((p) => p.categories).toSet().toList();
         categories.sort();
         final displayCategories = ["All Categories", ...categories];
 
@@ -181,45 +174,41 @@ class InventoryList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final productsAsync = ref.watch(organizerProductsProvider(organizerId));
+    final rewardsAsync = ref.watch(organizerRewardsProvider(organizerId));
 
-    return productsAsync.when(
-      data: (products) {
-        final filteredProducts = products.where((product) {
+    return rewardsAsync.when(
+      data: (rewards) {
+        final filteredRewards = rewards.where((reward) {
           final query = searchQuery.toLowerCase();
-          final matchesSearch =
-              product.name.toLowerCase().contains(query) ||
-              product.description.toLowerCase().contains(query) ||
-              (product.sku.toLowerCase().contains(query)) ||
-              (product.categories.any((c) => c.toLowerCase().contains(query)));
+          final matchesSearch = reward.name.toLowerCase().contains(query) ||
+              reward.description.toLowerCase().contains(query) ||
+              (reward.sku.toLowerCase().contains(query)) ||
+              (reward.categories.any((c) => c.toLowerCase().contains(query)));
 
           final matchesType =
-              selectedType == "All Types" ||
-              product.type.toName == selectedType;
+              selectedType == "All Types" || reward.type.toName == selectedType;
 
-          final matchesCategory =
-              selectedCategory == "All Categories" ||
-              product.categories.contains(selectedCategory);
+          final matchesCategory = selectedCategory == "All Categories" ||
+              reward.categories.contains(selectedCategory);
 
           return matchesSearch && matchesType && matchesCategory;
         }).toList();
 
-        if (filteredProducts.isEmpty) {
-          return const Center(child: Text("No products found"));
+        if (filteredRewards.isEmpty) {
+          return const Center(child: Text("No rewards found"));
         }
 
         return ListView.builder(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          itemCount: filteredProducts.length,
+          itemCount: filteredRewards.length,
           itemBuilder: (context, index) {
             return ListingCard(
-              product: filteredProducts[index],
-              allProducts: products,
+              reward: filteredRewards[index],
+              allRewards: rewards,
             );
           },
         );
       },
-
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (err, stack) => Center(child: Text('Error: $err')),
     );
@@ -227,13 +216,13 @@ class InventoryList extends ConsumerWidget {
 }
 
 class ListingCard extends ConsumerWidget {
-  final ProductModel product;
-  final List<ProductModel> allProducts;
+  final RewardModel reward;
+  final List<RewardModel> allRewards;
 
   const ListingCard({
     super.key,
-    required this.product,
-    required this.allProducts,
+    required this.reward,
+    required this.allRewards,
   });
 
   @override
@@ -241,18 +230,18 @@ class ListingCard extends ConsumerWidget {
     final textTheme = Theme.of(context).textTheme;
     final primaryColor = Theme.of(context).primaryColor;
 
-    int stock = product.calculateEffectiveStock(allProducts);
+    int stock = reward.calculateEffectiveStock(allRewards);
 
     // final isOutOfStock = stock <= 0;
     // final isLowStock = stock < 10 && stock > 0;
 
-    // Color statusColor = !product.isAvailable || isOutOfStock
+    // Color statusColor = !reward.isAvailable || isOutOfStock
     //     ? Colors.red
     //     : isLowStock
     //     ? Colors.orange
     //     : Colors.green;
 
-    // String statusText = !product.isAvailable
+    // String statusText = !reward.isAvailable
     //     ? "Unavailable"
     //     : (isOutOfStock
     //           ? "Out of Stock"
@@ -260,7 +249,7 @@ class ListingCard extends ConsumerWidget {
 
     // Color based on listing type
     Color typeColor;
-    switch (product.type) {
+    switch (reward.type) {
       case ListingType.regular:
         typeColor = primaryColor;
         break;
@@ -280,15 +269,15 @@ class ListingCard extends ConsumerWidget {
         showListingModal(
           context: context,
           ref: ref,
-          organizerId: product.organizerId,
-          product: product,
+          organizerId: reward.organizerId,
+          reward: reward,
         );
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(22),
           boxShadow: const [BoxShadow(blurRadius: 12, color: Colors.black12)],
         ),
@@ -302,9 +291,9 @@ class ListingCard extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(product.name, style: textTheme.titleMedium),
+                      Text(reward.name, style: textTheme.titleMedium),
                       const SizedBox(height: 4),
-                      _buildPriceInfo(context),
+                      _buildPointsInfo(context),
                     ],
                   ),
                 ),
@@ -320,7 +309,7 @@ class ListingCard extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
-                        product.type.toName,
+                        reward.type.toName,
                         style: TextStyle(
                           color: typeColor,
                           fontSize: 12,
@@ -342,13 +331,12 @@ class ListingCard extends ConsumerWidget {
                 ),
               ],
             ),
-
-            if (product.categories.isNotEmpty)
+            if (reward.categories.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: 8),
                 child: Wrap(
                   spacing: 4,
-                  children: product.categories
+                  children: reward.categories
                       .map(
                         (cat) => Container(
                           padding: const EdgeInsets.symmetric(
@@ -356,7 +344,12 @@ class ListingCard extends ConsumerWidget {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.grey.shade100,
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Theme.of(
+                                        context,
+                                      ).colorScheme.surfaceContainerHigh
+                                    : Colors.grey.shade100,
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
@@ -371,26 +364,22 @@ class ListingCard extends ConsumerWidget {
                       .toList(),
                 ),
               ),
-
             const SizedBox(height: 12),
-
             _buildListingDetails(context),
-
             const SizedBox(height: 5),
-
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // if (product.type == ListingType.regular || (product.type == ListingType.discount && product.linkedProductId == null))
+                // if (reward.type == ListingType.regular || (reward.type == ListingType.discount && reward.linkedRewardId == null))
                 //   Row(
                 //     children: [
                 //       _stockButton(
                 //         icon: Icons.remove,
                 //         onTap: () {
-                //           if (product.stock > 0) {
-                //             productService.updateStock(
-                //               productId: product.id,
-                //               newStock: product.stock - 1,
+                //           if (reward.stock > 0) {
+                //             rewardService.updateStock(
+                //               rewardId: reward.id,
+                //               newStock: reward.stock - 1,
                 //             );
                 //           }
                 //         },
@@ -401,9 +390,9 @@ class ListingCard extends ConsumerWidget {
                 //       _stockButton(
                 //         icon: Icons.add,
                 //         onTap: () {
-                //           productService.updateStock(
-                //             productId: product.id,
-                //             newStock: product.stock + 1,
+                //           rewardService.updateStock(
+                //             rewardId: reward.id,
+                //             newStock: reward.stock + 1,
                 //           );
                 //         },
                 //       ),
@@ -459,7 +448,7 @@ class ListingCard extends ConsumerWidget {
       builder: (context) => AlertDialog(
         title: const Text('Delete Listing'),
         content: Text(
-          'Are you sure you want to delete "${product.name}"? This action cannot be undone.',
+          'Are you sure you want to delete "${reward.name}"? This action cannot be undone.',
         ),
         actions: [
           TextButton(
@@ -476,59 +465,57 @@ class ListingCard extends ConsumerWidget {
     );
 
     if (confirmed == true) {
-      await ref.read(productServiceProvider).deleteOrganizerProduct(product.id);
+      await ref.read(rewardServiceProvider).deleteOrganizerReward(reward.id);
     }
   }
 
-  Widget _buildPriceInfo(BuildContext context) {
+  Widget _buildPointsInfo(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final primaryColor = Theme.of(context).primaryColor;
 
-    double? originalPrice = product.originalPrice;
+    int? originalPoints = reward.originalPoints;
 
-    // Automatically calculate original price for bundles/promos if missing or not reflecting base items
-    if (originalPrice == null || originalPrice <= product.price) {
-      if (product.type == ListingType.bundle && product.bundleItems != null) {
-        double total = 0;
-        for (var itemName in product.bundleItems!) {
-          final item = allProducts.firstWhereOrNull(
+    // Automatically calculate original points for bundles/promos if missing or not reflecting base items
+    if (originalPoints == null || originalPoints <= reward.points) {
+      if (reward.type == ListingType.bundle && reward.bundleItems != null) {
+        int total = 0;
+        for (var itemName in reward.bundleItems!) {
+          final item = allRewards.firstWhereOrNull(
             (p) =>
                 p.name == itemName &&
                 (p.type == ListingType.regular ||
                     (p.type == ListingType.discount &&
-                        p.linkedProductId == null)),
+                        p.linkedRewardId == null)),
           );
-          if (item != null) total += item.price;
+          if (item != null) total += item.points;
         }
-        if (total > product.price) originalPrice = total;
-      } else if (product.type == ListingType.promo &&
-          product.promoQuantity != null) {
-        final baseItem = allProducts.firstWhereOrNull(
+        if (total > reward.points) originalPoints = total;
+      } else if (reward.type == ListingType.promo &&
+          reward.promoQuantity != null) {
+        final baseItem = allRewards.firstWhereOrNull(
           (p) =>
-              (product.linkedProductId != null
-                  ? p.id == product.linkedProductId
-                  : p.name == product.name) &&
+              (reward.linkedRewardId != null
+                  ? p.id == reward.linkedRewardId
+                  : p.name == reward.name) &&
               (p.type == ListingType.regular ||
-                  (p.type == ListingType.discount &&
-                      p.linkedProductId == null)),
+                  (p.type == ListingType.discount && p.linkedRewardId == null)),
         );
         if (baseItem != null) {
-          double total = baseItem.price * product.promoQuantity!;
-          if (total > product.price) originalPrice = total;
+          int total = baseItem.points * reward.promoQuantity!;
+          if (total > reward.points) originalPoints = total;
         }
       }
     }
 
-    bool hasDiscount = originalPrice != null && originalPrice > product.price;
+    bool hasDiscount = originalPoints != null && originalPoints > reward.points;
 
     if (hasDiscount) {
-      double discountPercentage =
-          product.discountPercentage ??
-          ((1 - (product.price / originalPrice)) * 100);
+      double discountPercentage = reward.discountPercentage ??
+          ((1 - (reward.points / originalPoints)) * 100);
       return Row(
         children: [
           Text(
-            "₱${product.price.toStringAsFixed(2)}",
+            "${reward.points} pts",
             style: textTheme.bodySmall?.copyWith(
               color: Colors.red,
               fontWeight: FontWeight.bold,
@@ -536,7 +523,7 @@ class ListingCard extends ConsumerWidget {
           ),
           const SizedBox(width: 8),
           Text(
-            "₱${originalPrice.toStringAsFixed(2)}",
+            "$originalPoints pts",
             style: textTheme.bodySmall?.copyWith(
               decoration: TextDecoration.lineThrough,
               color: Colors.grey,
@@ -558,7 +545,7 @@ class ListingCard extends ConsumerWidget {
     }
 
     return Text(
-      "₱${product.price.toStringAsFixed(2)}",
+      "${reward.points} pts",
       style: textTheme.bodySmall?.copyWith(
         color: primaryColor,
         fontWeight: FontWeight.bold,
@@ -569,18 +556,18 @@ class ListingCard extends ConsumerWidget {
   Widget _buildListingDetails(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
-    if (product.type == ListingType.bundle &&
-        product.bundleItems != null &&
-        product.bundleItems!.isNotEmpty) {
+    if (reward.type == ListingType.bundle &&
+        reward.bundleItems != null &&
+        reward.bundleItems!.isNotEmpty) {
       return Text(
-        "${product.bundleItems!.join(' + ')} for ₱${product.price.toStringAsFixed(2)}",
+        "${reward.bundleItems!.join(' + ')} for ${reward.points} pts",
         style: textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
       );
     }
 
-    if (product.type == ListingType.promo && product.promoQuantity != null) {
+    if (reward.type == ListingType.promo && reward.promoQuantity != null) {
       return Text(
-        "${product.name} * ${product.promoQuantity} for ₱${product.price.toStringAsFixed(2)}",
+        "${reward.name} * ${reward.promoQuantity} for ${reward.points} pts",
         style: textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
       );
     }
@@ -588,16 +575,16 @@ class ListingCard extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (product.sku.isNotEmpty)
+        if (reward.sku.isNotEmpty)
           Text(
-            "SKU: ${product.sku}",
+            "SKU: ${reward.sku}",
             style: textTheme.bodySmall?.copyWith(
               color: Colors.grey.shade600,
               fontSize: 10,
             ),
           ),
         Text(
-          product.description,
+          reward.description,
           style: textTheme.bodySmall,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,

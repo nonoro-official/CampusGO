@@ -6,6 +6,7 @@ import 'package:campusgo/providers/organizer_provider.dart';
 import '../../models/event_model.dart';
 import '../../services/event_service.dart';
 import '../../pages/events/event_list_screen.dart';
+import '../../widgets/points_card.dart';
 import '../../widgets/reward_item_card.dart';
 import '../../widgets/analytics_grid.dart';
 import '../../widgets/organizer_actions_row.dart';
@@ -24,7 +25,9 @@ class OrganizerDashboard extends ConsumerWidget {
           const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (err, stack) => Scaffold(body: Center(child: Text("Error: $err"))),
       data: (organizer) {
-        if (organizer == null) return const Scaffold(body: Center(child: Text("No Organizer found")));
+        if (organizer == null)
+          return const Scaffold(
+              body: Center(child: Text("No Organizer found")));
 
         return SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -33,7 +36,11 @@ class OrganizerDashboard extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 80), // Space for toggle buttons
+              // const WelcomeCard(),
+              // const SizedBox(height: 15),
               const OrganizerShopCard(),
+              const SizedBox(height: 10),
+              const PointsCard(),
               const SizedBox(height: 25),
 
               Row(
@@ -44,10 +51,11 @@ class OrganizerDashboard extends ConsumerWidget {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const EventListScreen()),
+                        MaterialPageRoute(
+                            builder: (context) => const EventListScreen()),
                       );
                     },
-                    child: const Text("Join Events"),
+                    child: const Text("Browse Events"),
                   ),
                 ],
               ),
@@ -109,7 +117,9 @@ class OrganizerEventSection extends ConsumerWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.grey[100],
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Theme.of(context).colorScheme.surfaceContainerHigh
+                  : Colors.grey[100],
               borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
@@ -118,9 +128,10 @@ class OrganizerEventSection extends ConsumerWidget {
                 const SizedBox(height: 10),
                 ElevatedButton(
                   onPressed: () {
-                     Navigator.push(
+                    Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const EventListScreen()),
+                      MaterialPageRoute(
+                          builder: (context) => const EventListScreen()),
                     );
                   },
                   child: const Text("Browse Events"),
@@ -144,7 +155,10 @@ class OrganizerEventSection extends ConsumerWidget {
                 decoration: BoxDecoration(
                   color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Theme.of(context).primaryColor.withValues(alpha: 0.3)),
+                  border: Border.all(
+                      color: Theme.of(context)
+                          .primaryColor
+                          .withValues(alpha: 0.3)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -159,7 +173,12 @@ class OrganizerEventSection extends ConsumerWidget {
                     const SizedBox(height: 4),
                     Text(
                       DateFormat('MMM dd').format(event.date),
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Theme.of(context).colorScheme.onSurfaceVariant
+                            : Colors.grey[600],
+                      ),
                     ),
                   ],
                 ),
@@ -176,14 +195,25 @@ class OrganizerEventSection extends ConsumerWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
+        color: Theme.of(context).brightness == Brightness.dark
+            ? Theme.of(context).colorScheme.surfaceContainerLow
+            : Colors.grey[50],
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
+        border: Border.all(
+          color: Theme.of(context).brightness == Brightness.dark
+              ? Theme.of(context).colorScheme.outlineVariant
+              : Colors.grey[200]!,
+        ),
       ),
       child: Center(
         child: Text(
           message,
-          style: TextStyle(color: Colors.grey[600], fontStyle: FontStyle.italic),
+          style: TextStyle(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Theme.of(context).colorScheme.onSurfaceVariant
+                : Colors.grey[600],
+            fontStyle: FontStyle.italic,
+          ),
         ),
       ),
     );

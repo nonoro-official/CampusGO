@@ -5,11 +5,13 @@ class OrganizerActionsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primaryColor = Theme.of(context).primaryColor;
-    final textTheme = Theme.of(context).textTheme;
+    final theme = Theme.of(context);
+    final primaryColor = theme.colorScheme.primary;
+    final textTheme = theme.textTheme;
 
     final actions = [
-      {'icon': Icons.add_box, 'label': 'Add Product', 'route': '/inventory'},
+      {'icon': Icons.add_box, 'label': 'Add Rewards', 'route': '/inventory'},
+      {'icon': Icons.event, 'label': 'Create Events', 'route': '/add-event'},
       {
         'icon': Icons.receipt_long,
         'label': 'View Orders',
@@ -19,6 +21,11 @@ class OrganizerActionsRow extends StatelessWidget {
         'icon': Icons.inventory,
         'label': 'Manage Listings',
         'route': '/listings',
+      },
+      {
+        'icon': Icons.qr_code,
+        'label': 'Generate QR',
+        'route': '/qr-generator',
       },
     ];
 
@@ -38,7 +45,7 @@ class OrganizerActionsRow extends StatelessWidget {
               child: Container(
                 height: 100,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: theme.cardColor,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: const [
                     BoxShadow(
@@ -48,7 +55,6 @@ class OrganizerActionsRow extends StatelessWidget {
                     ),
                   ],
                 ),
-
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [

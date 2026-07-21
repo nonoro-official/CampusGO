@@ -29,7 +29,9 @@ class _TogglePagesButtonState extends State<TogglePagesButton> {
 
   @override
   Widget build(BuildContext context) {
-    final primaryColor = Theme.of(context).primaryColor;
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final primaryColor = colors.primary;
     final pages = widget.pages;
     final totalPages = pages.length;
 
@@ -49,7 +51,7 @@ class _TogglePagesButtonState extends State<TogglePagesButton> {
             margin: const EdgeInsets.symmetric(horizontal: 40),
             padding: const EdgeInsets.all(5),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: theme.cardColor,
               borderRadius: BorderRadius.circular(30),
               boxShadow: [
                 BoxShadow(
@@ -68,6 +70,8 @@ class _TogglePagesButtonState extends State<TogglePagesButton> {
                         : pages[i].toString().split('(').first,
                     i,
                     primaryColor,
+                    colors.onPrimary,
+                    colors.onSurfaceVariant,
                   ),
               ],
             ),
@@ -77,7 +81,13 @@ class _TogglePagesButtonState extends State<TogglePagesButton> {
     );
   }
 
-  Widget _toggleButton(String title, int index, Color primaryColor) {
+  Widget _toggleButton(
+    String title,
+    int index,
+    Color primaryColor,
+    Color selectedContentColor,
+    Color unselectedContentColor,
+  ) {
     final isSelected = selectedView == index;
 
     return Expanded(
@@ -94,7 +104,8 @@ class _TogglePagesButtonState extends State<TogglePagesButton> {
             child: Text(
               title,
               style: TextStyle(
-                color: isSelected ? Colors.white : Colors.grey,
+                color:
+                    isSelected ? selectedContentColor : unselectedContentColor,
                 fontWeight: FontWeight.w600,
               ),
             ),

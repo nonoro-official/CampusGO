@@ -30,7 +30,7 @@ class _FilterWidgetState extends State<FilterWidget> {
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 20),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             borderRadius: _isMenuOpen
                 ? const BorderRadius.only(
                     topLeft: Radius.circular(20),
@@ -63,7 +63,8 @@ class _FilterWidgetState extends State<FilterWidget> {
               widget.onChanged(value);
             },
             initialValue: widget.selectedValue,
-            offset: const Offset(-20, 45), // Height of the container, subtract horizontal padding
+            offset: const Offset(-20,
+                45), // Height of the container, subtract horizontal padding
             elevation: 8,
             shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.only(

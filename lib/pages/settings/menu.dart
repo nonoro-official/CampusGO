@@ -3,6 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:campusgo/pages/settings/deactivate_organizer.dart';
 import 'package:campusgo/pages/settings/privacy_policy.dart';
 import 'package:campusgo/pages/settings/terms_and_conditions.dart';
+import 'package:campusgo/pages/settings/notification_settings.dart';
 import 'package:campusgo/widgets/top_bar.dart';
 import '../../pages/settings/profile_edit.dart';
 import '../../pages/settings/help_center.dart';
@@ -10,6 +11,7 @@ import '../../pages/settings/organizer_edit.dart';
 import '../../pages/settings/password_edit.dart';
 import '../../pages/settings/delete_account.dart';
 import '../../widgets/pfp_edit.dart';
+import '../../widgets/dark_theme_switch.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../models/enums.dart';
 import '../../providers/auth_provider.dart';
@@ -53,7 +55,8 @@ class MenuScreen extends ConsumerWidget {
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 20),
-
+                  _header(context, "Appearance", false),
+                  const DarkThemeSwitch(),
                   _buildList(context, [
                     {
                       'icon': Icons.person_outline,
@@ -65,8 +68,17 @@ class MenuScreen extends ConsumerWidget {
                       'label': 'Change Password',
                       'action': () => editPassword(context, ref),
                     },
+                    {
+                      'icon': Icons.notifications_none,
+                      'label': 'Notifications',
+                      'action': () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const NotificationSettingsScreen(),
+                        ),
+                      ),
+                    },
                   ]),
-
                   _header(context, "Organizer Settings", false),
                   if (user.role == Role.organizer) ...[
                     organizerAsync.when(
@@ -93,7 +105,6 @@ class MenuScreen extends ConsumerWidget {
                       },
                     ]),
                   ],
-
                   _header(context, "Support", false),
                   _buildList(context, [
                     {
@@ -110,28 +121,6 @@ class MenuScreen extends ConsumerWidget {
                       'icon': Icons.privacy_tip_outlined,
                       'label': 'Privacy Policy',
                       'action': () => privacyPolicy(context, ref),
-                    },
-                    {
-                      'icon': Icons.feedback_outlined,
-                      'label': 'Feedback Survey',
-                      'action': () async {
-                        final uri = Uri.parse(
-                          "https://forms.gle/Bbc5dqyPJTFwVF2F7",
-                        );
-
-                        try {
-                          await launchUrl(
-                            uri,
-                            mode: LaunchMode.externalApplication,
-                          );
-                        } catch (e) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text("Could not open survey link"),
-                            ),
-                          );
-                        }
-                      },
                     },
                     {
                       'icon': Icons.logout,
@@ -154,7 +143,6 @@ class MenuScreen extends ConsumerWidget {
                       },
                     },
                   ]),
-
                   _header(context, "Danger Zone", true),
                   _buildList(context, [
                     if (user.role == Role.organizer) ...[
@@ -180,18 +168,18 @@ class MenuScreen extends ConsumerWidget {
   }
 
   Widget _header(BuildContext context, String text, bool isDangerous) => Align(
-    alignment: Alignment.centerLeft,
-    child: Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
-          color: isDangerous ? Theme.of(context).primaryColor : null,
+        alignment: Alignment.centerLeft,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Text(
+            text,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: isDangerous ? Theme.of(context).primaryColor : null,
+            ),
+          ),
         ),
-      ),
-    ),
-  );
+      );
 
   Widget _buildList(BuildContext context, List<Map<String, dynamic>> items) {
     return Column(

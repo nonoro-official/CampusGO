@@ -3,6 +3,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'local_notification_service.dart';
 
 // Must be top-level for background handling
 @pragma('vm:entry-point')
@@ -14,7 +15,7 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 class FCMService {
   static final _messaging = FirebaseMessaging.instance;
-  static final _localNotifs = FlutterLocalNotificationsPlugin();
+  static final _localNotifs = LocalNotificationService.notificationsPlugin;
 
   static Future<void> init() async {
     // 1. Initialize Firebase first if not already done

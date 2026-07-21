@@ -4,7 +4,7 @@ import '../../../widgets/search.dart';
 import '../../../widgets/top_bar.dart';
 import '../../../widgets/filter.dart';
 import '../../../providers/auth_provider.dart';
-import '../../../providers/product_provider.dart';
+import '../../../providers/reward_provider.dart';
 import '../../../providers/organizer_provider.dart';
 import '../../../models/reward_item_model.dart';
 import '../../../models/enums.dart';
@@ -25,19 +25,21 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final user = ref.watch(currentUserProvider);
-    final OrganizerAsync = ref.watch(myOrganizerProvider);
+    final organizerAsync = ref.watch(myOrganizerProvider);
 
-    return OrganizerAsync.when(
+    return organizerAsync.when(
       loading: () =>
           const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (err, stack) => Scaffold(body: Center(child: Text("Error: $err"))),
-      data: (Organizer) {
-        if (Organizer == null) return const SizedBox.shrink();
+      data: (organizer) {
+        if (organizer == null) return const SizedBox.shrink();
 
         return Scaffold(
-          backgroundColor: const Color(0xFFF5F5F5),
+          backgroundColor: Theme.of(context).brightness == Brightness.dark
+              ? Theme.of(context).scaffoldBackgroundColor
+              : const Color(0xFFF5F5F5),
           appBar: TopBar(
-            title: Organizer.organizerName,
+            title: organizer.organizerName,
             showBack: true,
             center: true,
             rightIcon: Icons.add,
@@ -108,16 +110,16 @@ class _CategoryFilter extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final productsAsync = ref.watch(organizerProductsProvider(organizerId));
+    final rewardsAsync = ref.watch(organizerRewardsProvider(organizerId));
 
-    return productsAsync.when(
-      data: (products) {
-        // Only get categories from "base" products (Regular or unlinked Discount)
-        final categories = products
+    return rewardsAsync.when(
+      data: (rewards) {
+        // Only get categories from "base" rewards (Regular or unlinked Discount)
+        final categories = rewards
             .where(
               (p) =>
                   p.type == ListingType.regular ||
-                  (p.type == ListingType.discount && p.linkedProductId == null),
+                  (p.type == ListingType.discount && p.linkedRewardId == null),
             )
             .expand((p) => p.categories)
             .toSet()
@@ -151,39 +153,35 @@ class InventoryList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final productsAsync = ref.watch(organizerProductsProvider(organizerId));
+    final rewardsAsync = ref.watch(organizerRewardsProvider(organizerId));
 
-    return productsAsync.when(
-      data: (products) {
-        final filtered = products
-            .where((p) {
-              // Base filter logic: Show Regular OR base Discount items (unlinked)
-              return p.type == ListingType.regular ||
-                  (p.type == ListingType.discount && p.linkedProductId == null);
-            })
-            .where((p) {
-              // Search filter
-              final query = searchQuery.toLowerCase();
-              return p.name.toLowerCase().contains(query) ||
-                  p.description.toLowerCase().contains(query) ||
-                  p.categories.any((c) => c.toLowerCase().contains(query));
-            })
-            .where((p) {
-              // Category filter
-              return selectedCategory == "All" ||
-                  p.categories.contains(selectedCategory);
-            })
-            .toList();
+    return rewardsAsync.when(
+      data: (rewards) {
+        final filtered = rewards.where((p) {
+          // Base filter logic: Show Regular OR base Discount items (unlinked)
+          return p.type == ListingType.regular ||
+              (p.type == ListingType.discount && p.linkedRewardId == null);
+        }).where((p) {
+          // Search filter
+          final query = searchQuery.toLowerCase();
+          return p.name.toLowerCase().contains(query) ||
+              p.description.toLowerCase().contains(query) ||
+              p.categories.any((c) => c.toLowerCase().contains(query));
+        }).where((p) {
+          // Category filter
+          return selectedCategory == "All" ||
+              p.categories.contains(selectedCategory);
+        }).toList();
 
         if (filtered.isEmpty) {
-          return const Center(child: Text("No products found"));
+          return const Center(child: Text("No rewards found"));
         }
 
         return ListView.builder(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           itemCount: filtered.length,
           itemBuilder: (context, index) {
-            return ItemCard(item: filtered[index], allProducts: products);
+            return ItemCard(item: filtered[index], allRewards: rewards);
           },
         );
       },
@@ -194,18 +192,18 @@ class InventoryList extends ConsumerWidget {
 }
 
 class ItemCard extends ConsumerWidget {
-  final ProductModel item;
-  final List<ProductModel> allProducts;
+  final RewardModel item;
+  final List<RewardModel> allRewards;
 
-  const ItemCard({super.key, required this.item, required this.allProducts});
+  const ItemCard({super.key, required this.item, required this.allRewards});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final productService = ref.read(productServiceProvider);
+    final rewardService = ref.read(rewardServiceProvider);
     final textTheme = Theme.of(context).textTheme;
     final primaryColor = Theme.of(context).primaryColor;
 
-    int stock = item.calculateEffectiveStock(allProducts);
+    int stock = item.calculateEffectiveStock(allRewards);
 
     final isOutOfStock = stock <= 0;
     final isLowStock = stock < 10 && stock > 0;
@@ -213,14 +211,14 @@ class ItemCard extends ConsumerWidget {
     Color statusColor = !item.isAvailable || isOutOfStock
         ? Colors.red
         : isLowStock
-        ? Colors.orange
-        : Colors.green;
+            ? Colors.orange
+            : Colors.green;
 
     String statusText = !item.isAvailable
         ? "Unavailable"
         : (isOutOfStock
-              ? "Out of Stock"
-              : (isLowStock ? "Low Stock" : "In Stock"));
+            ? "Out of Stock"
+            : (isLowStock ? "Low Stock" : "In Stock"));
 
     final isDiscounted = item.type == ListingType.discount;
 
@@ -228,7 +226,7 @@ class ItemCard extends ConsumerWidget {
       margin: const EdgeInsets.only(bottom: 15),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: const [
           BoxShadow(
@@ -285,7 +283,12 @@ class ItemCard extends ConsumerWidget {
                                     vertical: 2,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: Colors.grey.shade100,
+                                    color: Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? Theme.of(
+                                            context,
+                                          ).colorScheme.surfaceContainerHigh
+                                        : Colors.grey.shade100,
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: Text(
@@ -305,7 +308,7 @@ class ItemCard extends ConsumerWidget {
                       Row(
                         children: [
                           Text(
-                            '₱${item.price.toStringAsFixed(2)}',
+                            '${item.points} pts',
                             style: textTheme.bodySmall?.copyWith(
                               color: Colors.red,
                               fontWeight: FontWeight.bold,
@@ -326,7 +329,7 @@ class ItemCard extends ConsumerWidget {
                       )
                     else
                       Text(
-                        '₱${item.price.toStringAsFixed(2)}',
+                        '${item.points} pts',
                         style: textTheme.bodySmall?.copyWith(
                           color: primaryColor,
                           fontWeight: FontWeight.bold,
@@ -349,9 +352,7 @@ class ItemCard extends ConsumerWidget {
               ),
             ],
           ),
-
           const SizedBox(height: 16),
-
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -361,8 +362,8 @@ class ItemCard extends ConsumerWidget {
                     icon: Icons.remove,
                     onTap: () {
                       if (item.stock > 0) {
-                        productService.updateStock(
-                          productId: item.id,
+                        rewardService.updateStock(
+                          rewardId: item.id,
                           newStock: item.stock - 1,
                         );
                       }
@@ -374,15 +375,14 @@ class ItemCard extends ConsumerWidget {
                   _stockButton(
                     icon: Icons.add,
                     onTap: () {
-                      productService.updateStock(
-                        productId: item.id,
+                      rewardService.updateStock(
+                        rewardId: item.id,
                         newStock: item.stock + 1,
                       );
                     },
                   ),
                 ],
               ),
-
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 14,

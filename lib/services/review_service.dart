@@ -6,7 +6,7 @@ class ReviewService {
 
   Stream<List<ReviewModel>> getReviews(String organizerId) {
     return _firestore
-        .collection('Organizers')
+        .collection('organizers')
         .doc(organizerId)
         .collection('reviews')
         .orderBy('createdAt', descending: true)
@@ -20,7 +20,7 @@ class ReviewService {
 
   Future<void> addReview(String organizerId, ReviewModel review) async {
     await _firestore
-        .collection('Organizers')
+        .collection('organizers')
         .doc(organizerId)
         .collection('reviews')
         .add(review.toMap());

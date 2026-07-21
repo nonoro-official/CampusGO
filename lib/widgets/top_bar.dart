@@ -39,9 +39,13 @@ class TopBar extends ConsumerWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final Color primaryColor = Theme.of(context).primaryColor;
-    final textTheme = Theme.of(context).textTheme;
-    final Color contentColor = dark ? Colors.white : primaryColor;
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final Color primaryColor = colors.primary;
+    final textTheme = theme.textTheme;
+    final Color contentColor = dark
+        ? colors.onPrimary
+        : (theme.appBarTheme.foregroundColor ?? colors.onSurface);
 
     final currentUser = FirebaseAuth.instance.currentUser;
 
@@ -99,8 +103,7 @@ class TopBar extends ConsumerWidget implements PreferredSizeWidget {
               final lastTimestamp = data['lastTimestamp'];
               final lastSeen = data['lastSeen_${currentUser.uid}'];
 
-              if (lastSenderID != currentUser.uid &&
-                  lastTimestamp != null) {
+              if (lastSenderID != currentUser.uid && lastTimestamp != null) {
                 if (lastSeen == null) {
                   hasUnread = true;
                   break;
@@ -121,7 +124,6 @@ class TopBar extends ConsumerWidget implements PreferredSizeWidget {
                 color: contentColor,
                 onPressed: effectiveLeftAction,
               ),
-
               if (hasUnread)
                 Positioned(
                   right: 10,
@@ -168,7 +170,7 @@ class TopBar extends ConsumerWidget implements PreferredSizeWidget {
     return AppBar(
       backgroundColor: dark
           ? primaryColor
-          : (Theme.of(context).appBarTheme.backgroundColor ?? Colors.white),
+          : (theme.appBarTheme.backgroundColor ?? colors.surface),
       elevation: 0,
       centerTitle: center || dashboard,
       leading: leadingWidget,

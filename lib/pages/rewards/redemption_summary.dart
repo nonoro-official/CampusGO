@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusgo/models/redemption_order_model.dart';
@@ -39,29 +40,33 @@ class OrderSummary extends ConsumerWidget {
       data: (enriched) {
         final List<OrderItemModel> items = enriched.items;
         final OrderStatus status = enriched.orderStatus;
-        
-        // enriched.price is the total stored in the DB (includes the 10 pesos fee)
-        final double total = enriched.price;
-        const double serviceFee = 10.0;
-        final double subtotal = (total - serviceFee).clamp(0, double.infinity);
+
+        // enriched.points is the total stored in the DB
+        final int total = enriched.points;
         final int qty = enriched.totalQty;
 
         return Scaffold(
-          backgroundColor: const Color(0xFFF5F5F5),
-
+          backgroundColor: Theme.of(context).brightness == Brightness.dark
+              ? Theme.of(context).scaffoldBackgroundColor
+              : const Color(0xFFF5F5F5),
           appBar: TopBar(title: 'Order Summary', showBack: true, dark: true),
-
           bottomNavigationBar: Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              border: Border(top: BorderSide(color: Color(0xFFEAEAEA))),
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardColor,
+              border: Border(
+                top: BorderSide(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Theme.of(context).colorScheme.outlineVariant
+                      : const Color(0xFFEAEAEA),
+                ),
+              ),
             ),
             child: Row(
               children: [
                 Expanded(
                   child: Text(
-                    'Total: ₱${total.toStringAsFixed(2)}',
+                    'Total: $total pts',
                     style: textTheme.titleMedium?.copyWith(color: primaryColor),
                   ),
                 ),
@@ -69,43 +74,49 @@ class OrderSummary extends ConsumerWidget {
                 /// BUYER VIEW (Regardless of user's role, if they are viewing through their History/Cart)
                 if (accountType == "Customer") ...[
                   if (status == OrderStatus.processing)
-                    Row(
-                      children: [
-                        ElevatedButton.icon(
-                          onPressed: () async {
-                            final organizer = await OrganizerService().getOrganizer(enriched.organizerId);
-                            if (organizer != null) {
-                              await MessageService().initiateContact(organizer.ownerId);
-                              if (context.mounted) {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => ChatPage(
-                                      receiverName: organizer.organizerName,
-                                      receiverID: organizer.ownerId,
-                                      receiverImageUrl: organizer.imageUrl,
+                    Expanded(
+                      flex: 2,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          ElevatedButton.icon(
+                            onPressed: () async {
+                              final organizer = await OrganizerService()
+                                  .getOrganizer(enriched.organizerId);
+                              if (organizer != null) {
+                                await MessageService()
+                                    .initiateContact(organizer.ownerId);
+                                if (context.mounted) {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => ChatPage(
+                                        receiverName: organizer.organizerName,
+                                        receiverID: organizer.ownerId,
+                                        receiverImageUrl: organizer.imageUrl,
+                                      ),
                                     ),
-                                  ),
-                                );
+                                  );
+                                }
                               }
-                            }
-                          },
-                          icon: const Icon(Icons.chat, size: 18),
-                          label: const Text("Contact Seller"),
-                        ),
-                        const SizedBox(width: 8),
-                        OutlinedButton(
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: Colors.red),
+                            },
+                            icon: const Icon(Icons.chat, size: 18),
+                            label: const Text("Contact Seller"),
                           ),
-                          onPressed: () =>
-                              _cancelCustomerOrder(context, ref, enriched),
-                          child: const Text(
-                            "Cancel",
-                            style: TextStyle(color: Colors.red),
+                          const SizedBox(width: 8),
+                          OutlinedButton(
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: Colors.red),
+                            ),
+                            onPressed: () =>
+                                _cancelCustomerOrder(context, ref, enriched),
+                            child: const Text(
+                              "Cancel",
+                              style: TextStyle(color: Colors.red),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     )
                   else if (status == OrderStatus.completed)
                     ElevatedButton(
@@ -119,46 +130,52 @@ class OrderSummary extends ConsumerWidget {
                 else ...[
                   if (status == OrderStatus.processing ||
                       status == OrderStatus.readyForPickup)
-                    Row(
-                      children: [
-                        if (status == OrderStatus.processing)
-                        ElevatedButton(
-                          onPressed: statusNotifier.isLoading 
-                              ? null 
-                              : () => _onOrganizerAction(context, ref, enriched, status, total),
-                          child: const Text("Mark Ready"),
-                        ),
-                        if (status == OrderStatus.readyForPickup)
-                          ElevatedButton(
-                            onPressed: statusNotifier.isLoading 
-                                ? null 
-                                : () => _onOrganizerAction(context, ref, enriched, status, total),
-                            child: const Text("Confirm Payment"),
+                    Expanded(
+                      flex: 2,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          if (status == OrderStatus.processing)
+                            ElevatedButton(
+                              onPressed: statusNotifier.isLoading
+                                  ? null
+                                  : () => _onOrganizerAction(
+                                      context, ref, enriched, status, total),
+                              child: const Text("Mark Ready"),
+                            ),
+                          if (status == OrderStatus.readyForPickup)
+                            ElevatedButton(
+                              onPressed: statusNotifier.isLoading
+                                  ? null
+                                  : () => _onOrganizerAction(
+                                      context, ref, enriched, status, total),
+                              child: const Text("Confirm Payment"),
+                            ),
+                          const SizedBox(width: 8),
+                          OutlinedButton(
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: Colors.red),
+                            ),
+                            onPressed: () => _cancelOrganizerOrder(
+                                context, ref, enriched, status),
+                            child: const Text(
+                              "Cancel",
+                              style: TextStyle(color: Colors.red),
+                            ),
                           ),
-                        const SizedBox(width: 8),
-                        OutlinedButton(
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: Colors.red),
-                          ),
-                          onPressed: () =>
-                              _cancelOrganizerOrder(context, ref, enriched, status),
-                          child: const Text(
-                            "Cancel",
-                            style: TextStyle(color: Colors.red),
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     )
                   else if (status == OrderStatus.completed)
                     const Text(
                       "Completed",
-                      style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                          color: Colors.green, fontWeight: FontWeight.bold),
                     )
                 ],
               ],
             ),
           ),
-
           body: SingleChildScrollView(
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -167,9 +184,13 @@ class OrderSummary extends ConsumerWidget {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.grey.shade200),
+                    border: Border.all(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Theme.of(context).colorScheme.outlineVariant
+                          : Colors.grey.shade200,
+                    ),
                   ),
                   child: Row(
                     children: [
@@ -197,7 +218,7 @@ class OrderSummary extends ConsumerWidget {
                             ),
                             const SizedBox(height: 6),
                             Text(
-                              '₱${total.toStringAsFixed(2)}',
+                              '$total pts',
                               style: textTheme.titleSmall?.copyWith(
                                 color: primaryColor,
                               ),
@@ -229,34 +250,26 @@ class OrderSummary extends ConsumerWidget {
 
                 const SizedBox(height: 10),
 
-                // ─ Price breakdown ───────────────────────────────────
+                // ─ Points breakdown ───────────────────────────────────
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.grey.shade200),
+                    border: Border.all(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Theme.of(context).colorScheme.outlineVariant
+                          : Colors.grey.shade200,
+                    ),
                   ),
                   child: Column(
                     children: [
-                      _buildRow(
-                        context,
-                        'Subtotal',
-                        '₱${subtotal.toStringAsFixed(2)}',
-                      ),
-                      const SizedBox(height: 10),
-                      _buildRow(
-                        context,
-                        'Service Fee',
-                        '₱${serviceFee.toStringAsFixed(2)}',
-                      ),
-                      const SizedBox(height: 10),
                       _buildRow(context, 'Campus Pickup', 'Free'),
                       const Divider(height: 25),
                       _buildRow(
                         context,
                         'Total Payment',
-                        '₱${total.toStringAsFixed(2)}',
+                        '$total pts',
                         isTotal: true,
                       ),
                     ],
@@ -269,10 +282,14 @@ class OrderSummary extends ConsumerWidget {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.grey.shade200),
+                    border: Border.all(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Theme.of(context).colorScheme.outlineVariant
+                          : Colors.grey.shade200,
                     ),
+                  ),
                   child: Row(
                     children: [
                       Icon(Icons.account_balance_wallet, color: primaryColor),
@@ -296,7 +313,7 @@ class OrderSummary extends ConsumerWidget {
     WidgetRef ref,
     OrderModel order,
     OrderStatus status,
-    double total,
+    int total,
   ) {
     if (status == OrderStatus.processing) {
       ModalContainer.popup(
@@ -308,29 +325,49 @@ class OrderSummary extends ConsumerWidget {
           confirmLabel: 'Mark Ready',
           onConfirm: () async {
             Navigator.pop(context);
-            await ref
-                .read(orderStatusNotifierProvider.notifier)
-                .updateStatus(order.id, OrderStatus.readyForPickup);
-            if (context.mounted) Navigator.pop(context);
+            try {
+              await ref
+                  .read(orderStatusNotifierProvider.notifier)
+                  .updateStatus(order.id, OrderStatus.readyForPickup);
+              if (context.mounted) Navigator.pop(context);
+            } catch (e) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text("Error updating order: $e"),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            }
           },
           onCancel: () => Navigator.pop(context),
         ),
       );
-    } 
-    else if (status == OrderStatus.readyForPickup) {
+    } else if (status == OrderStatus.readyForPickup) {
       ModalContainer.popup(
         context: context,
         child: _ConfirmModal(
           title: 'Confirm Payment',
-          body:
-              'Confirm that the customer has paid ₱${total.toStringAsFixed(2)}?',
+          body: 'Confirm that the customer has paid $total pts?',
           confirmLabel: 'Confirm Payment',
           onConfirm: () async {
             Navigator.pop(context);
-            await ref
-                .read(orderStatusNotifierProvider.notifier)
-                .updateStatus(order.id, OrderStatus.completed);
-            if (context.mounted) Navigator.pop(context);
+            try {
+              await ref
+                  .read(orderStatusNotifierProvider.notifier)
+                  .updateStatus(order.id, OrderStatus.completed);
+              if (context.mounted) Navigator.pop(context);
+            } catch (e) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text("Error completing order: $e"),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            }
           },
           onCancel: () => Navigator.pop(context),
         ),
@@ -348,7 +385,8 @@ class OrderSummary extends ConsumerWidget {
       final organizer = await organizerService.getOrganizer(organizerId);
 
       if (organizer != null && context.mounted) {
-        Navigator.pushNamed(context, '/organizer-profile', arguments: organizer);
+        Navigator.pushNamed(context, '/organizer-profile',
+            arguments: organizer);
       } else if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Organizer no longer available')),
@@ -378,14 +416,25 @@ class OrderSummary extends ConsumerWidget {
         confirmLabel: 'Cancel Order',
         onConfirm: () async {
           Navigator.pop(context);
-          await ref
-              .read(orderStatusNotifierProvider.notifier)
-              .updateStatus(order.id, OrderStatus.cancelled);
-          if (context.mounted) {
-             Navigator.pop(context);
-             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Order cancelled")),
-             );
+          try {
+            await ref
+                .read(orderStatusNotifierProvider.notifier)
+                .updateStatus(order.id, OrderStatus.cancelled);
+            if (context.mounted) {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Order cancelled")),
+              );
+            }
+          } catch (e) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text("Error cancelling order: $e"),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
           }
         },
         onCancel: () => Navigator.pop(context),
@@ -406,10 +455,21 @@ class OrderSummary extends ConsumerWidget {
         confirmLabel: 'Yes, Cancel',
         onConfirm: () async {
           Navigator.pop(context);
-          await ref
-              .read(orderStatusNotifierProvider.notifier)
-              .updateStatus(order.id, OrderStatus.cancelled);
-          if (context.mounted) Navigator.pop(context);
+          try {
+            await ref
+                .read(orderStatusNotifierProvider.notifier)
+                .updateStatus(order.id, OrderStatus.cancelled);
+            if (context.mounted) Navigator.pop(context);
+          } catch (e) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text("Error cancelling order: $e"),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          }
         },
         onCancel: () => Navigator.pop(context),
       ),
@@ -434,11 +494,15 @@ class OrderSummary extends ConsumerWidget {
         ),
         Text(
           value,
-          style: (isTotal ? textTheme.titleSmall : textTheme.bodyMedium)
-              ?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: isTotal ? primaryColor : Colors.black87,
-              ),
+          style:
+              (isTotal ? textTheme.titleSmall : textTheme.bodyMedium)?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: isTotal
+                ? primaryColor
+                : Theme.of(context).brightness == Brightness.dark
+                    ? Theme.of(context).colorScheme.onSurface
+                    : Colors.black87,
+          ),
         ),
       ],
     );
@@ -453,9 +517,8 @@ class _StatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String label = status == OrderStatus.readyForPickup
-        ? "To Payment"
-        : status.toName;
+    String label =
+        status == OrderStatus.readyForPickup ? "To Payment" : status.toName;
 
     final color = switch (status) {
       OrderStatus.completed => Colors.green,
@@ -558,9 +621,13 @@ class OrderItems extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(
+          color: Theme.of(context).brightness == Brightness.dark
+              ? Theme.of(context).colorScheme.outlineVariant
+              : Colors.grey.shade200,
+        ),
       ),
       child: Row(
         children: [
@@ -573,7 +640,7 @@ class OrderItems extends StatelessWidget {
                 Text('Qty: ${item.quantity}', style: textTheme.bodySmall),
                 const SizedBox(height: 6),
                 Text(
-                  '₱${item.total.toStringAsFixed(2)}',
+                  '${item.total} pts',
                   style: textTheme.titleSmall?.copyWith(color: primaryColor),
                 ),
               ],

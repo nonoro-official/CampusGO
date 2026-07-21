@@ -54,10 +54,12 @@ class _SearchButtonState extends State<SearchButton>
 
   @override
   Widget build(BuildContext context) {
-    final primaryColor = Theme.of(context).primaryColor;
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final primaryColor = colors.primary;
     final dark = widget.dark;
-    final isDark = dark ? primaryColor : Colors.white;
-    final isContentDark = dark ? Colors.white : primaryColor;
+    final backgroundColor = dark ? primaryColor : theme.cardColor;
+    final contentColor = dark ? colors.onPrimary : primaryColor;
 
     return AnimatedBuilder(
       animation: _widthAnimation,
@@ -67,7 +69,7 @@ class _SearchButtonState extends State<SearchButton>
           height: 50,
           margin: const EdgeInsets.only(right: 20),
           decoration: BoxDecoration(
-            color: isDark,
+            color: backgroundColor,
             borderRadius: BorderRadius.circular(25),
             boxShadow: const [
               BoxShadow(
@@ -85,14 +87,17 @@ class _SearchButtonState extends State<SearchButton>
                         padding: const EdgeInsets.only(left: 16),
                         child: TextField(
                           controller: _textController,
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(color: isContentDark),
-                          cursorColor: isContentDark,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: contentColor,
+                          ),
+                          cursorColor: contentColor,
                           onChanged: widget.onSearch,
                           decoration: InputDecoration(
                             hintText: 'Search...',
                             hintStyle: TextStyle(
-                              color: dark ? Colors.white : Colors.grey,
+                              color: dark
+                                  ? colors.onPrimary
+                                  : colors.onSurfaceVariant,
                             ),
                             border: InputBorder.none,
                             enabledBorder: InputBorder.none,
@@ -106,7 +111,7 @@ class _SearchButtonState extends State<SearchButton>
                     IconButton(
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
-                      icon: Icon(Icons.close, color: isContentDark, size: 20),
+                      icon: Icon(Icons.close, color: contentColor, size: 20),
                       onPressed: _toggleSearch,
                     ),
                     const SizedBox(width: 10),
@@ -118,7 +123,7 @@ class _SearchButtonState extends State<SearchButton>
                     onTap: _toggleSearch,
                     borderRadius: BorderRadius.circular(25),
                     child: Center(
-                      child: Icon(Icons.search, color: isContentDark),
+                      child: Icon(Icons.search, color: contentColor),
                     ),
                   ),
                 ),
@@ -148,12 +153,14 @@ class _SearchBarWidgetState extends State<SearchBarWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final primaryColor = Theme.of(context).primaryColor;
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final primaryColor = colors.primary;
 
     return Container(
       height: 50,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(

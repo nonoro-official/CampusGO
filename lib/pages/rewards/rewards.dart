@@ -2,18 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../widgets/search.dart';
 import '../../widgets/top_bar.dart';
-import '../../widgets/product_image.dart';
+import '../../widgets/reward_image.dart';
 import '../../widgets/filter.dart';
 import '../../providers/organizer_provider.dart';
-import '../../providers/product_provider.dart';
+import '../../providers/reward_provider.dart';
 import '../../models/organizer_model.dart';
-import '../../utils/organizer_utils.dart';
+// import '../../utils/organizer_utils.dart';
 import '../organizer/organizer_profile_screen.dart';
 
 class ShopsScreen extends ConsumerStatefulWidget {
-  final String? category;
-
-  const ShopsScreen({super.key, this.category});
+  const ShopsScreen({super.key});
 
   @override
   ConsumerState<ShopsScreen> createState() => _ShopsScreenState();
@@ -26,11 +24,13 @@ class _ShopsScreenState extends ConsumerState<ShopsScreen> {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final titleLabel = widget.category ?? "All Shops";
+    const titleLabel = "All Shops";
     final allOrganizersAsync = ref.watch(allOrganizersProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: Theme.of(context).brightness == Brightness.dark
+          ? Theme.of(context).scaffoldBackgroundColor
+          : const Color(0xFFF5F5F5),
       appBar: TopBar(
         title: 'CampusGO',
         showBack: true,
@@ -81,18 +81,11 @@ class _ShopsScreenState extends ConsumerState<ShopsScreen> {
                         .toLowerCase()
                         .contains(searchQuery.toLowerCase());
 
-                    final matchesCategory =
-                        widget.category == null ||
-                        v.category == widget.category;
-
-                    final matchesPartner =
-                        selectedPartner == "All" ||
+                    final matchesPartner = selectedPartner == "All" ||
                         v.organizerPartner.name.toLowerCase() ==
                             selectedPartner.toLowerCase();
 
-                    return matchesSearch &&
-                        matchesCategory &&
-                        matchesPartner;
+                    return matchesSearch && matchesPartner;
                   }).toList();
 
                   return Stack(
@@ -100,23 +93,19 @@ class _ShopsScreenState extends ConsumerState<ShopsScreen> {
                       filteredOrganizers.isEmpty
                           ? const Center(child: Text("No organizers found"))
                           : OrganizerFeed(organizers: filteredOrganizers),
-
                       Positioned(
                         bottom: 10,
                         right: 0,
                         child: SearchButton(
                           dark: false,
-                          onSearch: (val) =>
-                              setState(() => searchQuery = val),
+                          onSearch: (val) => setState(() => searchQuery = val),
                         ),
                       ),
                     ],
                   );
                 },
-                loading: () =>
-                    const Center(child: CircularProgressIndicator()),
-                error: (err, stack) =>
-                    Center(child: Text("Error: $err")),
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (err, stack) => Center(child: Text("Error: $err")),
               ),
             ),
 
@@ -158,7 +147,7 @@ class OrganizerCard extends ConsumerWidget {
     final primaryColor = Theme.of(context).primaryColor;
     final textTheme = Theme.of(context).textTheme;
 
-    final productsAsync = ref.watch(organizerProductsProvider(organizer.id));
+    final rewardsAsync = ref.watch(organizerRewardsProvider(organizer.id));
     final hasImage =
         organizer.imageUrl != null && organizer.imageUrl!.isNotEmpty;
 
@@ -176,7 +165,7 @@ class OrganizerCard extends ConsumerWidget {
         margin: const EdgeInsets.only(bottom: 20),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(20),
           boxShadow: const [
             BoxShadow(
@@ -193,44 +182,30 @@ class OrganizerCard extends ConsumerWidget {
               children: [
                 CircleAvatar(
                   radius: 22,
-                  backgroundColor:
-                      primaryColor.withValues(alpha: 0.1),
-                  backgroundImage: hasImage
-                      ? NetworkImage(organizer.imageUrl!)
-                      : null,
-                  child: hasImage
-                      ? null
-                      : Icon(Icons.store, color: primaryColor),
+                  backgroundColor: primaryColor.withValues(alpha: 0.1),
+                  backgroundImage:
+                      hasImage ? NetworkImage(organizer.imageUrl!) : null,
+                  child:
+                      hasImage ? null : Icon(Icons.store, color: primaryColor),
                 ),
                 const SizedBox(width: 12),
-
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(organizer.organizerName,
                           style: textTheme.titleMedium),
-                      const SizedBox(height: 2),
-                      Text(
-                        organizer.category ?? 'Organizer',
-                        style: textTheme.bodySmall?.copyWith(
-                          color: Colors.grey,
-                        ),
-                      ),
                     ],
                   ),
                 ),
               ],
             ),
-
             const SizedBox(height: 15),
-
-            productsAsync.when(
-              data: (products) {
-                if (products.isEmpty) {
+            rewardsAsync.when(
+              data: (rewards) {
+                if (rewards.isEmpty) {
                   return Text(
-                    organizer.description ??
-                        "No description available.",
+                    organizer.description ?? "No description available.",
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: textTheme.bodySmall,
@@ -241,40 +216,35 @@ class OrganizerCard extends ConsumerWidget {
                   height: 90,
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
-                    itemCount: products.length,
-                    separatorBuilder: (_, __) =>
-                        const SizedBox(width: 10),
+                    itemCount: rewards.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 10),
                     itemBuilder: (context, index) {
-                      final product = products[index];
+                      final reward = rewards[index];
 
                       final effectiveStock =
-                          product.calculateEffectiveStock(products);
+                          reward.calculateEffectiveStock(rewards);
 
                       return Stack(
                         children: [
-                          ProductImage(
-                            imageUrl: product.imageUrl,
+                          RewardImage(
+                            imageUrl: reward.imageUrl,
                             width: 90,
                             height: 90,
                             borderRadius: 12,
                             isAvailable: effectiveStock > 0,
                           ),
-                          if (effectiveStock > 0 &&
-                              effectiveStock <= 9)
+                          if (effectiveStock > 0 && effectiveStock <= 9)
                             Positioned(
                               top: 4,
                               right: 4,
                               child: Container(
-                                padding:
-                                    const EdgeInsets.symmetric(
+                                padding: const EdgeInsets.symmetric(
                                   horizontal: 4,
                                   vertical: 2,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Colors.orange.withValues(
-                                      alpha: 0.8),
-                                  borderRadius:
-                                      BorderRadius.circular(4),
+                                  color: Colors.orange.withValues(alpha: 0.8),
+                                  borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: const Text(
                                   "Low Stock",
@@ -294,8 +264,7 @@ class OrganizerCard extends ConsumerWidget {
               },
               loading: () => const SizedBox(
                 height: 90,
-                child: Center(
-                    child: CircularProgressIndicator()),
+                child: Center(child: CircularProgressIndicator()),
               ),
               error: (_, __) => const SizedBox.shrink(),
             ),

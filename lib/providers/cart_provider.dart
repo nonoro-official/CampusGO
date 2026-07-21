@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/cart_item_model.dart';
 import '../models/reward_item_model.dart';
+import '../models/redemption_order_model.dart';
 import '../services/cart_service.dart';
 import '../services/order_service.dart';
 import 'auth_provider.dart';
@@ -19,7 +20,7 @@ final myCartsProvider = StreamProvider<List<CartItemModel>>((ref) {
   return service.getCartsByUser(user.uid);
 });
 
-//Enriched cart (with product details for display)
+//Enriched cart (with reward details for display)
 
 final enrichedCartProvider =
     FutureProvider.family<CartItemModel, CartItemModel>((ref, cart) async {
@@ -33,10 +34,10 @@ class CartNotifier extends AsyncNotifier<void> {
   @override
   Future<void> build() async {}
 
-  /// Add quantity of product to the current user's cart for organizerId.
+  /// Add quantity of reward to the current user's cart for organizerId.
   Future<void> addToCart({
     required String organizerId,
-    required ProductModel product,
+    required RewardModel reward,
     required int quantity,
   }) async {
     final user = ref.read(currentUserProvider);
@@ -47,42 +48,42 @@ class CartNotifier extends AsyncNotifier<void> {
       await ref.read(cartServiceProvider).addToCart(
             userId: user.uid,
             organizerId: organizerId,
-            product: product,
+            reward: reward,
             quantity: quantity,
           );
     });
   }
 
-  /// Update quantity for a specific product inside a cart.
+  /// Update quantity for a specific reward inside a cart.
   Future<void> updateQuantity({
     required String cartId,
-    required String productId,
+    required String rewardId,
     required int newQuantity,
-    required Map<String, int> currentProducts,
+    required Map<String, int> currentRewards,
   }) async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
-      await ref.read(cartServiceProvider).updateProductQuantity(
+      await ref.read(cartServiceProvider).updateRewardQuantity(
             cartId: cartId,
-            productId: productId,
+            rewardId: rewardId,
             newQuantity: newQuantity,
-            currentProducts: currentProducts,
+            currentRewards: currentRewards,
           );
     });
   }
 
-  /// Remove a product from a cart.
-  Future<void> removeProduct({
+  /// Remove a reward from a cart.
+  Future<void> removeReward({
     required String cartId,
-    required String productId,
-    required Map<String, int> currentProducts,
+    required String rewardId,
+    required Map<String, int> currentRewards,
   }) async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
-      await ref.read(cartServiceProvider).removeProduct(
+      await ref.read(cartServiceProvider).removeReward(
             cartId: cartId,
-            productId: productId,
-            currentProducts: currentProducts,
+            rewardId: rewardId,
+            currentRewards: currentRewards,
           );
     });
   }
@@ -114,15 +115,15 @@ class CartNotifier extends AsyncNotifier<void> {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       final orderService = OrderService();
-      // Calculate total including 10 pesos service fee.
-      // We explicitly pass the total with fee to ensure database consistency.
-      final totalWithFee = cart.price + 10.0;
+      // Calculate total.
+      // We explicitly pass the total to ensure database consistency.
+      final total = cart.points;
       
       await orderService.placeOrder(
-        OrganizerId: cart.organizerId,
+        organizerId: cart.organizerId,
         userId: user.uid,
-        orders: cart.products,
-        price: totalWithFee,
+        orders: cart.rewards,
+        points: total,
       );
 
       // Delete the cart after the order is placed
@@ -133,7 +134,7 @@ class CartNotifier extends AsyncNotifier<void> {
   /// Buy now: place an order immediately without adding to cart.
   Future<void> buyNow({
     required String organizerId,
-    required ProductModel product,
+    required RewardModel reward,
     required int quantity,
   }) async {
     final user = ref.read(currentUserProvider);
@@ -142,14 +143,14 @@ class CartNotifier extends AsyncNotifier<void> {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       final orderService = OrderService();
-      // Calculate total including 10 pesos service fee.
-      final totalWithFee = (product.price * quantity) + 10.0;
+      // Calculate total.
+      final total = (reward.points * quantity);
       
       await orderService.placeOrder(
-        OrganizerId: organizerId,
+        organizerId: organizerId,
         userId: user.uid,
-        orders: {product.id: quantity},
-        price: totalWithFee,
+        orders: {reward.id: quantity},
+        points: total,
       );
     });
   }

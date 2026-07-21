@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusgo/pages/auth/register_organizer.dart';
 import 'package:campusgo/services/fcm_service.dart';
+import 'package:campusgo/services/local_notification_service.dart';
 import 'themes/theme.dart';
 import 'firebase_options.dart';
 import 'pages/wrapper.dart';
@@ -18,17 +19,21 @@ import 'pages/rewards/organizer/reward_inventory.dart';
 import 'pages/messages/messages.dart';
 import 'pages/rewards/organizer/redemption_orders.dart';
 import 'pages/rewards/organizer/reward_listings.dart';
+import 'pages/events/add_event_screen.dart';
+import 'pages/events/event_list_screen.dart';
 import 'pages/organizer/organizer_profile_screen.dart';
 import 'pages/rewards/redemption_history.dart';
 import 'models/organizer_model.dart';
+import 'providers/theme_provider.dart';
 import 'widgets/message_notification_listener.dart';
+import 'pages/rewards/reward_qr_generator.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 final ValueNotifier<String?> currentRouteNotifier = ValueNotifier<String?>(
   null,
 );
 final ValueNotifier<String?> currentChatReceiverNotifier =
-ValueNotifier<String?>(null);
+    ValueNotifier<String?>(null);
 
 class RouteNameObserver extends NavigatorObserver {
   final ValueNotifier<String?> routeNotifier;
@@ -62,32 +67,43 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
+  // Initialize Local Notifications for event reminders
+  await LocalNotificationService.init();
+  
+  // Initialize FCM for cloud messages (don't await to avoid blocking UI if permission dialog hangs)
+  FCMService.init();
+
   // Register background handler BEFORE runApp
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
   runApp(const ProviderScope(child: MyApp()));
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final darkMode = ref.watch(darkModeProvider).value ?? false;
+
     return MaterialApp(
       navigatorKey: navigatorKey,
       navigatorObservers: [RouteNameObserver(currentRouteNotifier)],
       debugShowCheckedModeBanner: false,
       title: 'CampusGO',
       theme: AppTheme.lightTheme,
-
+      darkTheme: AppTheme.darkTheme,
+      themeMode: darkMode ? ThemeMode.dark : ThemeMode.light,
       builder: (context, child) {
-        return MessageNotificationListener(
-          navigatorKey: navigatorKey,
-          currentRouteNotifier: currentRouteNotifier,
-          currentChatReceiverNotifier: currentChatReceiverNotifier,
-          child: child!,
+        return AnnotatedRegion(
+          value: AppTheme.systemOverlayStyle(Theme.of(context).brightness),
+          child: MessageNotificationListener(
+            navigatorKey: navigatorKey,
+            currentRouteNotifier: currentRouteNotifier,
+            currentChatReceiverNotifier: currentChatReceiverNotifier,
+            child: child!,
+          ),
         );
       },
-
       initialRoute: '/',
       routes: {
         '/': (context) => const SplashScreen(),
@@ -100,14 +116,14 @@ class MyApp extends StatelessWidget {
         '/inventory': (context) => const InventoryScreen(),
         '/incoming-orders': (context) => const OrderList(),
         '/listings': (context) => const ListingScreen(),
+        '/qr-generator': (context) => const QRGeneratorScreen(),
         '/history-customer': (context) =>
-        const HistoryScreen(accountType: 'Customer'),
+            const HistoryScreen(accountType: 'Customer'),
         '/history-organizer': (context) =>
-        const HistoryScreen(accountType: 'Organizer'),
+            const HistoryScreen(accountType: 'Organizer'),
         '/dashboard': (context) {
-          final args =
-          ModalRoute.of(context)?.settings.arguments
-          as Map<String, dynamic>?;
+          final args = ModalRoute.of(context)?.settings.arguments
+              as Map<String, dynamic>?;
 
           return DashboardScreen(
             accountType: 'Customer',
@@ -115,11 +131,9 @@ class MyApp extends StatelessWidget {
             backToProcessing: args?['backToProcessing'],
           );
         },
-
         '/organizer-dashboard': (context) {
-          final args =
-          ModalRoute.of(context)?.settings.arguments
-          as Map<String, dynamic>?;
+          final args = ModalRoute.of(context)?.settings.arguments
+              as Map<String, dynamic>?;
 
           return DashboardScreen(
             accountType: 'Organizer',
@@ -129,19 +143,14 @@ class MyApp extends StatelessWidget {
         },
         '/organizer-profile': (context) {
           final organizer =
-          ModalRoute.of(context)!.settings.arguments as OrganizerModel;
+              ModalRoute.of(context)!.settings.arguments as OrganizerModel;
           return OrganizerProfileScreen(organizer: organizer);
         },
         '/menu': (context) => const MenuScreen(),
         '/messages': (context) => MessagesScreen(),
-        '/shops': (context) {
-          final args =
-          ModalRoute.of(context)?.settings.arguments
-          as Map<String, dynamic>?;
-          return ShopsScreen(
-            category: args?['category']?.toString() ?? 'Other',
-          );
-        },
+        '/shops': (context) => const ShopsScreen(),
+        '/add-event': (context) => const AddEventScreen(),
+        '/events': (context) => const EventListScreen(),
       },
     );
   }

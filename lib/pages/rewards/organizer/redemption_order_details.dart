@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:campusgo/models/redemption_order_model.dart';
@@ -40,71 +41,103 @@ class OrderDetails extends ConsumerWidget {
         final bool isReady = status == OrderStatus.readyForPickup;
 
         // Grand Total from DB
-        final double total = enriched.price;
-        const double serviceFee = 10.0;
-        // Subtotal is (Grand Total - Fee)
-        final double subtotal = (total - serviceFee).clamp(0, double.infinity);
+        final int total = enriched.points;
         final int qty = enriched.totalQty;
 
         return Scaffold(
-          backgroundColor: const Color(0xFFF5F5F5),
-
+          backgroundColor: Theme.of(context).brightness == Brightness.dark
+              ? Theme.of(context).scaffoldBackgroundColor
+              : const Color(0xFFF5F5F5),
           appBar: TopBar(title: 'Order Summary', showBack: true, dark: true),
-
           bottomNavigationBar: Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              border: Border(top: BorderSide(color: Color(0xFFEAEAEA))),
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardColor,
+              border: Border(
+                top: BorderSide(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Theme.of(context).colorScheme.outlineVariant
+                      : const Color(0xFFEAEAEA),
+                ),
+              ),
             ),
             child: Row(
               children: [
                 Expanded(
                   child: Text(
-                    'Total: ₱${total.toStringAsFixed(2)}',
+                    'Total: $total pts',
                     style: textTheme.titleMedium?.copyWith(color: primaryColor),
                   ),
                 ),
                 // ─── Organizer view ───────────────────────────────────
-                if (accountType == 'Organizer' && status != OrderStatus.completed)
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 25,
-                        vertical: 12,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                if (accountType == 'Organizer' &&
+                    status != OrderStatus.completed &&
+                    status != OrderStatus.cancelled)
+                  Expanded(
+                    flex: 2,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Expanded(
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            onPressed: statusNotifier.isLoading
+                                ? null
+                                : () => _onOrganizerAction(
+                                      context,
+                                      ref,
+                                      enriched,
+                                      isProcessing,
+                                      isReady,
+                                      total,
+                                    ),
+                            child: statusNotifier.isLoading
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2),
+                                  )
+                                : Text(
+                                    isProcessing
+                                        ? 'Mark Ready'
+                                        : isReady
+                                            ? 'Complete Order'
+                                            : 'Confirm',
+                                  ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: Colors.red),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 12,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onPressed: statusNotifier.isLoading
+                              ? null
+                              : () => _cancelOrder(context, ref, enriched),
+                          child: const Text(
+                            "Cancel",
+                            style: TextStyle(color: Colors.red),
+                          ),
+                        ),
+                      ],
                     ),
-                    onPressed: statusNotifier.isLoading
-                        ? null
-                        : () => _onOrganizerAction(
-                            context,
-                            ref,
-                            enriched,
-                            isProcessing,
-                            isReady,
-                            total,
-                          ),
-                    child: statusNotifier.isLoading
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Text(
-                            isProcessing
-                                ? 'Mark Ready'
-                                : isReady
-                                ? 'Complete Order'
-                                : 'Confirm',
-                          ),
                   ),
               ],
             ),
           ),
-
           body: SingleChildScrollView(
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -113,9 +146,13 @@ class OrderDetails extends ConsumerWidget {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.grey.shade200),
+                    border: Border.all(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Theme.of(context).colorScheme.outlineVariant
+                          : Colors.grey.shade200,
+                    ),
                   ),
                   child: Row(
                     children: [
@@ -143,7 +180,7 @@ class OrderDetails extends ConsumerWidget {
                             ),
                             const SizedBox(height: 6),
                             Text(
-                              '₱${total.toStringAsFixed(2)}',
+                              '${total} pts',
                               style: textTheme.titleSmall?.copyWith(
                                 color: primaryColor,
                               ),
@@ -175,34 +212,26 @@ class OrderDetails extends ConsumerWidget {
 
                 const SizedBox(height: 10),
 
-                // ─ Price breakdown ───────────────────────────────────
+                // ─ Points breakdown ───────────────────────────────────
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.grey.shade200),
+                    border: Border.all(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Theme.of(context).colorScheme.outlineVariant
+                          : Colors.grey.shade200,
+                    ),
                   ),
                   child: Column(
                     children: [
-                      _buildRow(
-                        context,
-                        'Subtotal',
-                        '₱${subtotal.toStringAsFixed(2)}',
-                      ),
-                      const SizedBox(height: 10),
-                      _buildRow(
-                        context,
-                        'Service Fee',
-                        '₱${serviceFee.toStringAsFixed(2)}',
-                      ),
-                      const SizedBox(height: 10),
                       _buildRow(context, 'Campus Pickup', 'Free'),
                       const Divider(height: 25),
                       _buildRow(
                         context,
                         'Total Payment',
-                        '₱${total.toStringAsFixed(2)}',
+                        '${total} pts',
                         isTotal: true,
                       ),
                     ],
@@ -215,9 +244,13 @@ class OrderDetails extends ConsumerWidget {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.grey.shade200),
+                    border: Border.all(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Theme.of(context).colorScheme.outlineVariant
+                          : Colors.grey.shade200,
+                    ),
                   ),
                   child: Row(
                     children: [
@@ -245,7 +278,7 @@ class OrderDetails extends ConsumerWidget {
     OrderModel enriched,
     bool isProcessing,
     bool isReady,
-    double total,
+    int total,
   ) {
     if (isProcessing) {
       ModalContainer.popup(
@@ -257,11 +290,22 @@ class OrderDetails extends ConsumerWidget {
           confirmLabel: 'Mark Ready',
           onConfirm: () async {
             Navigator.pop(context); // close modal
-            await ref
-                .read(orderStatusNotifierProvider.notifier)
-                .updateStatus(enriched.id, OrderStatus.readyForPickup);
-            if (context.mounted) {
-              Navigator.pop(context); // back to order list
+            try {
+              await ref
+                  .read(orderStatusNotifierProvider.notifier)
+                  .updateStatus(enriched.id, OrderStatus.readyForPickup);
+              if (context.mounted) {
+                Navigator.pop(context); // back to order list
+              }
+            } catch (e) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text("Error updating order: $e"),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
             }
           },
           onCancel: () => Navigator.pop(context),
@@ -273,21 +317,72 @@ class OrderDetails extends ConsumerWidget {
         child: _ConfirmModal(
           title: 'Complete Order',
           body:
-              'Confirm that the customer has paid ₱${total.toStringAsFixed(2)} and picked up the items?',
+              'Confirm that the customer has paid $total pts and picked up the items?',
           confirmLabel: 'Complete Order',
           onConfirm: () async {
             Navigator.pop(context); // close modal
-            await ref
-                .read(orderStatusNotifierProvider.notifier)
-                .updateStatus(enriched.id, OrderStatus.completed);
-            if (context.mounted) {
-              Navigator.pop(context); // back to order list
+            try {
+              await ref
+                  .read(orderStatusNotifierProvider.notifier)
+                  .updateStatus(enriched.id, OrderStatus.completed);
+              if (context.mounted) {
+                Navigator.pop(context); // back to order list
+              }
+            } catch (e) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text("Error completing order: $e"),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
             }
           },
           onCancel: () => Navigator.pop(context),
         ),
       );
     }
+  }
+
+  void _cancelOrder(
+    BuildContext context,
+    WidgetRef ref,
+    OrderModel order,
+  ) {
+    ModalContainer.popup(
+      context: context,
+      child: _ConfirmModal(
+        title: 'Cancel Order',
+        body:
+            'Are you sure you want to cancel this order? This cannot be undone.',
+        confirmLabel: 'Cancel Order',
+        onConfirm: () async {
+          Navigator.pop(context); // close modal
+          try {
+            await ref
+                .read(orderStatusNotifierProvider.notifier)
+                .updateStatus(order.id, OrderStatus.cancelled);
+            if (context.mounted) {
+              Navigator.pop(context); // back to order list
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Order cancelled")),
+              );
+            }
+          } catch (e) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text("Error cancelling order: $e"),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          }
+        },
+        onCancel: () => Navigator.pop(context),
+      ),
+    );
   }
 
   Widget _buildRow(
@@ -308,11 +403,15 @@ class OrderDetails extends ConsumerWidget {
         ),
         Text(
           value,
-          style: (isTotal ? textTheme.titleSmall : textTheme.bodyMedium)
-              ?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: isTotal ? primaryColor : Colors.black87,
-              ),
+          style:
+              (isTotal ? textTheme.titleSmall : textTheme.bodyMedium)?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: isTotal
+                ? primaryColor
+                : Theme.of(context).brightness == Brightness.dark
+                    ? Theme.of(context).colorScheme.onSurface
+                    : Colors.black87,
+          ),
         ),
       ],
     );
@@ -436,9 +535,13 @@ class OrderItems extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(
+          color: Theme.of(context).brightness == Brightness.dark
+              ? Theme.of(context).colorScheme.outlineVariant
+              : Colors.grey.shade200,
+        ),
       ),
       child: Row(
         children: [
@@ -451,7 +554,7 @@ class OrderItems extends StatelessWidget {
                 Text('Qty: ${item.quantity}', style: textTheme.bodySmall),
                 const SizedBox(height: 6),
                 Text(
-                  '₱${item.total.toStringAsFixed(2)}',
+                  '${item.total} pts',
                   style: textTheme.titleSmall?.copyWith(color: primaryColor),
                 ),
               ],

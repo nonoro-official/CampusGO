@@ -1,18 +1,18 @@
 class InventoryModel {
   final String id;
   final String organizerId; // Links to OrganizerModel
-  final String productId; // Links to ProductModel
-  final String name; // Copy of product name for faster UI
-  final double price; // Organizer-specific price
+  final String rewardId; // Links to RewardModel
+  final String name; // Copy of reward name for faster UI
+  final int points; // Organizer-specific points
   final int stock; // Organizer-specific stock
   final bool isAvailable;
 
   InventoryModel({
     required this.id,
     required this.organizerId,
-    required this.productId,
+    required this.rewardId,
     required this.name,
-    required this.price,
+    required this.points,
     required this.stock,
     this.isAvailable = true,
   });
@@ -24,10 +24,10 @@ class InventoryModel {
     return InventoryModel(
       id: id,
       organizerId: data['organizerId'] ?? '',
-      productId: data['productId'] ?? '',
+      rewardId: data['rewardId'] ?? '',
       name: data['name'] ?? '',
-      price: (data['price'] ?? 0.0).toDouble(),
-      stock: (data['stock'] ?? 0).toInt(),
+      points: (data['points'] as num?)?.toInt() ?? 0,
+      stock: (data['stock'] as num?)?.toInt() ?? 0,
       isAvailable: data['isAvailable'] ?? true,
     );
   }
@@ -35,9 +35,9 @@ class InventoryModel {
   Map<String, dynamic> toMap() {
     return {
       'organizerId': organizerId,
-      'productId': productId,
+      'rewardId': rewardId,
       'name': name,
-      'price': price,
+      'points': points,
       'stock': stock,
       'isAvailable': isAvailable,
     };
