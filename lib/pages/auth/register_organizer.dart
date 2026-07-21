@@ -68,6 +68,7 @@ class _RegisterOrganizerScreenState extends State<RegisterOrganizerScreen> {
           firstName: regData['firstName'] ?? '',
           lastName: regData['lastName'] ?? '',
           phoneNumber: regData['phoneNumber'] ?? '',
+          schoolId: regData['schoolId'] ?? '',
           role: regData['role'] ?? Role.customer,
         );
 
