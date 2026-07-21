@@ -94,7 +94,8 @@ class NotificationNotifier extends AsyncNotifier<NotificationPreferences> {
 
   Future<void> _scheduleReminders(EventModel event) async {
     final prefs = state.value!;
-    final baseId = event.id.hashCode.abs();
+    // Keep IDs safe (32-bit int limit) and unique
+    final baseId = (event.id.hashCode.abs() % 1000000);
 
     if (prefs.notifyAtStart) {
       await LocalNotificationService.scheduleEventReminder(
@@ -130,7 +131,7 @@ class NotificationNotifier extends AsyncNotifier<NotificationPreferences> {
   }
 
   Future<void> _cancelReminders(EventModel event) async {
-    final baseId = event.id.hashCode.abs();
+    final baseId = (event.id.hashCode.abs() % 1000000);
     await LocalNotificationService.cancelNotification(baseId);
     await LocalNotificationService.cancelNotification(baseId + 1000000);
     await LocalNotificationService.cancelNotification(baseId + 2000000);

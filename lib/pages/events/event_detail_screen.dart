@@ -63,12 +63,16 @@ class EventDetailScreen extends ConsumerWidget {
                     ref
                         .read(notificationPreferencesProvider.notifier)
                         .toggleEventReminder(currentEvent);
+                    
+                    final nextTime = currentEvent.date;
+                    final timeStr = DateFormat('hh:mm a').format(nextTime);
+
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(isReminded
                             ? "Reminder removed"
-                            : "Reminder set! Check notification settings for details."),
-                        duration: const Duration(seconds: 2),
+                            : "Reminder set for $timeStr! Check settings for 1-day/week options."),
+                        duration: const Duration(seconds: 3),
                       ),
                     );
                   },

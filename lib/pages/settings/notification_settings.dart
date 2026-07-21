@@ -32,25 +32,38 @@ class NotificationSettingsScreen extends ConsumerWidget {
                   ?.areNotificationsEnabled(),
               builder: (context, snapshot) {
                 if (snapshot.hasData && snapshot.data == false) {
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 20),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.red.shade100,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Row(
-                      children: [
-                        Icon(Icons.error_outline, color: Colors.red),
-                        SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            "Notifications are disabled in system settings. Please enable them to receive reminders.",
-                            style: TextStyle(color: Colors.red),
-                          ),
-                        ),
-                      ],
-                    ),
+                  return _buildWarning(
+                    context,
+                    "Notifications are disabled in system settings. Please enable them to receive reminders.",
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+            ),
+            FutureBuilder<bool?>(
+              future: LocalNotificationService.notificationsPlugin
+                  .resolvePlatformSpecificImplementation<
+                      AndroidFlutterLocalNotificationsPlugin>()
+                  ?.canScheduleExactNotifications(),
+              builder: (context, snapshot) {
+                if (snapshot.hasData && snapshot.data == false) {
+                  return Column(
+                    children: [
+                      _buildWarning(
+                        context,
+                        "Exact alarms are not permitted. Reminders may be delayed by several minutes.",
+                      ),
+                      TextButton(
+                        onPressed: () async {
+                          await LocalNotificationService.notificationsPlugin
+                              .resolvePlatformSpecificImplementation<
+                                  AndroidFlutterLocalNotificationsPlugin>()
+                              ?.requestExactAlarmsPermission();
+                        },
+                        child: const Text("Allow Exact Alarms"),
+                      ),
+                      const SizedBox(height: 10),
+                    ],
                   );
                 }
                 return const SizedBox.shrink();
@@ -131,6 +144,29 @@ class NotificationSettingsScreen extends ConsumerWidget {
           color: Theme.of(context).primaryColor,
           letterSpacing: 1.2,
         ),
+      ),
+    );
+  }
+
+  Widget _buildWarning(BuildContext context, String message) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.red.shade100,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.error_outline, color: Colors.red),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(color: Colors.red, fontSize: 13),
+            ),
+          ),
+        ],
       ),
     );
   }

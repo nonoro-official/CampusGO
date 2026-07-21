@@ -60,26 +60,69 @@ class LocalNotificationService {
     required String title,
     required String body,
   }) async {
-    if (scheduledDate.isBefore(DateTime.now())) return;
+    final now = DateTime.now();
+    
+    // If it's in the past, don't schedule. 
+    // If it's within the next 30 seconds, just show it immediately.
+    if (scheduledDate.isBefore(now)) {
+      if (scheduledDate.isAfter(now.subtract(const Duration(seconds: 30)))) {
+        await notificationsPlugin.show(
+          id: notificationId,
+          title: title,
+          body: body,
+          notificationDetails: const NotificationDetails(
+            android: AndroidNotificationDetails(
+              'event_reminders',
+              'Event Reminders',
+              importance: Importance.max,
+              priority: Priority.high,
+            ),
+            iOS: DarwinNotificationDetails(),
+          ),
+          payload: event.id,
+        );
+      }
+      return;
+    }
 
-    await notificationsPlugin.zonedSchedule(
-      id: notificationId,
-      title: title,
-      body: body,
-      scheduledDate: tz.TZDateTime.from(scheduledDate, tz.local),
-      notificationDetails: const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'event_reminders',
-          'Event Reminders',
-          channelDescription: 'Notifications for upcoming events',
-          importance: Importance.max,
-          priority: Priority.high,
+    try {
+      await notificationsPlugin.zonedSchedule(
+        id: notificationId,
+        title: title,
+        body: body,
+        scheduledDate: tz.TZDateTime.from(scheduledDate, tz.local),
+        notificationDetails: const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'event_reminders',
+            'Event Reminders',
+            channelDescription: 'Notifications for upcoming events',
+            importance: Importance.max,
+            priority: Priority.high,
+          ),
+          iOS: DarwinNotificationDetails(),
         ),
-        iOS: DarwinNotificationDetails(),
-      ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      payload: event.id,
-    );
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        payload: event.id,
+      );
+    } catch (e) {
+      // Fallback to inexact if exact fails
+      await notificationsPlugin.zonedSchedule(
+        id: notificationId,
+        title: title,
+        body: body,
+        scheduledDate: tz.TZDateTime.from(scheduledDate, tz.local),
+        notificationDetails: const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'event_reminders',
+            'Event Reminders',
+            importance: Importance.max,
+            priority: Priority.high,
+          ),
+        ),
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        payload: event.id,
+      );
+    }
   }
 
   static Future<void> cancelNotification(int id) async {
