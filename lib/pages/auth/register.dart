@@ -21,11 +21,9 @@ class RedirectScreen extends StatelessWidget {
           children: [
             Align(
               alignment: Alignment.center,
-              child: Image.asset('assets/images/campusgo_logo.png', width: 235),
+              child: Image.asset('assets/images/campusgo_logo.png', width: 400),
             ),
             const SizedBox(height: 10),
-            Text('Buy and Sell', style: textTheme.bodyMedium),
-            const SizedBox(height: 40),
             ElevatedButton(
               onPressed: () => Navigator.push(
                 context,

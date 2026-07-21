@@ -54,12 +54,10 @@ class _SplashScreenState extends State<SplashScreen> {
                 alignment: const Alignment(0, 0),
                 child: Image.asset(
                   'assets/images/campusgo_logo.png',
-                  width: 235,
+                  width: 400,
                 ),
               ),
               const SizedBox(height: 10),
-              Text('Buy and Sell', style: textTheme.bodyMedium),
-              const SizedBox(height: 40),
             ],
           ),
         ),
