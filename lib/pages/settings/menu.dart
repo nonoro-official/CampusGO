@@ -123,28 +123,6 @@ class MenuScreen extends ConsumerWidget {
                       'action': () => privacyPolicy(context, ref),
                     },
                     {
-                      'icon': Icons.feedback_outlined,
-                      'label': 'Feedback Survey',
-                      'action': () async {
-                        final uri = Uri.parse(
-                          "https://forms.gle/Bbc5dqyPJTFwVF2F7",
-                        );
-
-                        try {
-                          await launchUrl(
-                            uri,
-                            mode: LaunchMode.externalApplication,
-                          );
-                        } catch (e) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text("Could not open survey link"),
-                            ),
-                          );
-                        }
-                      },
-                    },
-                    {
                       'icon': Icons.logout,
                       'label': 'Logout',
                       'action': () async {
