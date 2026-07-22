@@ -97,26 +97,26 @@ class NotificationSettingsScreen extends ConsumerWidget {
                   .setNotifyOneWeekBefore(val),
               activeColor: Theme.of(context).primaryColor,
             ),
-            const Divider(height: 40),
-            ElevatedButton.icon(
-              onPressed: () async {
-                await LocalNotificationService.notificationsPlugin.show(
-                  id: 999,
-                  title: 'Test Notification',
-                  body: 'If you see this, notifications are working!',
-                  notificationDetails: NotificationDetails(
-                    android: AndroidNotificationDetails(
-                      'event_reminders',
-                      'Event Reminders',
-                      importance: Importance.max,
-                      priority: Priority.high,
-                    ),
-                  ),
-                );
-              },
-              icon: const Icon(Icons.notifications_active),
-              label: const Text('Send Test Notification'),
-            ),
+            // const Divider(height: 40),
+            // ElevatedButton.icon(
+            //   onPressed: () async {
+            //     await LocalNotificationService.notificationsPlugin.show(
+            //       id: 999,
+            //       title: 'Test Notification',
+            //       body: 'If you see this, notifications are working!',
+            //       notificationDetails: NotificationDetails(
+            //         android: AndroidNotificationDetails(
+            //           'event_reminders',
+            //           'Event Reminders',
+            //           importance: Importance.max,
+            //           priority: Priority.high,
+            //         ),
+            //       ),
+            //     );
+            //   },
+            //   icon: const Icon(Icons.notifications_active),
+            //   label: const Text('Send Test Notification'),
+            // ),
             const SizedBox(height: 20),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
